@@ -21,12 +21,12 @@ const pool = new Pool({
 
 // Handle Socket.io connections
 io.on("connection", (socket) => {
-  console.log("User connected")
+  console.log("👋 Player connected")
+
+  let currentRoom = "0_0"
 
   // Handle player updates
   socket.on("update", ({ id, ...position }) => {
-    console.log("Player updated:", id)
-
     // Data includes:
     // position (xyz)
     // rotation (xyz)
@@ -39,23 +39,38 @@ io.on("connection", (socket) => {
       SET position = '${JSON.stringify(position)}'
       WHERE id = $1
     `
+
+    const GRID_SIZE = 100
+
+    // Calculate current room based on grid size.
+    const newRoom = `${Math.floor(position.x / GRID_SIZE)}_${Math.floor(
+      position.y / GRID_SIZE
+    )}`
+
+    // If player's room has changed, then join it.
+    if (newRoom !== currentRoom) {
+      socket.leaveAll()
+      socket.join(newRoom)
+      console.log(`🚪 Player ${id} joined room ${newRoom}`)
+    }
+
     pool.query(sql, [id], (err, result) => {
       if (err) {
         console.error(err.message)
       } else {
-        console.log(`Player ${id} updated`)
+        console.log(`⬆ Player ${id} updated`)
       }
     })
   })
 
   // Handle disconnections
   socket.on("disconnect", () => {
-    console.log("User disconnected")
+    console.log("🏃 Player disconnected")
   })
 })
 
 // Start the server
 const port = 3000
 server.listen(port, () => {
-  console.log(`Server running on port ${port}`)
+  console.log(`🛥 Canal server running on port ${port}`)
 })
