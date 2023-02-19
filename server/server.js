@@ -59,6 +59,7 @@ io.on("connection", (socket) => {
         console.error(err.message)
       } else {
         console.log(`⬆ Player ${id} updated`)
+        socket.volatile.emit("update", { id, ...position })
       }
     })
   })
