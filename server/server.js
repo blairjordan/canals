@@ -46,7 +46,9 @@ io.on("connection", (socket) => {
     if (newRoom !== currentRoom) {
       socket.leaveAll()
       socket.join(newRoom)
-      socket.volatile.emit("player-joined-room", { id, ...position })
+      socket
+        .to(newRoom)
+        .volatile.emit("player-joined-room", { id, ...position })
       console.log(`🚪 Player ${id} joined room ${newRoom}`)
       currentRoom = newRoom
     }
