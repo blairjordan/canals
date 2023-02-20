@@ -19,6 +19,8 @@ const pool = new Pool({
   port: 5432,
 })
 
+const players = []
+
 // Handle Socket.io connections
 io.on("connection", (socket) => {
   console.log("👋 Player connected")
@@ -26,42 +28,41 @@ io.on("connection", (socket) => {
   let currentRoom = "0_0"
 
   // Handle player updates
-  socket.on("update", ({ id, ...position }) => {
+  socket.on("update", ({ id, position }) => {
     // Data includes:
     // position (xyz)
     // rotation (xyz)
     // velocity (xyz)
     // angular_velocity (xyz)
 
-    // Update the player in the database
-    const sql = `
-      UPDATE players
-      SET position = '${JSON.stringify(position)}'
-      WHERE id = $1
-    `
-
     const GRID_SIZE = 100
 
     // Calculate current room based on grid size.
-    const newRoom = `${Math.floor(position.x / GRID_SIZE)}_${Math.floor(
-      position.y / GRID_SIZE
+    const newRoom = `${Math.floor(position.pos_x / GRID_SIZE)}_${Math.floor(
+      position.pos_y / GRID_SIZE
     )}`
 
     // If player's room has changed, then join it.
     if (newRoom !== currentRoom) {
       socket.leaveAll()
       socket.join(newRoom)
+      socket.volatile.emit("player-joined-room", { id, ...position })
       console.log(`🚪 Player ${id} joined room ${newRoom}`)
+      currentRoom = newRoom
     }
 
-    pool.query(sql, [id], (err, result) => {
-      if (err) {
-        console.error(err.message)
-      } else {
-        console.log(`⬆ Player ${id} updated`)
-        socket.volatile.emit("update", { id, ...position })
-      }
-    })
+    const player = players.find((player) => player.id === id)
+    if (!player) {
+      players.push({ id, position, currentRoom })
+    } else {
+      player.position = position
+      player.currentRoom = currentRoom
+    }
+
+    console.log(`⬆ Player ${id} updated`)
+    socket.volatile.emit("update", { id, ...position })
+
+    console.log("👩‍👩‍👧‍👧 All players", JSON.stringify(players))
   })
 
   // Handle disconnections
