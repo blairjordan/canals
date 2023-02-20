@@ -13,7 +13,7 @@ The `update` message should include a player's ID and position data.
       "position": [123, 545, 23],
       "rotation": [43, -55, -2],
       "velocity": [322, 12, 22],
-      "angular_velocitory": [32, 54, 65]
+      "angular_velocity": [32, 54, 65]
   }
 }
 ```
