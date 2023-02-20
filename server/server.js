@@ -28,41 +28,41 @@ io.on("connection", (socket) => {
   let currentRoom = "0_0"
 
   // Handle player updates
-  socket.on("update", ({ id, position }) => {
-    // Data includes:
-    // position (xyz)
-    // rotation (xyz)
-    // velocity (xyz)
-    // angular_velocity (xyz)
+  socket.on("update", ({ id, positionData }) => {
+    // positionData includes:
+    // position[]
+    // rotation[]
+    // velocity[]
+    // angular_velocity[]
 
     const GRID_SIZE = 100
 
+    const [position_x, position_y, _] = positionData.position
+
     // Calculate current room based on grid size.
-    const newRoom = `${Math.floor(position.pos_x / GRID_SIZE)}_${Math.floor(
-      position.pos_y / GRID_SIZE
+    const newRoom = `${Math.floor(position_x / GRID_SIZE)}_${Math.floor(
+      position_y / GRID_SIZE
     )}`
 
     // If player's room has changed, then join it.
     if (newRoom !== currentRoom) {
       socket.leaveAll()
       socket.join(newRoom)
-      socket
-        .to(newRoom)
-        .volatile.emit("player-joined-room", { id, ...position })
+      socket.to(newRoom).volatile.emit("player-join", { id, positionData })
       console.log(`🚪 Player ${id} joined room ${newRoom}`)
       currentRoom = newRoom
     }
 
     const player = players.find((player) => player.id === id)
     if (!player) {
-      players.push({ id, position, currentRoom })
+      players.push({ id, currentRoom, positionData })
     } else {
-      player.position = position
+      player.position = positionData
       player.currentRoom = currentRoom
     }
 
     console.log(`⬆ Player ${id} updated`)
-    socket.volatile.emit("update", { id, ...position })
+    socket.to(newRoom).volatile.emit("player-update", { id, positionData })
 
     console.log("👩‍👩‍👧‍👧 All players", JSON.stringify(players))
   })
