@@ -52,6 +52,9 @@ io.on("connection", (socket) => {
 
     // If player's room has changed, then join it.
     if (newRoom !== currentRoom) {
+      //if a player falls down in the woods?
+      socket.to(currentRoom).volatile.emit("player-leave", { id })
+
       socket.leaveAll()
       socket.join(newRoom)
       socket.to(newRoom).volatile.emit("player-join", { id, positionData })
@@ -63,14 +66,19 @@ io.on("connection", (socket) => {
     if (!player) {
       players.push({ id, socket:socket.id, currentRoom, positionData })
     } else {
-      player.position = positionData
+      player.positionData = positionData
       player.currentRoom = currentRoom
     }
 
-    console.log(`⬆ Player ${id} updated`)
-    socket.to(newRoom).volatile.emit("player-update", { id, positionData })
+    //console.log(`⬆ Player ${id} updated`)
+    socket.to(currentRoom).volatile.emit("player-update", { id, positionData })
 
-    console.log("👩‍👩‍👧‍👧 All players", JSON.stringify(players))
+    //console.log("👩‍👩‍👧‍👧 All players", JSON.stringify(players))
+  })
+
+  socket.on("item-collected", ({ id, items }) => {
+    console.log(`💡 items collected: ${items} by ${id}`)
+    socket.broadcast.emit("item-collected", { id, items });
   })
 
   // Handle disconnections
@@ -78,6 +86,7 @@ io.on("connection", (socket) => {
     const  index = players.findIndex((player) => player.socket === socket.id);
     if(index>=0) {
       console.log("🏃 Player removed from game:"+ players[index].id)
+      socket.to(currentRoom).volatile.emit("player-leave", { id: players[index].id })
       players.splice(index, 1);
       //could put something here so player stays around for a few minutes and could in still have interactions with bots/people
     }
