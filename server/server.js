@@ -8,7 +8,13 @@ const app = express()
 const server = http.createServer(app)
 
 // Set up the Socket.io server
-const io = socketIO(server)
+const io = socketIO(server, 
+  {
+    cors: {
+      origin: "http://localhost:3001"
+    }
+  }
+)
 
 // Connect to the PostgreSQL database
 const pool = new Pool({
@@ -55,7 +61,7 @@ io.on("connection", (socket) => {
 
     const player = players.find((player) => player.id === id)
     if (!player) {
-      players.push({ id, currentRoom, positionData })
+      players.push({ id, socket:socket.id, currentRoom, positionData })
     } else {
       player.position = positionData
       player.currentRoom = currentRoom
@@ -69,6 +75,12 @@ io.on("connection", (socket) => {
 
   // Handle disconnections
   socket.on("disconnect", () => {
+    const  index = players.findIndex((player) => player.socket === socket.id);
+    if(index>=0) {
+      console.log("🏃 Player removed from game:"+ players[index].id)
+      players.splice(index, 1);
+      //could put something here so player stays around for a few minutes and could in still have interactions with bots/people
+    }
     console.log("🏃 Player disconnected")
   })
 })
