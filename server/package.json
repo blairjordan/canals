@@ -3,8 +3,11 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "@graphile-contrib/pg-simplify-inflector": "^6.1.0",
+    "@graphile/pg-pubsub": "^4.13.0",
     "express": "^4.18.2",
     "pg": "^8.9.0",
+    "postgraphile": "^4.13.0",
     "socket.io": "^4.6.0"
   }
 }

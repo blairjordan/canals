@@ -1,0 +1,1018 @@
+"""The root query type which gives access points into the data universe."""
+type Query implements Node {
+  """
+  Exposes the root query type nested one level down. This is helpful for Relay 1
+  which can only query top level fields if they are in a particular form.
+  """
+  query: Query!
+
+  """
+  The root query type must be a `Node` to work well with Relay 1 mutations. This just resolves to `query`.
+  """
+  nodeId: ID!
+
+  """Fetches an object given its globally unique `ID`."""
+  node(
+    """The globally unique `ID`."""
+    nodeId: ID!
+  ): Node
+
+  """Reads and enables pagination through a set of `GridNode`."""
+  gridNodes(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `GridNode`."""
+    orderBy: [GridNodesOrderBy!] = [PRIMARY_KEY_ASC]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: GridNodeCondition
+  ): GridNodesConnection
+
+  """Reads and enables pagination through a set of `GridNodeLink`."""
+  gridNodeLinks(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `GridNodeLink`."""
+    orderBy: [GridNodeLinksOrderBy!] = [PRIMARY_KEY_ASC]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: GridNodeLinkCondition
+  ): GridNodeLinksConnection
+
+  """Reads and enables pagination through a set of `Player`."""
+  players(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `Player`."""
+    orderBy: [PlayersOrderBy!] = [PRIMARY_KEY_ASC]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: PlayerCondition
+  ): PlayersConnection
+  gridNode(id: Int!): GridNode
+  gridNodeLink(id: Int!): GridNodeLink
+  player(id: Int!): Player
+
+  """Reads a single `GridNode` using its globally unique `ID`."""
+  gridNodeByNodeId(
+    """The globally unique `ID` to be used in selecting a single `GridNode`."""
+    nodeId: ID!
+  ): GridNode
+
+  """Reads a single `GridNodeLink` using its globally unique `ID`."""
+  gridNodeLinkByNodeId(
+    """
+    The globally unique `ID` to be used in selecting a single `GridNodeLink`.
+    """
+    nodeId: ID!
+  ): GridNodeLink
+
+  """Reads a single `Player` using its globally unique `ID`."""
+  playerByNodeId(
+    """The globally unique `ID` to be used in selecting a single `Player`."""
+    nodeId: ID!
+  ): Player
+}
+
+"""An object with a globally unique `ID`."""
+interface Node {
+  """
+  A globally unique identifier. Can be used in various places throughout the system to identify this single value.
+  """
+  nodeId: ID!
+}
+
+"""A connection to a list of `GridNode` values."""
+type GridNodesConnection {
+  """A list of `GridNode` objects."""
+  nodes: [GridNode!]!
+
+  """
+  A list of edges which contains the `GridNode` and cursor to aid in pagination.
+  """
+  edges: [GridNodesEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `GridNode` you could get from the connection."""
+  totalCount: Int!
+}
+
+type GridNode implements Node {
+  """
+  A globally unique identifier. Can be used in various places throughout the system to identify this single value.
+  """
+  nodeId: ID!
+  id: Int!
+  position: JSON!
+  props: JSON
+
+  """Reads and enables pagination through a set of `GridNodeLink`."""
+  gridNodeLinksByFromNode(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `GridNodeLink`."""
+    orderBy: [GridNodeLinksOrderBy!] = [PRIMARY_KEY_ASC]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: GridNodeLinkCondition
+  ): GridNodeLinksConnection!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+"""A connection to a list of `GridNodeLink` values."""
+type GridNodeLinksConnection {
+  """A list of `GridNodeLink` objects."""
+  nodes: [GridNodeLink!]!
+
+  """
+  A list of edges which contains the `GridNodeLink` and cursor to aid in pagination.
+  """
+  edges: [GridNodeLinksEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `GridNodeLink` you could get from the connection."""
+  totalCount: Int!
+}
+
+type GridNodeLink implements Node {
+  """
+  A globally unique identifier. Can be used in various places throughout the system to identify this single value.
+  """
+  nodeId: ID!
+  id: Int!
+  fromNode: BigInt
+  props: JSON
+
+  """Reads a single `GridNode` that is related to this `GridNodeLink`."""
+  gridNodeByFromNode: GridNode
+}
+
+"""
+A signed eight-byte integer. The upper big integer values are greater than the
+max value for a JavaScript number. Therefore all big integers will be output as
+strings and not numbers.
+"""
+scalar BigInt
+
+"""A `GridNodeLink` edge in the connection."""
+type GridNodeLinksEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `GridNodeLink` at the end of the edge."""
+  node: GridNodeLink!
+}
+
+"""A location in a connection that can be used for resuming pagination."""
+scalar Cursor
+
+"""Information about pagination in a connection."""
+type PageInfo {
+  """When paginating forwards, are there more items?"""
+  hasNextPage: Boolean!
+
+  """When paginating backwards, are there more items?"""
+  hasPreviousPage: Boolean!
+
+  """When paginating backwards, the cursor to continue."""
+  startCursor: Cursor
+
+  """When paginating forwards, the cursor to continue."""
+  endCursor: Cursor
+}
+
+"""Methods to use when ordering `GridNodeLink`."""
+enum GridNodeLinksOrderBy {
+  NATURAL
+  ID_ASC
+  ID_DESC
+  FROM_NODE_ASC
+  FROM_NODE_DESC
+  PROPS_ASC
+  PROPS_DESC
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+}
+
+"""
+A condition to be used against `GridNodeLink` object types. All fields are
+tested for equality and combined with a logical ‘and.’
+"""
+input GridNodeLinkCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: Int
+
+  """Checks for equality with the object’s `fromNode` field."""
+  fromNode: BigInt
+
+  """Checks for equality with the object’s `props` field."""
+  props: JSON
+}
+
+"""A `GridNode` edge in the connection."""
+type GridNodesEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `GridNode` at the end of the edge."""
+  node: GridNode!
+}
+
+"""Methods to use when ordering `GridNode`."""
+enum GridNodesOrderBy {
+  NATURAL
+  ID_ASC
+  ID_DESC
+  POSITION_ASC
+  POSITION_DESC
+  PROPS_ASC
+  PROPS_DESC
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+}
+
+"""
+A condition to be used against `GridNode` object types. All fields are tested
+for equality and combined with a logical ‘and.’
+"""
+input GridNodeCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: Int
+
+  """Checks for equality with the object’s `position` field."""
+  position: JSON
+
+  """Checks for equality with the object’s `props` field."""
+  props: JSON
+}
+
+"""A connection to a list of `Player` values."""
+type PlayersConnection {
+  """A list of `Player` objects."""
+  nodes: [Player!]!
+
+  """
+  A list of edges which contains the `Player` and cursor to aid in pagination.
+  """
+  edges: [PlayersEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `Player` you could get from the connection."""
+  totalCount: Int!
+}
+
+type Player implements Node {
+  """
+  A globally unique identifier. Can be used in various places throughout the system to identify this single value.
+  """
+  nodeId: ID!
+  id: Int!
+  username: String!
+  meta: JSON
+  position: JSON
+}
+
+"""A `Player` edge in the connection."""
+type PlayersEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `Player` at the end of the edge."""
+  node: Player!
+}
+
+"""Methods to use when ordering `Player`."""
+enum PlayersOrderBy {
+  NATURAL
+  ID_ASC
+  ID_DESC
+  USERNAME_ASC
+  USERNAME_DESC
+  META_ASC
+  META_DESC
+  POSITION_ASC
+  POSITION_DESC
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+}
+
+"""
+A condition to be used against `Player` object types. All fields are tested for equality and combined with a logical ‘and.’
+"""
+input PlayerCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: Int
+
+  """Checks for equality with the object’s `username` field."""
+  username: String
+
+  """Checks for equality with the object’s `meta` field."""
+  meta: JSON
+
+  """Checks for equality with the object’s `position` field."""
+  position: JSON
+}
+
+"""
+The root mutation type which contains root level fields which mutate data.
+"""
+type Mutation {
+  """Creates a single `GridNode`."""
+  createGridNode(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateGridNodeInput!
+  ): CreateGridNodePayload
+
+  """Creates a single `GridNodeLink`."""
+  createGridNodeLink(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateGridNodeLinkInput!
+  ): CreateGridNodeLinkPayload
+
+  """Creates a single `Player`."""
+  createPlayer(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreatePlayerInput!
+  ): CreatePlayerPayload
+
+  """Updates a single `GridNode` using its globally unique id and a patch."""
+  updateGridNodeByNodeId(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateGridNodeByNodeIdInput!
+  ): UpdateGridNodePayload
+
+  """Updates a single `GridNode` using a unique key and a patch."""
+  updateGridNode(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateGridNodeInput!
+  ): UpdateGridNodePayload
+
+  """
+  Updates a single `GridNodeLink` using its globally unique id and a patch.
+  """
+  updateGridNodeLinkByNodeId(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateGridNodeLinkByNodeIdInput!
+  ): UpdateGridNodeLinkPayload
+
+  """Updates a single `GridNodeLink` using a unique key and a patch."""
+  updateGridNodeLink(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateGridNodeLinkInput!
+  ): UpdateGridNodeLinkPayload
+
+  """Updates a single `Player` using its globally unique id and a patch."""
+  updatePlayerByNodeId(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdatePlayerByNodeIdInput!
+  ): UpdatePlayerPayload
+
+  """Updates a single `Player` using a unique key and a patch."""
+  updatePlayer(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdatePlayerInput!
+  ): UpdatePlayerPayload
+
+  """Deletes a single `GridNode` using its globally unique id."""
+  deleteGridNodeByNodeId(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteGridNodeByNodeIdInput!
+  ): DeleteGridNodePayload
+
+  """Deletes a single `GridNode` using a unique key."""
+  deleteGridNode(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteGridNodeInput!
+  ): DeleteGridNodePayload
+
+  """Deletes a single `GridNodeLink` using its globally unique id."""
+  deleteGridNodeLinkByNodeId(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteGridNodeLinkByNodeIdInput!
+  ): DeleteGridNodeLinkPayload
+
+  """Deletes a single `GridNodeLink` using a unique key."""
+  deleteGridNodeLink(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteGridNodeLinkInput!
+  ): DeleteGridNodeLinkPayload
+
+  """Deletes a single `Player` using its globally unique id."""
+  deletePlayerByNodeId(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeletePlayerByNodeIdInput!
+  ): DeletePlayerPayload
+
+  """Deletes a single `Player` using a unique key."""
+  deletePlayer(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeletePlayerInput!
+  ): DeletePlayerPayload
+}
+
+"""The output of our create `GridNode` mutation."""
+type CreateGridNodePayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `GridNode` that was created by this mutation."""
+  gridNode: GridNode
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """An edge for our `GridNode`. May be used by Relay 1."""
+  gridNodeEdge(
+    """The method to use when ordering `GridNode`."""
+    orderBy: [GridNodesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): GridNodesEdge
+}
+
+"""All input for the create `GridNode` mutation."""
+input CreateGridNodeInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `GridNode` to be created by this mutation."""
+  gridNode: GridNodeInput!
+}
+
+"""An input for mutations affecting `GridNode`"""
+input GridNodeInput {
+  id: Int
+  position: JSON!
+  props: JSON
+}
+
+"""The output of our create `GridNodeLink` mutation."""
+type CreateGridNodeLinkPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `GridNodeLink` that was created by this mutation."""
+  gridNodeLink: GridNodeLink
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `GridNode` that is related to this `GridNodeLink`."""
+  gridNodeByFromNode: GridNode
+
+  """An edge for our `GridNodeLink`. May be used by Relay 1."""
+  gridNodeLinkEdge(
+    """The method to use when ordering `GridNodeLink`."""
+    orderBy: [GridNodeLinksOrderBy!] = [PRIMARY_KEY_ASC]
+  ): GridNodeLinksEdge
+}
+
+"""All input for the create `GridNodeLink` mutation."""
+input CreateGridNodeLinkInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `GridNodeLink` to be created by this mutation."""
+  gridNodeLink: GridNodeLinkInput!
+}
+
+"""An input for mutations affecting `GridNodeLink`"""
+input GridNodeLinkInput {
+  id: Int
+  fromNode: BigInt
+  props: JSON
+}
+
+"""The output of our create `Player` mutation."""
+type CreatePlayerPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Player` that was created by this mutation."""
+  player: Player
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """An edge for our `Player`. May be used by Relay 1."""
+  playerEdge(
+    """The method to use when ordering `Player`."""
+    orderBy: [PlayersOrderBy!] = [PRIMARY_KEY_ASC]
+  ): PlayersEdge
+}
+
+"""All input for the create `Player` mutation."""
+input CreatePlayerInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `Player` to be created by this mutation."""
+  player: PlayerInput!
+}
+
+"""An input for mutations affecting `Player`"""
+input PlayerInput {
+  id: Int
+  username: String!
+  meta: JSON
+  position: JSON
+}
+
+"""The output of our update `GridNode` mutation."""
+type UpdateGridNodePayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `GridNode` that was updated by this mutation."""
+  gridNode: GridNode
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """An edge for our `GridNode`. May be used by Relay 1."""
+  gridNodeEdge(
+    """The method to use when ordering `GridNode`."""
+    orderBy: [GridNodesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): GridNodesEdge
+}
+
+"""All input for the `updateGridNodeByNodeId` mutation."""
+input UpdateGridNodeByNodeIdInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  The globally unique `ID` which will identify a single `GridNode` to be updated.
+  """
+  nodeId: ID!
+
+  """
+  An object where the defined keys will be set on the `GridNode` being updated.
+  """
+  patch: GridNodePatch!
+}
+
+"""
+Represents an update to a `GridNode`. Fields that are set will be updated.
+"""
+input GridNodePatch {
+  id: Int
+  position: JSON
+  props: JSON
+}
+
+"""All input for the `updateGridNode` mutation."""
+input UpdateGridNodeInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  An object where the defined keys will be set on the `GridNode` being updated.
+  """
+  patch: GridNodePatch!
+  id: Int!
+}
+
+"""The output of our update `GridNodeLink` mutation."""
+type UpdateGridNodeLinkPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `GridNodeLink` that was updated by this mutation."""
+  gridNodeLink: GridNodeLink
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `GridNode` that is related to this `GridNodeLink`."""
+  gridNodeByFromNode: GridNode
+
+  """An edge for our `GridNodeLink`. May be used by Relay 1."""
+  gridNodeLinkEdge(
+    """The method to use when ordering `GridNodeLink`."""
+    orderBy: [GridNodeLinksOrderBy!] = [PRIMARY_KEY_ASC]
+  ): GridNodeLinksEdge
+}
+
+"""All input for the `updateGridNodeLinkByNodeId` mutation."""
+input UpdateGridNodeLinkByNodeIdInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  The globally unique `ID` which will identify a single `GridNodeLink` to be updated.
+  """
+  nodeId: ID!
+
+  """
+  An object where the defined keys will be set on the `GridNodeLink` being updated.
+  """
+  patch: GridNodeLinkPatch!
+}
+
+"""
+Represents an update to a `GridNodeLink`. Fields that are set will be updated.
+"""
+input GridNodeLinkPatch {
+  id: Int
+  fromNode: BigInt
+  props: JSON
+}
+
+"""All input for the `updateGridNodeLink` mutation."""
+input UpdateGridNodeLinkInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  An object where the defined keys will be set on the `GridNodeLink` being updated.
+  """
+  patch: GridNodeLinkPatch!
+  id: Int!
+}
+
+"""The output of our update `Player` mutation."""
+type UpdatePlayerPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Player` that was updated by this mutation."""
+  player: Player
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """An edge for our `Player`. May be used by Relay 1."""
+  playerEdge(
+    """The method to use when ordering `Player`."""
+    orderBy: [PlayersOrderBy!] = [PRIMARY_KEY_ASC]
+  ): PlayersEdge
+}
+
+"""All input for the `updatePlayerByNodeId` mutation."""
+input UpdatePlayerByNodeIdInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  The globally unique `ID` which will identify a single `Player` to be updated.
+  """
+  nodeId: ID!
+
+  """
+  An object where the defined keys will be set on the `Player` being updated.
+  """
+  patch: PlayerPatch!
+}
+
+"""
+Represents an update to a `Player`. Fields that are set will be updated.
+"""
+input PlayerPatch {
+  id: Int
+  username: String
+  meta: JSON
+  position: JSON
+}
+
+"""All input for the `updatePlayer` mutation."""
+input UpdatePlayerInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  An object where the defined keys will be set on the `Player` being updated.
+  """
+  patch: PlayerPatch!
+  id: Int!
+}
+
+"""The output of our delete `GridNode` mutation."""
+type DeleteGridNodePayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `GridNode` that was deleted by this mutation."""
+  gridNode: GridNode
+  deletedGridNodeNodeId: ID
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """An edge for our `GridNode`. May be used by Relay 1."""
+  gridNodeEdge(
+    """The method to use when ordering `GridNode`."""
+    orderBy: [GridNodesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): GridNodesEdge
+}
+
+"""All input for the `deleteGridNodeByNodeId` mutation."""
+input DeleteGridNodeByNodeIdInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  The globally unique `ID` which will identify a single `GridNode` to be deleted.
+  """
+  nodeId: ID!
+}
+
+"""All input for the `deleteGridNode` mutation."""
+input DeleteGridNodeInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: Int!
+}
+
+"""The output of our delete `GridNodeLink` mutation."""
+type DeleteGridNodeLinkPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `GridNodeLink` that was deleted by this mutation."""
+  gridNodeLink: GridNodeLink
+  deletedGridNodeLinkNodeId: ID
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `GridNode` that is related to this `GridNodeLink`."""
+  gridNodeByFromNode: GridNode
+
+  """An edge for our `GridNodeLink`. May be used by Relay 1."""
+  gridNodeLinkEdge(
+    """The method to use when ordering `GridNodeLink`."""
+    orderBy: [GridNodeLinksOrderBy!] = [PRIMARY_KEY_ASC]
+  ): GridNodeLinksEdge
+}
+
+"""All input for the `deleteGridNodeLinkByNodeId` mutation."""
+input DeleteGridNodeLinkByNodeIdInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  The globally unique `ID` which will identify a single `GridNodeLink` to be deleted.
+  """
+  nodeId: ID!
+}
+
+"""All input for the `deleteGridNodeLink` mutation."""
+input DeleteGridNodeLinkInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: Int!
+}
+
+"""The output of our delete `Player` mutation."""
+type DeletePlayerPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Player` that was deleted by this mutation."""
+  player: Player
+  deletedPlayerNodeId: ID
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """An edge for our `Player`. May be used by Relay 1."""
+  playerEdge(
+    """The method to use when ordering `Player`."""
+    orderBy: [PlayersOrderBy!] = [PRIMARY_KEY_ASC]
+  ): PlayersEdge
+}
+
+"""All input for the `deletePlayerByNodeId` mutation."""
+input DeletePlayerByNodeIdInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  The globally unique `ID` which will identify a single `Player` to be deleted.
+  """
+  nodeId: ID!
+}
+
+"""All input for the `deletePlayer` mutation."""
+input DeletePlayerInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: Int!
+}
+
+"""
+The root subscription type: contains realtime events you can subscribe to with the `subscription` operation.
+"""
+type Subscription {
+  listen(topic: String!): ListenPayload!
+}
+
+type ListenPayload {
+  """
+  Our root query field type. Allows us to run any query from our subscription payload.
+  """
+  query: Query
+  relatedNode: Node
+  relatedNodeId: ID
+}
