@@ -75,6 +75,37 @@ type Query implements Node {
     condition: GridNodeLinkCondition
   ): GridNodeLinksConnection
 
+  """
+  Reads and enables pagination through a set of `GridNodeLinksRecursive`.
+  """
+  gridNodeLinksRecursives(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `GridNodeLinksRecursive`."""
+    orderBy: [GridNodeLinksRecursivesOrderBy!] = [NATURAL]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: GridNodeLinksRecursiveCondition
+  ): GridNodeLinksRecursivesConnection
+
   """Reads and enables pagination through a set of `Player`."""
   players(
     """Only read the first `n` values of the set."""
@@ -103,9 +134,9 @@ type Query implements Node {
     """
     condition: PlayerCondition
   ): PlayersConnection
-  gridNode(id: Int!): GridNode
-  gridNodeLink(id: Int!): GridNodeLink
-  player(id: Int!): Player
+  gridNode(id: BigInt!): GridNode
+  gridNodeLink(id: BigInt!): GridNodeLink
+  player(id: BigInt!): Player
 
   """Reads a single `GridNode` using its globally unique `ID`."""
   gridNodeByNodeId(
@@ -158,12 +189,12 @@ type GridNode implements Node {
   A globally unique identifier. Can be used in various places throughout the system to identify this single value.
   """
   nodeId: ID!
-  id: Int!
+  id: BigInt!
   position: JSON!
   props: JSON
 
   """Reads and enables pagination through a set of `GridNodeLink`."""
-  gridNodeLinksByFromNode(
+  gridNodeLinksByFromGridNodeId(
     """Only read the first `n` values of the set."""
     first: Int
 
@@ -190,7 +221,105 @@ type GridNode implements Node {
     """
     condition: GridNodeLinkCondition
   ): GridNodeLinksConnection!
+
+  """Reads and enables pagination through a set of `GridNodeLink`."""
+  gridNodeLinksByToGridNodeId(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `GridNodeLink`."""
+    orderBy: [GridNodeLinksOrderBy!] = [PRIMARY_KEY_ASC]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: GridNodeLinkCondition
+  ): GridNodeLinksConnection!
+
+  """
+  Reads and enables pagination through a set of `GridNodeLinksRecursive`.
+  """
+  toGridNode(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `GridNodeLinksRecursive`."""
+    orderBy: [GridNodeLinksRecursivesOrderBy!] = [NATURAL]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: GridNodeLinksRecursiveCondition
+  ): GridNodeLinksRecursivesConnection!
+
+  """
+  Reads and enables pagination through a set of `GridNodeLinksRecursive`.
+  """
+  fromGridNode(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `GridNodeLinksRecursive`."""
+    orderBy: [GridNodeLinksRecursivesOrderBy!] = [NATURAL]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: GridNodeLinksRecursiveCondition
+  ): GridNodeLinksRecursivesConnection!
 }
+
+"""
+A signed eight-byte integer. The upper big integer values are greater than the
+max value for a JavaScript number. Therefore all big integers will be output as
+strings and not numbers.
+"""
+scalar BigInt
 
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
@@ -219,20 +348,17 @@ type GridNodeLink implements Node {
   A globally unique identifier. Can be used in various places throughout the system to identify this single value.
   """
   nodeId: ID!
-  id: Int!
-  fromNode: BigInt
+  id: BigInt!
+  fromGridNodeId: BigInt!
+  toGridNodeId: BigInt!
   props: JSON
 
   """Reads a single `GridNode` that is related to this `GridNodeLink`."""
-  gridNodeByFromNode: GridNode
-}
+  fromGridNode: GridNode
 
-"""
-A signed eight-byte integer. The upper big integer values are greater than the
-max value for a JavaScript number. Therefore all big integers will be output as
-strings and not numbers.
-"""
-scalar BigInt
+  """Reads a single `GridNode` that is related to this `GridNodeLink`."""
+  toGridNode: GridNode
+}
 
 """A `GridNodeLink` edge in the connection."""
 type GridNodeLinksEdge {
@@ -266,8 +392,10 @@ enum GridNodeLinksOrderBy {
   NATURAL
   ID_ASC
   ID_DESC
-  FROM_NODE_ASC
-  FROM_NODE_DESC
+  FROM_GRID_NODE_ID_ASC
+  FROM_GRID_NODE_ID_DESC
+  TO_GRID_NODE_ID_ASC
+  TO_GRID_NODE_ID_DESC
   PROPS_ASC
   PROPS_DESC
   PRIMARY_KEY_ASC
@@ -280,13 +408,98 @@ tested for equality and combined with a logical ‘and.’
 """
 input GridNodeLinkCondition {
   """Checks for equality with the object’s `id` field."""
-  id: Int
+  id: BigInt
 
-  """Checks for equality with the object’s `fromNode` field."""
-  fromNode: BigInt
+  """Checks for equality with the object’s `fromGridNodeId` field."""
+  fromGridNodeId: BigInt
+
+  """Checks for equality with the object’s `toGridNodeId` field."""
+  toGridNodeId: BigInt
 
   """Checks for equality with the object’s `props` field."""
   props: JSON
+}
+
+"""A connection to a list of `GridNodeLinksRecursive` values."""
+type GridNodeLinksRecursivesConnection {
+  """A list of `GridNodeLinksRecursive` objects."""
+  nodes: [GridNodeLinksRecursive!]!
+
+  """
+  A list of edges which contains the `GridNodeLinksRecursive` and cursor to aid in pagination.
+  """
+  edges: [GridNodeLinksRecursivesEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """
+  The count of *all* `GridNodeLinksRecursive` you could get from the connection.
+  """
+  totalCount: Int!
+}
+
+type GridNodeLinksRecursive {
+  id: BigInt
+  fromGridNodeId: BigInt
+  toGridNodeId: BigInt
+  props: JSON
+  depth: Int
+
+  """
+  Reads a single `GridNode` that is related to this `GridNodeLinksRecursive`.
+  """
+  toGridNode: GridNode
+
+  """
+  Reads a single `GridNode` that is related to this `GridNodeLinksRecursive`.
+  """
+  fromGridNode: GridNode
+}
+
+"""A `GridNodeLinksRecursive` edge in the connection."""
+type GridNodeLinksRecursivesEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `GridNodeLinksRecursive` at the end of the edge."""
+  node: GridNodeLinksRecursive!
+}
+
+"""Methods to use when ordering `GridNodeLinksRecursive`."""
+enum GridNodeLinksRecursivesOrderBy {
+  NATURAL
+  ID_ASC
+  ID_DESC
+  FROM_GRID_NODE_ID_ASC
+  FROM_GRID_NODE_ID_DESC
+  TO_GRID_NODE_ID_ASC
+  TO_GRID_NODE_ID_DESC
+  PROPS_ASC
+  PROPS_DESC
+  DEPTH_ASC
+  DEPTH_DESC
+}
+
+"""
+A condition to be used against `GridNodeLinksRecursive` object types. All fields
+are tested for equality and combined with a logical ‘and.’
+"""
+input GridNodeLinksRecursiveCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: BigInt
+
+  """Checks for equality with the object’s `fromGridNodeId` field."""
+  fromGridNodeId: BigInt
+
+  """Checks for equality with the object’s `toGridNodeId` field."""
+  toGridNodeId: BigInt
+
+  """Checks for equality with the object’s `props` field."""
+  props: JSON
+
+  """Checks for equality with the object’s `depth` field."""
+  depth: Int
 }
 
 """A `GridNode` edge in the connection."""
@@ -317,7 +530,7 @@ for equality and combined with a logical ‘and.’
 """
 input GridNodeCondition {
   """Checks for equality with the object’s `id` field."""
-  id: Int
+  id: BigInt
 
   """Checks for equality with the object’s `position` field."""
   position: JSON
@@ -348,7 +561,7 @@ type Player implements Node {
   A globally unique identifier. Can be used in various places throughout the system to identify this single value.
   """
   nodeId: ID!
-  id: Int!
+  id: BigInt!
   username: String!
   meta: JSON
   position: JSON
@@ -383,7 +596,7 @@ A condition to be used against `Player` object types. All fields are tested for 
 """
 input PlayerCondition {
   """Checks for equality with the object’s `id` field."""
-  id: Int
+  id: BigInt
 
   """Checks for equality with the object’s `username` field."""
   username: String
@@ -559,7 +772,7 @@ input CreateGridNodeInput {
 
 """An input for mutations affecting `GridNode`"""
 input GridNodeInput {
-  id: Int
+  id: BigInt
   position: JSON!
   props: JSON
 }
@@ -581,7 +794,10 @@ type CreateGridNodeLinkPayload {
   query: Query
 
   """Reads a single `GridNode` that is related to this `GridNodeLink`."""
-  gridNodeByFromNode: GridNode
+  fromGridNode: GridNode
+
+  """Reads a single `GridNode` that is related to this `GridNodeLink`."""
+  toGridNode: GridNode
 
   """An edge for our `GridNodeLink`. May be used by Relay 1."""
   gridNodeLinkEdge(
@@ -604,8 +820,9 @@ input CreateGridNodeLinkInput {
 
 """An input for mutations affecting `GridNodeLink`"""
 input GridNodeLinkInput {
-  id: Int
-  fromNode: BigInt
+  id: BigInt
+  fromGridNodeId: BigInt!
+  toGridNodeId: BigInt!
   props: JSON
 }
 
@@ -646,7 +863,7 @@ input CreatePlayerInput {
 
 """An input for mutations affecting `Player`"""
 input PlayerInput {
-  id: Int
+  id: BigInt
   username: String!
   meta: JSON
   position: JSON
@@ -698,7 +915,7 @@ input UpdateGridNodeByNodeIdInput {
 Represents an update to a `GridNode`. Fields that are set will be updated.
 """
 input GridNodePatch {
-  id: Int
+  id: BigInt
   position: JSON
   props: JSON
 }
@@ -715,7 +932,7 @@ input UpdateGridNodeInput {
   An object where the defined keys will be set on the `GridNode` being updated.
   """
   patch: GridNodePatch!
-  id: Int!
+  id: BigInt!
 }
 
 """The output of our update `GridNodeLink` mutation."""
@@ -735,7 +952,10 @@ type UpdateGridNodeLinkPayload {
   query: Query
 
   """Reads a single `GridNode` that is related to this `GridNodeLink`."""
-  gridNodeByFromNode: GridNode
+  fromGridNode: GridNode
+
+  """Reads a single `GridNode` that is related to this `GridNodeLink`."""
+  toGridNode: GridNode
 
   """An edge for our `GridNodeLink`. May be used by Relay 1."""
   gridNodeLinkEdge(
@@ -767,8 +987,9 @@ input UpdateGridNodeLinkByNodeIdInput {
 Represents an update to a `GridNodeLink`. Fields that are set will be updated.
 """
 input GridNodeLinkPatch {
-  id: Int
-  fromNode: BigInt
+  id: BigInt
+  fromGridNodeId: BigInt
+  toGridNodeId: BigInt
   props: JSON
 }
 
@@ -784,7 +1005,7 @@ input UpdateGridNodeLinkInput {
   An object where the defined keys will be set on the `GridNodeLink` being updated.
   """
   patch: GridNodeLinkPatch!
-  id: Int!
+  id: BigInt!
 }
 
 """The output of our update `Player` mutation."""
@@ -833,7 +1054,7 @@ input UpdatePlayerByNodeIdInput {
 Represents an update to a `Player`. Fields that are set will be updated.
 """
 input PlayerPatch {
-  id: Int
+  id: BigInt
   username: String
   meta: JSON
   position: JSON
@@ -851,7 +1072,7 @@ input UpdatePlayerInput {
   An object where the defined keys will be set on the `Player` being updated.
   """
   patch: PlayerPatch!
-  id: Int!
+  id: BigInt!
 }
 
 """The output of our delete `GridNode` mutation."""
@@ -899,7 +1120,7 @@ input DeleteGridNodeInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  id: Int!
+  id: BigInt!
 }
 
 """The output of our delete `GridNodeLink` mutation."""
@@ -920,7 +1141,10 @@ type DeleteGridNodeLinkPayload {
   query: Query
 
   """Reads a single `GridNode` that is related to this `GridNodeLink`."""
-  gridNodeByFromNode: GridNode
+  fromGridNode: GridNode
+
+  """Reads a single `GridNode` that is related to this `GridNodeLink`."""
+  toGridNode: GridNode
 
   """An edge for our `GridNodeLink`. May be used by Relay 1."""
   gridNodeLinkEdge(
@@ -950,7 +1174,7 @@ input DeleteGridNodeLinkInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  id: Int!
+  id: BigInt!
 }
 
 """The output of our delete `Player` mutation."""
@@ -998,7 +1222,7 @@ input DeletePlayerInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  id: Int!
+  id: BigInt!
 }
 
 """
