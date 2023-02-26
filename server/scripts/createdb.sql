@@ -5,22 +5,27 @@ CREATE TABLE players (
   position JSONB
 );
 
-CREATE TABLE grid_node (
+CREATE TABLE grid_nodes (
   id BIGSERIAL PRIMARY KEY,
   position JSONB NOT NULL,
+  type VARCHAR(55),
   props JSONB
 );
 
-INSERT INTO grid_node (position) VALUES ('{"x": 0, "y": 0, "z": 0}');
-INSERT INTO grid_node (position) VALUES ('{"x": 500, "y": 0, "z": 0}');
-INSERT INTO grid_node (position) VALUES ('{"x": 500, "y": 0, "z": 500}');
+CREATE INDEX idx_grid_node_type ON grid_nodes (type);
+
+INSERT INTO grid_nodes (position) VALUES ('{"x": 0, "y": 0, "z": 0}');
+INSERT INTO grid_nodes (position) VALUES ('{"x": 500, "y": 0, "z": 0}');
+INSERT INTO grid_nodes (position) VALUES ('{"x": 500, "y": 0, "z": 500}');
 
 CREATE TABLE grid_node_links (
   id BIGSERIAL PRIMARY KEY,
-  from_grid_node_id BIGINT REFERENCES grid_node(id) NOT NULL,
-  to_grid_node_id BIGINT REFERENCES grid_node(id) NOT NULL,
+  from_grid_node_id BIGINT REFERENCES grid_nodes(id) NOT NULL,
+  to_grid_node_id BIGINT REFERENCES grid_nodes(id) NOT NULL,
   props JSONB
 );
+
+ALTER TABLE grid_node_links ADD CONSTRAINT uq_links UNIQUE (from_grid_node_id, to_grid_node_id);
 
 INSERT INTO grid_node_links (from_grid_node_id, to_grid_node_id) VALUES (1, 2);
 INSERT INTO grid_node_links (from_grid_node_id, to_grid_node_id) VALUES (1, 3);
