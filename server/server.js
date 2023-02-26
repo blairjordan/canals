@@ -2,8 +2,10 @@ const express = require("express")
 const { postgraphile, makePluginHook } = require("postgraphile")
 const { default: PgPubsub } = require("@graphile/pg-pubsub")
 
-const app = express()
+const graphqlRoute = "/graphql"
+const graphiqlRoute = "/graphiql"
 
+const app = express()
 const pluginHook = makePluginHook([PgPubsub])
 
 app.use(
@@ -12,6 +14,8 @@ app.use(
       "postgres://canaluser:canalpassword@localhost:5432/canaldb",
     "public",
     {
+      graphqlRoute,
+      graphiqlRoute,
       pluginHook,
       subscriptions: true,
       simpleSubscriptions: true,
@@ -33,5 +37,10 @@ app.use(
 
 const port = process.env.PORT || 3000
 
-console.info(`🛥 Listening on port ${port}`)
+console.info(
+  `🛥 GraphQL server running @ http://localhost:${port}${graphqlRoute}`
+)
+console.info(
+  `🌍 GraphiQL (Web UI) available @ http://localhost:${port}${graphiqlRoute}`
+)
 app.listen(port)
