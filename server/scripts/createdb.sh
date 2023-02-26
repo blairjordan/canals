@@ -22,6 +22,7 @@ docker run -d \
   -e POSTGRES_USER=canaluser \
   -e POSTGRES_PASSWORD=canalpassword \
   -e POSTGRES_DB=canaldb \
+  -e POSTGRES_HOST_AUTH_METHOD=trust \
   -p 5432:5432 \
   postgres:latest >/dev/null 2>&1
 
@@ -33,7 +34,7 @@ docker cp $SCRIPT_DIR/createdb.sql $POSTGRES_CONTAINER_NAME:/createdb.sql
 
 echo "🌊 Creating DB objects ..."
 
-docker exec $POSTGRES_CONTAINER_NAME psql -U canaluser canaldb -f /createdb.sql
+docker exec $POSTGRES_CONTAINER_NAME psql -U canaluser canaldb -f ./createdb.sql
 
 echo -n "🌏 Container IP ($POSTGRES_CONTAINER_NAME):"
 printf " %s\n" $(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $POSTGRES_CONTAINER_NAME)
