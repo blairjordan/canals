@@ -17,8 +17,8 @@ type Query implements Node {
     nodeId: ID!
   ): Node
 
-  """Reads and enables pagination through a set of `GridNode`."""
-  gridNodes(
+  """Reads and enables pagination through a set of `Item`."""
+  items(
     """Only read the first `n` values of the set."""
     first: Int
 
@@ -37,17 +37,17 @@ type Query implements Node {
     """Read all values in the set after (below) this cursor."""
     after: Cursor
 
-    """The method to use when ordering `GridNode`."""
-    orderBy: [GridNodesOrderBy!] = [PRIMARY_KEY_ASC]
+    """The method to use when ordering `Item`."""
+    orderBy: [ItemsOrderBy!] = [PRIMARY_KEY_ASC]
 
     """
     A condition to be used in determining which values should be returned by the collection.
     """
-    condition: GridNodeCondition
-  ): GridNodesConnection
+    condition: ItemCondition
+  ): ItemsConnection
 
-  """Reads and enables pagination through a set of `GridNodeLink`."""
-  gridNodeLinks(
+  """Reads and enables pagination through a set of `Link`."""
+  links(
     """Only read the first `n` values of the set."""
     first: Int
 
@@ -66,19 +66,17 @@ type Query implements Node {
     """Read all values in the set after (below) this cursor."""
     after: Cursor
 
-    """The method to use when ordering `GridNodeLink`."""
-    orderBy: [GridNodeLinksOrderBy!] = [PRIMARY_KEY_ASC]
+    """The method to use when ordering `Link`."""
+    orderBy: [LinksOrderBy!] = [PRIMARY_KEY_ASC]
 
     """
     A condition to be used in determining which values should be returned by the collection.
     """
-    condition: GridNodeLinkCondition
-  ): GridNodeLinksConnection
+    condition: LinkCondition
+  ): LinksConnection
 
-  """
-  Reads and enables pagination through a set of `GridNodeLinksRecursive`.
-  """
-  gridNodeLinksRecursives(
+  """Reads and enables pagination through a set of `LinksRecursive`."""
+  linksRecursives(
     """Only read the first `n` values of the set."""
     first: Int
 
@@ -97,14 +95,72 @@ type Query implements Node {
     """Read all values in the set after (below) this cursor."""
     after: Cursor
 
-    """The method to use when ordering `GridNodeLinksRecursive`."""
-    orderBy: [GridNodeLinksRecursivesOrderBy!] = [NATURAL]
+    """The method to use when ordering `LinksRecursive`."""
+    orderBy: [LinksRecursivesOrderBy!] = [NATURAL]
 
     """
     A condition to be used in determining which values should be returned by the collection.
     """
-    condition: GridNodeLinksRecursiveCondition
-  ): GridNodeLinksRecursivesConnection
+    condition: LinksRecursiveCondition
+  ): LinksRecursivesConnection
+
+  """Reads and enables pagination through a set of `MarkerItem`."""
+  markerItems(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `MarkerItem`."""
+    orderBy: [MarkerItemsOrderBy!] = [NATURAL]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: MarkerItemCondition
+  ): MarkerItemsConnection
+
+  """Reads and enables pagination through a set of `Marker`."""
+  markers(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `Marker`."""
+    orderBy: [MarkersOrderBy!] = [PRIMARY_KEY_ASC]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: MarkerCondition
+  ): MarkersConnection
 
   """Reads and enables pagination through a set of `Player`."""
   players(
@@ -134,23 +190,29 @@ type Query implements Node {
     """
     condition: PlayerCondition
   ): PlayersConnection
-  gridNode(id: BigInt!): GridNode
-  gridNodeLink(id: BigInt!): GridNodeLink
+  item(id: BigInt!): Item
+  link(id: BigInt!): Link
+  linkByFromMarkerIdAndToMarkerId(fromMarkerId: BigInt!, toMarkerId: BigInt!): Link
+  marker(id: BigInt!): Marker
   player(id: BigInt!): Player
 
-  """Reads a single `GridNode` using its globally unique `ID`."""
-  gridNodeByNodeId(
-    """The globally unique `ID` to be used in selecting a single `GridNode`."""
+  """Reads a single `Item` using its globally unique `ID`."""
+  itemByNodeId(
+    """The globally unique `ID` to be used in selecting a single `Item`."""
     nodeId: ID!
-  ): GridNode
+  ): Item
 
-  """Reads a single `GridNodeLink` using its globally unique `ID`."""
-  gridNodeLinkByNodeId(
-    """
-    The globally unique `ID` to be used in selecting a single `GridNodeLink`.
-    """
+  """Reads a single `Link` using its globally unique `ID`."""
+  linkByNodeId(
+    """The globally unique `ID` to be used in selecting a single `Link`."""
     nodeId: ID!
-  ): GridNodeLink
+  ): Link
+
+  """Reads a single `Marker` using its globally unique `ID`."""
+  markerByNodeId(
+    """The globally unique `ID` to be used in selecting a single `Marker`."""
+    nodeId: ID!
+  ): Marker
 
   """Reads a single `Player` using its globally unique `ID`."""
   playerByNodeId(
@@ -167,34 +229,36 @@ interface Node {
   nodeId: ID!
 }
 
-"""A connection to a list of `GridNode` values."""
-type GridNodesConnection {
-  """A list of `GridNode` objects."""
-  nodes: [GridNode!]!
+"""A connection to a list of `Item` values."""
+type ItemsConnection {
+  """A list of `Item` objects."""
+  nodes: [Item!]!
 
   """
-  A list of edges which contains the `GridNode` and cursor to aid in pagination.
+  A list of edges which contains the `Item` and cursor to aid in pagination.
   """
-  edges: [GridNodesEdge!]!
+  edges: [ItemsEdge!]!
 
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
-  """The count of *all* `GridNode` you could get from the connection."""
+  """The count of *all* `Item` you could get from the connection."""
   totalCount: Int!
 }
 
-type GridNode implements Node {
+type Item implements Node {
   """
   A globally unique identifier. Can be used in various places throughout the system to identify this single value.
   """
   nodeId: ID!
   id: BigInt!
-  position: JSON!
-  props: JSON
+  name: String!
+  type: String
+  description: String
+  floorPrice: BigFloat
 
-  """Reads and enables pagination through a set of `GridNodeLink`."""
-  gridNodeLinksByFromGridNodeId(
+  """Reads and enables pagination through a set of `MarkerItem`."""
+  markerItems(
     """Only read the first `n` values of the set."""
     first: Int
 
@@ -213,105 +277,14 @@ type GridNode implements Node {
     """Read all values in the set after (below) this cursor."""
     after: Cursor
 
-    """The method to use when ordering `GridNodeLink`."""
-    orderBy: [GridNodeLinksOrderBy!] = [PRIMARY_KEY_ASC]
+    """The method to use when ordering `MarkerItem`."""
+    orderBy: [MarkerItemsOrderBy!] = [NATURAL]
 
     """
     A condition to be used in determining which values should be returned by the collection.
     """
-    condition: GridNodeLinkCondition
-  ): GridNodeLinksConnection!
-
-  """Reads and enables pagination through a set of `GridNodeLink`."""
-  gridNodeLinksByToGridNodeId(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """The method to use when ordering `GridNodeLink`."""
-    orderBy: [GridNodeLinksOrderBy!] = [PRIMARY_KEY_ASC]
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: GridNodeLinkCondition
-  ): GridNodeLinksConnection!
-
-  """
-  Reads and enables pagination through a set of `GridNodeLinksRecursive`.
-  """
-  toGridNode(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """The method to use when ordering `GridNodeLinksRecursive`."""
-    orderBy: [GridNodeLinksRecursivesOrderBy!] = [NATURAL]
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: GridNodeLinksRecursiveCondition
-  ): GridNodeLinksRecursivesConnection!
-
-  """
-  Reads and enables pagination through a set of `GridNodeLinksRecursive`.
-  """
-  fromGridNode(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """The method to use when ordering `GridNodeLinksRecursive`."""
-    orderBy: [GridNodeLinksRecursivesOrderBy!] = [NATURAL]
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: GridNodeLinksRecursiveCondition
-  ): GridNodeLinksRecursivesConnection!
+    condition: MarkerItemCondition
+  ): MarkerItemsConnection!
 }
 
 """
@@ -322,51 +295,240 @@ strings and not numbers.
 scalar BigInt
 
 """
-The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+A floating point number that requires more precision than IEEE 754 binary 64
 """
-scalar JSON
+scalar BigFloat
 
-"""A connection to a list of `GridNodeLink` values."""
-type GridNodeLinksConnection {
-  """A list of `GridNodeLink` objects."""
-  nodes: [GridNodeLink!]!
+"""A connection to a list of `MarkerItem` values."""
+type MarkerItemsConnection {
+  """A list of `MarkerItem` objects."""
+  nodes: [MarkerItem!]!
 
   """
-  A list of edges which contains the `GridNodeLink` and cursor to aid in pagination.
+  A list of edges which contains the `MarkerItem` and cursor to aid in pagination.
   """
-  edges: [GridNodeLinksEdge!]!
+  edges: [MarkerItemsEdge!]!
 
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
-  """The count of *all* `GridNodeLink` you could get from the connection."""
+  """The count of *all* `MarkerItem` you could get from the connection."""
   totalCount: Int!
 }
 
-type GridNodeLink implements Node {
+type MarkerItem {
+  markerId: BigInt!
+  itemId: BigInt!
+
+  """Reads a single `Marker` that is related to this `MarkerItem`."""
+  marker: Marker
+
+  """Reads a single `Item` that is related to this `MarkerItem`."""
+  item: Item
+}
+
+type Marker implements Node {
   """
   A globally unique identifier. Can be used in various places throughout the system to identify this single value.
   """
   nodeId: ID!
   id: BigInt!
-  fromGridNodeId: BigInt!
-  toGridNodeId: BigInt!
+  position: JSON!
+  type: String
   props: JSON
 
-  """Reads a single `GridNode` that is related to this `GridNodeLink`."""
-  fromGridNode: GridNode
+  """Reads and enables pagination through a set of `Link`."""
+  linksByFromMarkerId(
+    """Only read the first `n` values of the set."""
+    first: Int
 
-  """Reads a single `GridNode` that is related to this `GridNodeLink`."""
-  toGridNode: GridNode
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `Link`."""
+    orderBy: [LinksOrderBy!] = [PRIMARY_KEY_ASC]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: LinkCondition
+  ): LinksConnection!
+
+  """Reads and enables pagination through a set of `Link`."""
+  linksByToMarkerId(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `Link`."""
+    orderBy: [LinksOrderBy!] = [PRIMARY_KEY_ASC]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: LinkCondition
+  ): LinksConnection!
+
+  """Reads and enables pagination through a set of `MarkerItem`."""
+  markerItems(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `MarkerItem`."""
+    orderBy: [MarkerItemsOrderBy!] = [NATURAL]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: MarkerItemCondition
+  ): MarkerItemsConnection!
+
+  """Reads and enables pagination through a set of `LinksRecursive`."""
+  tomarker(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `LinksRecursive`."""
+    orderBy: [LinksRecursivesOrderBy!] = [NATURAL]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: LinksRecursiveCondition
+  ): LinksRecursivesConnection!
+
+  """Reads and enables pagination through a set of `LinksRecursive`."""
+  frommarker(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `LinksRecursive`."""
+    orderBy: [LinksRecursivesOrderBy!] = [NATURAL]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: LinksRecursiveCondition
+  ): LinksRecursivesConnection!
 }
 
-"""A `GridNodeLink` edge in the connection."""
-type GridNodeLinksEdge {
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+"""A connection to a list of `Link` values."""
+type LinksConnection {
+  """A list of `Link` objects."""
+  nodes: [Link!]!
+
+  """
+  A list of edges which contains the `Link` and cursor to aid in pagination.
+  """
+  edges: [LinksEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `Link` you could get from the connection."""
+  totalCount: Int!
+}
+
+type Link implements Node {
+  """
+  A globally unique identifier. Can be used in various places throughout the system to identify this single value.
+  """
+  nodeId: ID!
+  id: BigInt!
+  fromMarkerId: BigInt!
+  toMarkerId: BigInt!
+  props: JSON
+
+  """Reads a single `Marker` that is related to this `Link`."""
+  fromMarker: Marker
+
+  """Reads a single `Marker` that is related to this `Link`."""
+  toMarker: Marker
+}
+
+"""A `Link` edge in the connection."""
+type LinksEdge {
   """A cursor for use in pagination."""
   cursor: Cursor
 
-  """The `GridNodeLink` at the end of the edge."""
-  node: GridNodeLink!
+  """The `Link` at the end of the edge."""
+  node: Link!
 }
 
 """A location in a connection that can be used for resuming pagination."""
@@ -387,15 +549,15 @@ type PageInfo {
   endCursor: Cursor
 }
 
-"""Methods to use when ordering `GridNodeLink`."""
-enum GridNodeLinksOrderBy {
+"""Methods to use when ordering `Link`."""
+enum LinksOrderBy {
   NATURAL
   ID_ASC
   ID_DESC
-  FROM_GRID_NODE_ID_ASC
-  FROM_GRID_NODE_ID_DESC
-  TO_GRID_NODE_ID_ASC
-  TO_GRID_NODE_ID_DESC
+  FROM_MARKER_ID_ASC
+  FROM_MARKER_ID_DESC
+  TO_MARKER_ID_ASC
+  TO_MARKER_ID_DESC
   PROPS_ASC
   PROPS_DESC
   PRIMARY_KEY_ASC
@@ -403,78 +565,92 @@ enum GridNodeLinksOrderBy {
 }
 
 """
-A condition to be used against `GridNodeLink` object types. All fields are
-tested for equality and combined with a logical ‘and.’
+A condition to be used against `Link` object types. All fields are tested for equality and combined with a logical ‘and.’
 """
-input GridNodeLinkCondition {
+input LinkCondition {
   """Checks for equality with the object’s `id` field."""
   id: BigInt
 
-  """Checks for equality with the object’s `fromGridNodeId` field."""
-  fromGridNodeId: BigInt
+  """Checks for equality with the object’s `fromMarkerId` field."""
+  fromMarkerId: BigInt
 
-  """Checks for equality with the object’s `toGridNodeId` field."""
-  toGridNodeId: BigInt
+  """Checks for equality with the object’s `toMarkerId` field."""
+  toMarkerId: BigInt
 
   """Checks for equality with the object’s `props` field."""
   props: JSON
 }
 
-"""A connection to a list of `GridNodeLinksRecursive` values."""
-type GridNodeLinksRecursivesConnection {
-  """A list of `GridNodeLinksRecursive` objects."""
-  nodes: [GridNodeLinksRecursive!]!
+"""Methods to use when ordering `MarkerItem`."""
+enum MarkerItemsOrderBy {
+  NATURAL
+  MARKER_ID_ASC
+  MARKER_ID_DESC
+  ITEM_ID_ASC
+  ITEM_ID_DESC
+}
+
+"""
+A condition to be used against `MarkerItem` object types. All fields are tested
+for equality and combined with a logical ‘and.’
+"""
+input MarkerItemCondition {
+  """Checks for equality with the object’s `markerId` field."""
+  markerId: BigInt
+
+  """Checks for equality with the object’s `itemId` field."""
+  itemId: BigInt
+}
+
+"""A connection to a list of `LinksRecursive` values."""
+type LinksRecursivesConnection {
+  """A list of `LinksRecursive` objects."""
+  nodes: [LinksRecursive!]!
 
   """
-  A list of edges which contains the `GridNodeLinksRecursive` and cursor to aid in pagination.
+  A list of edges which contains the `LinksRecursive` and cursor to aid in pagination.
   """
-  edges: [GridNodeLinksRecursivesEdge!]!
+  edges: [LinksRecursivesEdge!]!
 
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
-  """
-  The count of *all* `GridNodeLinksRecursive` you could get from the connection.
-  """
+  """The count of *all* `LinksRecursive` you could get from the connection."""
   totalCount: Int!
 }
 
-type GridNodeLinksRecursive {
+type LinksRecursive {
   id: BigInt
-  fromGridNodeId: BigInt
-  toGridNodeId: BigInt
+  fromMarkerId: BigInt
+  toMarkerId: BigInt
   props: JSON
   depth: Int
 
-  """
-  Reads a single `GridNode` that is related to this `GridNodeLinksRecursive`.
-  """
-  toGridNode: GridNode
+  """Reads a single `Marker` that is related to this `LinksRecursive`."""
+  toMarker: Marker
 
-  """
-  Reads a single `GridNode` that is related to this `GridNodeLinksRecursive`.
-  """
-  fromGridNode: GridNode
+  """Reads a single `Marker` that is related to this `LinksRecursive`."""
+  fromMarker: Marker
 }
 
-"""A `GridNodeLinksRecursive` edge in the connection."""
-type GridNodeLinksRecursivesEdge {
+"""A `LinksRecursive` edge in the connection."""
+type LinksRecursivesEdge {
   """A cursor for use in pagination."""
   cursor: Cursor
 
-  """The `GridNodeLinksRecursive` at the end of the edge."""
-  node: GridNodeLinksRecursive!
+  """The `LinksRecursive` at the end of the edge."""
+  node: LinksRecursive!
 }
 
-"""Methods to use when ordering `GridNodeLinksRecursive`."""
-enum GridNodeLinksRecursivesOrderBy {
+"""Methods to use when ordering `LinksRecursive`."""
+enum LinksRecursivesOrderBy {
   NATURAL
   ID_ASC
   ID_DESC
-  FROM_GRID_NODE_ID_ASC
-  FROM_GRID_NODE_ID_DESC
-  TO_GRID_NODE_ID_ASC
-  TO_GRID_NODE_ID_DESC
+  FROM_MARKER_ID_ASC
+  FROM_MARKER_ID_DESC
+  TO_MARKER_ID_ASC
+  TO_MARKER_ID_DESC
   PROPS_ASC
   PROPS_DESC
   DEPTH_ASC
@@ -482,18 +658,18 @@ enum GridNodeLinksRecursivesOrderBy {
 }
 
 """
-A condition to be used against `GridNodeLinksRecursive` object types. All fields
-are tested for equality and combined with a logical ‘and.’
+A condition to be used against `LinksRecursive` object types. All fields are
+tested for equality and combined with a logical ‘and.’
 """
-input GridNodeLinksRecursiveCondition {
+input LinksRecursiveCondition {
   """Checks for equality with the object’s `id` field."""
   id: BigInt
 
-  """Checks for equality with the object’s `fromGridNodeId` field."""
-  fromGridNodeId: BigInt
+  """Checks for equality with the object’s `fromMarkerId` field."""
+  fromMarkerId: BigInt
 
-  """Checks for equality with the object’s `toGridNodeId` field."""
-  toGridNodeId: BigInt
+  """Checks for equality with the object’s `toMarkerId` field."""
+  toMarkerId: BigInt
 
   """Checks for equality with the object’s `props` field."""
   props: JSON
@@ -502,22 +678,96 @@ input GridNodeLinksRecursiveCondition {
   depth: Int
 }
 
-"""A `GridNode` edge in the connection."""
-type GridNodesEdge {
+"""A `MarkerItem` edge in the connection."""
+type MarkerItemsEdge {
   """A cursor for use in pagination."""
   cursor: Cursor
 
-  """The `GridNode` at the end of the edge."""
-  node: GridNode!
+  """The `MarkerItem` at the end of the edge."""
+  node: MarkerItem!
 }
 
-"""Methods to use when ordering `GridNode`."""
-enum GridNodesOrderBy {
+"""A `Item` edge in the connection."""
+type ItemsEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `Item` at the end of the edge."""
+  node: Item!
+}
+
+"""Methods to use when ordering `Item`."""
+enum ItemsOrderBy {
+  NATURAL
+  ID_ASC
+  ID_DESC
+  NAME_ASC
+  NAME_DESC
+  TYPE_ASC
+  TYPE_DESC
+  DESCRIPTION_ASC
+  DESCRIPTION_DESC
+  FLOOR_PRICE_ASC
+  FLOOR_PRICE_DESC
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+}
+
+"""
+A condition to be used against `Item` object types. All fields are tested for equality and combined with a logical ‘and.’
+"""
+input ItemCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: BigInt
+
+  """Checks for equality with the object’s `name` field."""
+  name: String
+
+  """Checks for equality with the object’s `type` field."""
+  type: String
+
+  """Checks for equality with the object’s `description` field."""
+  description: String
+
+  """Checks for equality with the object’s `floorPrice` field."""
+  floorPrice: BigFloat
+}
+
+"""A connection to a list of `Marker` values."""
+type MarkersConnection {
+  """A list of `Marker` objects."""
+  nodes: [Marker!]!
+
+  """
+  A list of edges which contains the `Marker` and cursor to aid in pagination.
+  """
+  edges: [MarkersEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `Marker` you could get from the connection."""
+  totalCount: Int!
+}
+
+"""A `Marker` edge in the connection."""
+type MarkersEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `Marker` at the end of the edge."""
+  node: Marker!
+}
+
+"""Methods to use when ordering `Marker`."""
+enum MarkersOrderBy {
   NATURAL
   ID_ASC
   ID_DESC
   POSITION_ASC
   POSITION_DESC
+  TYPE_ASC
+  TYPE_DESC
   PROPS_ASC
   PROPS_DESC
   PRIMARY_KEY_ASC
@@ -525,15 +775,17 @@ enum GridNodesOrderBy {
 }
 
 """
-A condition to be used against `GridNode` object types. All fields are tested
-for equality and combined with a logical ‘and.’
+A condition to be used against `Marker` object types. All fields are tested for equality and combined with a logical ‘and.’
 """
-input GridNodeCondition {
+input MarkerCondition {
   """Checks for equality with the object’s `id` field."""
   id: BigInt
 
   """Checks for equality with the object’s `position` field."""
   position: JSON
+
+  """Checks for equality with the object’s `type` field."""
+  type: String
 
   """Checks for equality with the object’s `props` field."""
   props: JSON
@@ -565,6 +817,7 @@ type Player implements Node {
   username: String!
   meta: JSON
   position: JSON
+  balance: BigFloat!
 }
 
 """A `Player` edge in the connection."""
@@ -587,6 +840,8 @@ enum PlayersOrderBy {
   META_DESC
   POSITION_ASC
   POSITION_DESC
+  BALANCE_ASC
+  BALANCE_DESC
   PRIMARY_KEY_ASC
   PRIMARY_KEY_DESC
 }
@@ -606,27 +861,46 @@ input PlayerCondition {
 
   """Checks for equality with the object’s `position` field."""
   position: JSON
+
+  """Checks for equality with the object’s `balance` field."""
+  balance: BigFloat
 }
 
 """
 The root mutation type which contains root level fields which mutate data.
 """
 type Mutation {
-  """Creates a single `GridNode`."""
-  createGridNode(
+  """Creates a single `Item`."""
+  createItem(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
-    input: CreateGridNodeInput!
-  ): CreateGridNodePayload
+    input: CreateItemInput!
+  ): CreateItemPayload
 
-  """Creates a single `GridNodeLink`."""
-  createGridNodeLink(
+  """Creates a single `Link`."""
+  createLink(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
-    input: CreateGridNodeLinkInput!
-  ): CreateGridNodeLinkPayload
+    input: CreateLinkInput!
+  ): CreateLinkPayload
+
+  """Creates a single `MarkerItem`."""
+  createMarkerItem(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateMarkerItemInput!
+  ): CreateMarkerItemPayload
+
+  """Creates a single `Marker`."""
+  createMarker(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateMarkerInput!
+  ): CreateMarkerPayload
 
   """Creates a single `Player`."""
   createPlayer(
@@ -636,39 +910,61 @@ type Mutation {
     input: CreatePlayerInput!
   ): CreatePlayerPayload
 
-  """Updates a single `GridNode` using its globally unique id and a patch."""
-  updateGridNodeByNodeId(
+  """Updates a single `Item` using its globally unique id and a patch."""
+  updateItemByNodeId(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
-    input: UpdateGridNodeByNodeIdInput!
-  ): UpdateGridNodePayload
+    input: UpdateItemByNodeIdInput!
+  ): UpdateItemPayload
 
-  """Updates a single `GridNode` using a unique key and a patch."""
-  updateGridNode(
+  """Updates a single `Item` using a unique key and a patch."""
+  updateItem(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
-    input: UpdateGridNodeInput!
-  ): UpdateGridNodePayload
+    input: UpdateItemInput!
+  ): UpdateItemPayload
 
-  """
-  Updates a single `GridNodeLink` using its globally unique id and a patch.
-  """
-  updateGridNodeLinkByNodeId(
+  """Updates a single `Link` using its globally unique id and a patch."""
+  updateLinkByNodeId(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
-    input: UpdateGridNodeLinkByNodeIdInput!
-  ): UpdateGridNodeLinkPayload
+    input: UpdateLinkByNodeIdInput!
+  ): UpdateLinkPayload
 
-  """Updates a single `GridNodeLink` using a unique key and a patch."""
-  updateGridNodeLink(
+  """Updates a single `Link` using a unique key and a patch."""
+  updateLink(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
-    input: UpdateGridNodeLinkInput!
-  ): UpdateGridNodeLinkPayload
+    input: UpdateLinkInput!
+  ): UpdateLinkPayload
+
+  """Updates a single `Link` using a unique key and a patch."""
+  updateLinkByFromMarkerIdAndToMarkerId(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateLinkByFromMarkerIdAndToMarkerIdInput!
+  ): UpdateLinkPayload
+
+  """Updates a single `Marker` using its globally unique id and a patch."""
+  updateMarkerByNodeId(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateMarkerByNodeIdInput!
+  ): UpdateMarkerPayload
+
+  """Updates a single `Marker` using a unique key and a patch."""
+  updateMarker(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateMarkerInput!
+  ): UpdateMarkerPayload
 
   """Updates a single `Player` using its globally unique id and a patch."""
   updatePlayerByNodeId(
@@ -686,37 +982,61 @@ type Mutation {
     input: UpdatePlayerInput!
   ): UpdatePlayerPayload
 
-  """Deletes a single `GridNode` using its globally unique id."""
-  deleteGridNodeByNodeId(
+  """Deletes a single `Item` using its globally unique id."""
+  deleteItemByNodeId(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
-    input: DeleteGridNodeByNodeIdInput!
-  ): DeleteGridNodePayload
+    input: DeleteItemByNodeIdInput!
+  ): DeleteItemPayload
 
-  """Deletes a single `GridNode` using a unique key."""
-  deleteGridNode(
+  """Deletes a single `Item` using a unique key."""
+  deleteItem(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
-    input: DeleteGridNodeInput!
-  ): DeleteGridNodePayload
+    input: DeleteItemInput!
+  ): DeleteItemPayload
 
-  """Deletes a single `GridNodeLink` using its globally unique id."""
-  deleteGridNodeLinkByNodeId(
+  """Deletes a single `Link` using its globally unique id."""
+  deleteLinkByNodeId(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
-    input: DeleteGridNodeLinkByNodeIdInput!
-  ): DeleteGridNodeLinkPayload
+    input: DeleteLinkByNodeIdInput!
+  ): DeleteLinkPayload
 
-  """Deletes a single `GridNodeLink` using a unique key."""
-  deleteGridNodeLink(
+  """Deletes a single `Link` using a unique key."""
+  deleteLink(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
-    input: DeleteGridNodeLinkInput!
-  ): DeleteGridNodeLinkPayload
+    input: DeleteLinkInput!
+  ): DeleteLinkPayload
+
+  """Deletes a single `Link` using a unique key."""
+  deleteLinkByFromMarkerIdAndToMarkerId(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteLinkByFromMarkerIdAndToMarkerIdInput!
+  ): DeleteLinkPayload
+
+  """Deletes a single `Marker` using its globally unique id."""
+  deleteMarkerByNodeId(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteMarkerByNodeIdInput!
+  ): DeleteMarkerPayload
+
+  """Deletes a single `Marker` using a unique key."""
+  deleteMarker(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteMarkerInput!
+  ): DeleteMarkerPayload
 
   """Deletes a single `Player` using its globally unique id."""
   deletePlayerByNodeId(
@@ -735,94 +1055,186 @@ type Mutation {
   ): DeletePlayerPayload
 }
 
-"""The output of our create `GridNode` mutation."""
-type CreateGridNodePayload {
+"""The output of our create `Item` mutation."""
+type CreateItemPayload {
   """
   The exact same `clientMutationId` that was provided in the mutation input,
   unchanged and unused. May be used by a client to track mutations.
   """
   clientMutationId: String
 
-  """The `GridNode` that was created by this mutation."""
-  gridNode: GridNode
+  """The `Item` that was created by this mutation."""
+  item: Item
 
   """
   Our root query field type. Allows us to run any query from our mutation payload.
   """
   query: Query
 
-  """An edge for our `GridNode`. May be used by Relay 1."""
-  gridNodeEdge(
-    """The method to use when ordering `GridNode`."""
-    orderBy: [GridNodesOrderBy!] = [PRIMARY_KEY_ASC]
-  ): GridNodesEdge
+  """An edge for our `Item`. May be used by Relay 1."""
+  itemEdge(
+    """The method to use when ordering `Item`."""
+    orderBy: [ItemsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): ItemsEdge
 }
 
-"""All input for the create `GridNode` mutation."""
-input CreateGridNodeInput {
+"""All input for the create `Item` mutation."""
+input CreateItemInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
 
-  """The `GridNode` to be created by this mutation."""
-  gridNode: GridNodeInput!
+  """The `Item` to be created by this mutation."""
+  item: ItemInput!
 }
 
-"""An input for mutations affecting `GridNode`"""
-input GridNodeInput {
+"""An input for mutations affecting `Item`"""
+input ItemInput {
   id: BigInt
-  position: JSON!
+  name: String!
+  type: String
+  description: String
+  floorPrice: BigFloat
+}
+
+"""The output of our create `Link` mutation."""
+type CreateLinkPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Link` that was created by this mutation."""
+  link: Link
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `Marker` that is related to this `Link`."""
+  fromMarker: Marker
+
+  """Reads a single `Marker` that is related to this `Link`."""
+  toMarker: Marker
+
+  """An edge for our `Link`. May be used by Relay 1."""
+  linkEdge(
+    """The method to use when ordering `Link`."""
+    orderBy: [LinksOrderBy!] = [PRIMARY_KEY_ASC]
+  ): LinksEdge
+}
+
+"""All input for the create `Link` mutation."""
+input CreateLinkInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `Link` to be created by this mutation."""
+  link: LinkInput!
+}
+
+"""An input for mutations affecting `Link`"""
+input LinkInput {
+  id: BigInt
+  fromMarkerId: BigInt!
+  toMarkerId: BigInt!
   props: JSON
 }
 
-"""The output of our create `GridNodeLink` mutation."""
-type CreateGridNodeLinkPayload {
+"""The output of our create `MarkerItem` mutation."""
+type CreateMarkerItemPayload {
   """
   The exact same `clientMutationId` that was provided in the mutation input,
   unchanged and unused. May be used by a client to track mutations.
   """
   clientMutationId: String
 
-  """The `GridNodeLink` that was created by this mutation."""
-  gridNodeLink: GridNodeLink
+  """The `MarkerItem` that was created by this mutation."""
+  markerItem: MarkerItem
 
   """
   Our root query field type. Allows us to run any query from our mutation payload.
   """
   query: Query
 
-  """Reads a single `GridNode` that is related to this `GridNodeLink`."""
-  fromGridNode: GridNode
+  """Reads a single `Marker` that is related to this `MarkerItem`."""
+  marker: Marker
 
-  """Reads a single `GridNode` that is related to this `GridNodeLink`."""
-  toGridNode: GridNode
+  """Reads a single `Item` that is related to this `MarkerItem`."""
+  item: Item
 
-  """An edge for our `GridNodeLink`. May be used by Relay 1."""
-  gridNodeLinkEdge(
-    """The method to use when ordering `GridNodeLink`."""
-    orderBy: [GridNodeLinksOrderBy!] = [PRIMARY_KEY_ASC]
-  ): GridNodeLinksEdge
+  """An edge for our `MarkerItem`. May be used by Relay 1."""
+  markerItemEdge(
+    """The method to use when ordering `MarkerItem`."""
+    orderBy: [MarkerItemsOrderBy!] = [NATURAL]
+  ): MarkerItemsEdge
 }
 
-"""All input for the create `GridNodeLink` mutation."""
-input CreateGridNodeLinkInput {
+"""All input for the create `MarkerItem` mutation."""
+input CreateMarkerItemInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
 
-  """The `GridNodeLink` to be created by this mutation."""
-  gridNodeLink: GridNodeLinkInput!
+  """The `MarkerItem` to be created by this mutation."""
+  markerItem: MarkerItemInput!
 }
 
-"""An input for mutations affecting `GridNodeLink`"""
-input GridNodeLinkInput {
+"""An input for mutations affecting `MarkerItem`"""
+input MarkerItemInput {
+  markerId: BigInt!
+  itemId: BigInt!
+}
+
+"""The output of our create `Marker` mutation."""
+type CreateMarkerPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Marker` that was created by this mutation."""
+  marker: Marker
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """An edge for our `Marker`. May be used by Relay 1."""
+  markerEdge(
+    """The method to use when ordering `Marker`."""
+    orderBy: [MarkersOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MarkersEdge
+}
+
+"""All input for the create `Marker` mutation."""
+input CreateMarkerInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `Marker` to be created by this mutation."""
+  marker: MarkerInput!
+}
+
+"""An input for mutations affecting `Marker`"""
+input MarkerInput {
   id: BigInt
-  fromGridNodeId: BigInt!
-  toGridNodeId: BigInt!
+  position: JSON!
+  type: String
   props: JSON
 }
 
@@ -867,33 +1279,34 @@ input PlayerInput {
   username: String!
   meta: JSON
   position: JSON
+  balance: BigFloat
 }
 
-"""The output of our update `GridNode` mutation."""
-type UpdateGridNodePayload {
+"""The output of our update `Item` mutation."""
+type UpdateItemPayload {
   """
   The exact same `clientMutationId` that was provided in the mutation input,
   unchanged and unused. May be used by a client to track mutations.
   """
   clientMutationId: String
 
-  """The `GridNode` that was updated by this mutation."""
-  gridNode: GridNode
+  """The `Item` that was updated by this mutation."""
+  item: Item
 
   """
   Our root query field type. Allows us to run any query from our mutation payload.
   """
   query: Query
 
-  """An edge for our `GridNode`. May be used by Relay 1."""
-  gridNodeEdge(
-    """The method to use when ordering `GridNode`."""
-    orderBy: [GridNodesOrderBy!] = [PRIMARY_KEY_ASC]
-  ): GridNodesEdge
+  """An edge for our `Item`. May be used by Relay 1."""
+  itemEdge(
+    """The method to use when ordering `Item`."""
+    orderBy: [ItemsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): ItemsEdge
 }
 
-"""All input for the `updateGridNodeByNodeId` mutation."""
-input UpdateGridNodeByNodeIdInput {
+"""All input for the `updateItemByNodeId` mutation."""
+input UpdateItemByNodeIdInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
@@ -901,27 +1314,27 @@ input UpdateGridNodeByNodeIdInput {
   clientMutationId: String
 
   """
-  The globally unique `ID` which will identify a single `GridNode` to be updated.
+  The globally unique `ID` which will identify a single `Item` to be updated.
   """
   nodeId: ID!
 
   """
-  An object where the defined keys will be set on the `GridNode` being updated.
+  An object where the defined keys will be set on the `Item` being updated.
   """
-  patch: GridNodePatch!
+  patch: ItemPatch!
 }
 
-"""
-Represents an update to a `GridNode`. Fields that are set will be updated.
-"""
-input GridNodePatch {
+"""Represents an update to a `Item`. Fields that are set will be updated."""
+input ItemPatch {
   id: BigInt
-  position: JSON
-  props: JSON
+  name: String
+  type: String
+  description: String
+  floorPrice: BigFloat
 }
 
-"""All input for the `updateGridNode` mutation."""
-input UpdateGridNodeInput {
+"""All input for the `updateItem` mutation."""
+input UpdateItemInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
@@ -929,43 +1342,43 @@ input UpdateGridNodeInput {
   clientMutationId: String
 
   """
-  An object where the defined keys will be set on the `GridNode` being updated.
+  An object where the defined keys will be set on the `Item` being updated.
   """
-  patch: GridNodePatch!
+  patch: ItemPatch!
   id: BigInt!
 }
 
-"""The output of our update `GridNodeLink` mutation."""
-type UpdateGridNodeLinkPayload {
+"""The output of our update `Link` mutation."""
+type UpdateLinkPayload {
   """
   The exact same `clientMutationId` that was provided in the mutation input,
   unchanged and unused. May be used by a client to track mutations.
   """
   clientMutationId: String
 
-  """The `GridNodeLink` that was updated by this mutation."""
-  gridNodeLink: GridNodeLink
+  """The `Link` that was updated by this mutation."""
+  link: Link
 
   """
   Our root query field type. Allows us to run any query from our mutation payload.
   """
   query: Query
 
-  """Reads a single `GridNode` that is related to this `GridNodeLink`."""
-  fromGridNode: GridNode
+  """Reads a single `Marker` that is related to this `Link`."""
+  fromMarker: Marker
 
-  """Reads a single `GridNode` that is related to this `GridNodeLink`."""
-  toGridNode: GridNode
+  """Reads a single `Marker` that is related to this `Link`."""
+  toMarker: Marker
 
-  """An edge for our `GridNodeLink`. May be used by Relay 1."""
-  gridNodeLinkEdge(
-    """The method to use when ordering `GridNodeLink`."""
-    orderBy: [GridNodeLinksOrderBy!] = [PRIMARY_KEY_ASC]
-  ): GridNodeLinksEdge
+  """An edge for our `Link`. May be used by Relay 1."""
+  linkEdge(
+    """The method to use when ordering `Link`."""
+    orderBy: [LinksOrderBy!] = [PRIMARY_KEY_ASC]
+  ): LinksEdge
 }
 
-"""All input for the `updateGridNodeLinkByNodeId` mutation."""
-input UpdateGridNodeLinkByNodeIdInput {
+"""All input for the `updateLinkByNodeId` mutation."""
+input UpdateLinkByNodeIdInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
@@ -973,28 +1386,26 @@ input UpdateGridNodeLinkByNodeIdInput {
   clientMutationId: String
 
   """
-  The globally unique `ID` which will identify a single `GridNodeLink` to be updated.
+  The globally unique `ID` which will identify a single `Link` to be updated.
   """
   nodeId: ID!
 
   """
-  An object where the defined keys will be set on the `GridNodeLink` being updated.
+  An object where the defined keys will be set on the `Link` being updated.
   """
-  patch: GridNodeLinkPatch!
+  patch: LinkPatch!
 }
 
-"""
-Represents an update to a `GridNodeLink`. Fields that are set will be updated.
-"""
-input GridNodeLinkPatch {
+"""Represents an update to a `Link`. Fields that are set will be updated."""
+input LinkPatch {
   id: BigInt
-  fromGridNodeId: BigInt
-  toGridNodeId: BigInt
+  fromMarkerId: BigInt
+  toMarkerId: BigInt
   props: JSON
 }
 
-"""All input for the `updateGridNodeLink` mutation."""
-input UpdateGridNodeLinkInput {
+"""All input for the `updateLink` mutation."""
+input UpdateLinkInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
@@ -1002,9 +1413,92 @@ input UpdateGridNodeLinkInput {
   clientMutationId: String
 
   """
-  An object where the defined keys will be set on the `GridNodeLink` being updated.
+  An object where the defined keys will be set on the `Link` being updated.
   """
-  patch: GridNodeLinkPatch!
+  patch: LinkPatch!
+  id: BigInt!
+}
+
+"""All input for the `updateLinkByFromMarkerIdAndToMarkerId` mutation."""
+input UpdateLinkByFromMarkerIdAndToMarkerIdInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  An object where the defined keys will be set on the `Link` being updated.
+  """
+  patch: LinkPatch!
+  fromMarkerId: BigInt!
+  toMarkerId: BigInt!
+}
+
+"""The output of our update `Marker` mutation."""
+type UpdateMarkerPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Marker` that was updated by this mutation."""
+  marker: Marker
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """An edge for our `Marker`. May be used by Relay 1."""
+  markerEdge(
+    """The method to use when ordering `Marker`."""
+    orderBy: [MarkersOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MarkersEdge
+}
+
+"""All input for the `updateMarkerByNodeId` mutation."""
+input UpdateMarkerByNodeIdInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  The globally unique `ID` which will identify a single `Marker` to be updated.
+  """
+  nodeId: ID!
+
+  """
+  An object where the defined keys will be set on the `Marker` being updated.
+  """
+  patch: MarkerPatch!
+}
+
+"""
+Represents an update to a `Marker`. Fields that are set will be updated.
+"""
+input MarkerPatch {
+  id: BigInt
+  position: JSON
+  type: String
+  props: JSON
+}
+
+"""All input for the `updateMarker` mutation."""
+input UpdateMarkerInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  An object where the defined keys will be set on the `Marker` being updated.
+  """
+  patch: MarkerPatch!
   id: BigInt!
 }
 
@@ -1058,6 +1552,7 @@ input PlayerPatch {
   username: String
   meta: JSON
   position: JSON
+  balance: BigFloat
 }
 
 """All input for the `updatePlayer` mutation."""
@@ -1075,32 +1570,32 @@ input UpdatePlayerInput {
   id: BigInt!
 }
 
-"""The output of our delete `GridNode` mutation."""
-type DeleteGridNodePayload {
+"""The output of our delete `Item` mutation."""
+type DeleteItemPayload {
   """
   The exact same `clientMutationId` that was provided in the mutation input,
   unchanged and unused. May be used by a client to track mutations.
   """
   clientMutationId: String
 
-  """The `GridNode` that was deleted by this mutation."""
-  gridNode: GridNode
-  deletedGridNodeNodeId: ID
+  """The `Item` that was deleted by this mutation."""
+  item: Item
+  deletedItemNodeId: ID
 
   """
   Our root query field type. Allows us to run any query from our mutation payload.
   """
   query: Query
 
-  """An edge for our `GridNode`. May be used by Relay 1."""
-  gridNodeEdge(
-    """The method to use when ordering `GridNode`."""
-    orderBy: [GridNodesOrderBy!] = [PRIMARY_KEY_ASC]
-  ): GridNodesEdge
+  """An edge for our `Item`. May be used by Relay 1."""
+  itemEdge(
+    """The method to use when ordering `Item`."""
+    orderBy: [ItemsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): ItemsEdge
 }
 
-"""All input for the `deleteGridNodeByNodeId` mutation."""
-input DeleteGridNodeByNodeIdInput {
+"""All input for the `deleteItemByNodeId` mutation."""
+input DeleteItemByNodeIdInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
@@ -1108,13 +1603,13 @@ input DeleteGridNodeByNodeIdInput {
   clientMutationId: String
 
   """
-  The globally unique `ID` which will identify a single `GridNode` to be deleted.
+  The globally unique `ID` which will identify a single `Item` to be deleted.
   """
   nodeId: ID!
 }
 
-"""All input for the `deleteGridNode` mutation."""
-input DeleteGridNodeInput {
+"""All input for the `deleteItem` mutation."""
+input DeleteItemInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
@@ -1123,38 +1618,38 @@ input DeleteGridNodeInput {
   id: BigInt!
 }
 
-"""The output of our delete `GridNodeLink` mutation."""
-type DeleteGridNodeLinkPayload {
+"""The output of our delete `Link` mutation."""
+type DeleteLinkPayload {
   """
   The exact same `clientMutationId` that was provided in the mutation input,
   unchanged and unused. May be used by a client to track mutations.
   """
   clientMutationId: String
 
-  """The `GridNodeLink` that was deleted by this mutation."""
-  gridNodeLink: GridNodeLink
-  deletedGridNodeLinkNodeId: ID
+  """The `Link` that was deleted by this mutation."""
+  link: Link
+  deletedLinkNodeId: ID
 
   """
   Our root query field type. Allows us to run any query from our mutation payload.
   """
   query: Query
 
-  """Reads a single `GridNode` that is related to this `GridNodeLink`."""
-  fromGridNode: GridNode
+  """Reads a single `Marker` that is related to this `Link`."""
+  fromMarker: Marker
 
-  """Reads a single `GridNode` that is related to this `GridNodeLink`."""
-  toGridNode: GridNode
+  """Reads a single `Marker` that is related to this `Link`."""
+  toMarker: Marker
 
-  """An edge for our `GridNodeLink`. May be used by Relay 1."""
-  gridNodeLinkEdge(
-    """The method to use when ordering `GridNodeLink`."""
-    orderBy: [GridNodeLinksOrderBy!] = [PRIMARY_KEY_ASC]
-  ): GridNodeLinksEdge
+  """An edge for our `Link`. May be used by Relay 1."""
+  linkEdge(
+    """The method to use when ordering `Link`."""
+    orderBy: [LinksOrderBy!] = [PRIMARY_KEY_ASC]
+  ): LinksEdge
 }
 
-"""All input for the `deleteGridNodeLinkByNodeId` mutation."""
-input DeleteGridNodeLinkByNodeIdInput {
+"""All input for the `deleteLinkByNodeId` mutation."""
+input DeleteLinkByNodeIdInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
@@ -1162,13 +1657,72 @@ input DeleteGridNodeLinkByNodeIdInput {
   clientMutationId: String
 
   """
-  The globally unique `ID` which will identify a single `GridNodeLink` to be deleted.
+  The globally unique `ID` which will identify a single `Link` to be deleted.
   """
   nodeId: ID!
 }
 
-"""All input for the `deleteGridNodeLink` mutation."""
-input DeleteGridNodeLinkInput {
+"""All input for the `deleteLink` mutation."""
+input DeleteLinkInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: BigInt!
+}
+
+"""All input for the `deleteLinkByFromMarkerIdAndToMarkerId` mutation."""
+input DeleteLinkByFromMarkerIdAndToMarkerIdInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  fromMarkerId: BigInt!
+  toMarkerId: BigInt!
+}
+
+"""The output of our delete `Marker` mutation."""
+type DeleteMarkerPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Marker` that was deleted by this mutation."""
+  marker: Marker
+  deletedMarkerNodeId: ID
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """An edge for our `Marker`. May be used by Relay 1."""
+  markerEdge(
+    """The method to use when ordering `Marker`."""
+    orderBy: [MarkersOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MarkersEdge
+}
+
+"""All input for the `deleteMarkerByNodeId` mutation."""
+input DeleteMarkerByNodeIdInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  The globally unique `ID` which will identify a single `Marker` to be deleted.
+  """
+  nodeId: ID!
+}
+
+"""All input for the `deleteMarker` mutation."""
+input DeleteMarkerInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
