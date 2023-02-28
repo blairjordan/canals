@@ -11,7 +11,7 @@ const pluginHook = makePluginHook([PgPubsub])
 app.use(
   postgraphile(
     process.env.DATABASE_URL ||
-      "postgres://canaluser:canalpassword@localhost:5432/canaldb",
+      "postgres://canaluser:canalpassword@localhost:5431/canaldb",
     "public",
     {
       graphqlRoute,

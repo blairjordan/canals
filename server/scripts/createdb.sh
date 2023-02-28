@@ -7,7 +7,7 @@ POSTGRES_CONTAINER_NAME=canal-postgres
 POSTGRES_USER=canaluser
 POSTGRES_PASSWORD=canalpassword
 POSTGRES_DB=canaldb
-POSTGRES_PORT=5432
+POSTGRES_PORT=5431
 
 echo "🚧 Stopping and removing existing container ..."
 docker stop $POSTGRES_CONTAINER_NAME >/dev/null 2>&1
@@ -23,7 +23,7 @@ docker run -d \
   -e POSTGRES_PASSWORD=canalpassword \
   -e POSTGRES_DB=canaldb \
   -e POSTGRES_HOST_AUTH_METHOD=trust \
-  -p 5432:5432 \
+  -p 5431:5432 \
   postgres:latest >/dev/null 2>&1
 
 sleep 5
