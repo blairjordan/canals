@@ -10,10 +10,12 @@ import { Connectivity } from "../../Server/IO";
 import { GamePads } from "../Controls/GamePads";
 import { cyrb128, sfc32 } from "../Utils/utils";
 import { Canal } from "./Canal";
+import { Player } from "../Objects/Player";
+import { OrbitControls } from "../Controls/OrbitControls";
 
 class TestScene {
-  constructor(id) {
-    this.id = id;
+  constructor(playerData) {
+    this.playerData = playerData;
 
     this.container = null;
     this.stats = null;
@@ -142,19 +144,19 @@ class TestScene {
 
     //
 
-    // this.controls = new OrbitControls( this.camera, this.renderer.domElement );
-    // this.controls.maxPolarAngle = Math.PI * 0.495;
-    // this.controls.target.set( 0, 5, 0 );
-    // this.controls.minDistance = 10.0;
-    // this.controls.maxDistance = 80.0;
-    // this.controls.update();
+    this.controls = new OrbitControls( this.camera, this.renderer.domElement );
+    this.controls.maxPolarAngle = Math.PI * 0.495;
+    this.controls.target.set( 0, 5, 0 );
+    this.controls.minDistance = 10.0;
+    this.controls.maxDistance = 80.0;
+    this.controls.update();
 
     this.controlGroup = new THREE.Group();
     this.controlGroupRotation = new THREE.Vector2();
-    this.controlGroup.add(this.camera);
     this.controlGroup.position.set(30, 30, 30);
     this.controlGroup.rotation.order = "YXZ";
     this.scene.add(this.controlGroup);
+    this.scene.add(this.camera);
 
     window.addEventListener("resize", this.onWindowResize);
 
@@ -163,11 +165,18 @@ class TestScene {
     this.animate();
 
     this.initControls();
+
+    this.initPlayer();
+  }
+
+  initPlayer() {
+    this.player = new Player(this, this.playerData);
+    this.player.init();
   }
 
   initControls() {
-    this.connectivity = new Connectivity(this, this.controlGroup);
-    this.connectivity.init();
+    // this.connectivity = new Connectivity(this, this.controlGroup);
+    // this.connectivity.init();
 
     this.gamepads = new GamePads(this);
   }
@@ -213,8 +222,13 @@ class TestScene {
       this.checkItems();
       this.connectivity.update();
       
-        if(this.gamepads) this.smoothControls(delta);
     }
+    if(this.player) {
+      if(this.player.ready ) {
+        this.controls.target.copy(this.player.playerGroup.position);
+      }
+    }
+    if(this.gamepads) this.smoothControls(delta);
     if(this.canalNetwork) this.canalNetwork.update(delta);
   }
 
@@ -222,6 +236,15 @@ class TestScene {
 
     // const angleTo = this.controlGroup.quaternion.angleTo(this.gamepads.gamePad.targetObject.quaternion)
     // const distTo = this.controlGroup.position.distanceTo(this.gamepads.gamePad.targetObject.position)
+
+    if(this.player ) {
+      if(this.player.ready) {
+        this.player.playerGroup.position.lerp(this.gamepads.gamePad.boatTargetObject.position, delta * 5);
+        this.player.playerGroup.quaternion.slerp(this.gamepads.gamePad.boatTargetObject.quaternion, delta * 5);
+        this.controls.update();
+      }
+    }
+
     this.controlGroup.position.lerp(this.gamepads.gamePad.targetObject.position, delta * 5)
     this.controlGroup.quaternion.slerp(this.gamepads.gamePad.targetObject.quaternion, delta * 5)
   }

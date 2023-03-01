@@ -7,8 +7,11 @@ class KeyboardAndMouse {
 
     this.enabled = true;
     this.enabledZoom = true;
+    this.enableMouse = false;
     this.mouseAction = -1;
     this.zoomSpeed = 100;
+
+    this.keys = {};
 
     this.init();
   }
@@ -16,6 +19,7 @@ class KeyboardAndMouse {
   init() {
     this.onContextMenu = this.onContextMenu.bind(this);
     this.onKeyDown = this.onKeyDown.bind(this);
+    this.onKeyUp = this.onKeyUp.bind(this);
     this.onPointerDown = this.onPointerDown.bind(this);
     this.onPointerUp = this.onPointerUp.bind(this);
     this.onPointerMove = this.onPointerMove.bind(this);
@@ -24,15 +28,17 @@ class KeyboardAndMouse {
     this.onMouseUp = this.onMouseUp.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
 
-    window.addEventListener("contextmenu", this.onContextMenu);
-
     window.addEventListener("keydown", this.onKeyDown);
-    window.addEventListener("pointerdown", this.onPointerDown);
-    window.addEventListener("pointerup", this.onPointerUp);
-    window.addEventListener("pointermove", this.onPointerMove);
-    window.addEventListener("wheel", this.onMouseWheel, {
-      passive: false,
-    });
+    window.addEventListener("keyup", this.onKeyUp);
+    if (this.enableMouse) {
+      window.addEventListener("contextmenu", this.onContextMenu);
+      window.addEventListener("pointerdown", this.onPointerDown);
+      window.addEventListener("pointerup", this.onPointerUp);
+      window.addEventListener("pointermove", this.onPointerMove);
+      window.addEventListener("wheel", this.onMouseWheel, {
+        passive: false,
+      });
+    }
   }
 
   onContextMenu(event) {
@@ -41,43 +47,55 @@ class KeyboardAndMouse {
     event.preventDefault();
   }
 
+  onKeyUp(event) {
+    event = event || window.event;
+
+    this.keys[event.key] = false;
+  }
+
   onKeyDown(event) {
     if (this.enabled === false) return;
 
     event = event || window.event;
-    switch (event.key) {
-      case "ArrowLeft":
-      case "a":
-      case "A":
-          this.gamePad.updateAxis(0, -10);
-        break;
-      case "ArrowRight":
-      case "d":
-      case "D":
-          this.gamePad.updateAxis(0, 10);
-        break;
-      case "ArrowUp":
-      case "w":
-      case "W":
-          this.gamePad.updateAxis(1, -10);
-        break;
-      case "ArrowDown":
-      case "s":
-      case "S":
-          this.gamePad.updateAxis(1, 10);
-        break;
-      case "q":
-      case "Q":
-          this.gamePad.updateAxis(2, -10);
-        break;
-      case "e":
-      case "E":
-          this.gamePad.updateAxis(2, 10);
-        break;
-      default:
-        //do nothing (unassigned keys)
-        break;
-    }
+    this.keys[event.key] = true;
+
+    Object.keys(this.keys).forEach((key) => {
+      if (this.keys[key]) {
+        switch (key) {
+          case "ArrowLeft":
+          case "a":
+          case "A":
+            this.gamePad.updateAxis(0, -1);
+            break;
+          case "ArrowRight":
+          case "d":
+          case "D":
+            this.gamePad.updateAxis(0, 1);
+            break;
+          case "ArrowUp":
+          case "w":
+          case "W":
+            this.gamePad.updateAxis(1, -1);
+            break;
+          case "ArrowDown":
+          case "s":
+          case "S":
+            this.gamePad.updateAxis(1, 1);
+            break;
+          case "q":
+          case "Q":
+            this.gamePad.updateAxis(2, -1);
+            break;
+          case "e":
+          case "E":
+            this.gamePad.updateAxis(2, 1);
+            break;
+          default:
+            //do nothing (unassigned keys)
+            break;
+        }
+      }
+    });
   }
 
   onPointerDown(event) {

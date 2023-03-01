@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { Clipper } from "../Utils/clipper";
-import { getIntersectionOnAPoint, lerpValues, randomIndex, rotatePointAroundPivot, shuffle } from "../Utils/utils";
+//import { Clipper } from "../Utils/clipper";
+import { getIntersectionOnAPoint, lerpValues, randomIndex, shuffle } from "../Utils/utils";
 import { CanalNode } from "./CanalNode";
 
 

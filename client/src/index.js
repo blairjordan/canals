@@ -12,19 +12,19 @@ import {
 
 const App = React.lazy(() => import('./Components/App'));
 const Test = React.lazy(() => import('./Components/Test'));
+const Fishing = React.lazy(() => import('./Components/Fishing'));
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
     <React.Suspense fallback={<div></div>}>
       <BrowserRouter>
           <Routes>
               <Route path='/' element={<App />} />
               <Route path='/test/:id' element={<Test/>} />
+              <Route path='/fishing' element={<Fishing/>} />
           </Routes>
       </BrowserRouter>
     </React.Suspense>
-  </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function

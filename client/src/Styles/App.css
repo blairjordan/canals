@@ -29,6 +29,17 @@
   font-variant: small-caps;
 }
 
+.App-guest {
+  font-family: "Gotham SSm A", "Gotham SSm B", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 24px;
+  color: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.1s all ease-in-out;
+}
+
 .field {
   width: fit-content;
   height: 56px;
@@ -124,4 +135,17 @@
   color: #e0e0e0;
   opacity: 1;
   pointer-events: none;
+}
+
+.hidden {
+  visibility: hidden;
+  display: none;
+}
+
+.disabled {
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  opacity: 0.5;
+  cursor:not-allowed;
 }

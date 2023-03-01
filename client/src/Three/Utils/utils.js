@@ -139,3 +139,16 @@ export function rotatePointAroundPivot(point, pivot, angles) {
     _tempVector3.applyQuaternion(_tempQuaternion)
     return _tempVector3.add(pivot);
   }
+
+export function wait(milliseconds) {
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+export function downloadTxt(content, fileName, contentType) {
+    const a = document.createElement("a");
+    const file = new Blob([content], {type: contentType});
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(a.href);
+}

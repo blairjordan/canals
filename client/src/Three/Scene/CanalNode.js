@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { mergeBufferGeometries } from "three/examples/jsm/utils/BufferGeometryUtils";
-import { lerpValues } from "../Utils/utils";
 
 //A node point that is part of a network of nodes
 class CanalNode {
@@ -46,7 +45,6 @@ class CanalNode {
     const nodePoints = [];
 
     const center = new THREE.Vector2(this.position.x, this.position.z);
-    const sideAngle = 360.0 / 8; //16 points for 8 sides.
 
     for (let i = 0; i < this.nodes.length; i++) {
       //connected node point

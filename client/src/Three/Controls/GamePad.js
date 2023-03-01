@@ -11,12 +11,14 @@ class GamePad {
         this.buttons = {};
 
         this.euler = new Euler()
-        this.deadzone = 0.2
+        this.deadzone = 0.01
         this.leftAxis = new Vector2()
         this.rightAxis = new Vector2()
 
         this.targetObject = new Object3D();
         this.targetObject.position.set(30,30,30)
+
+        this.boatTargetObject = new Object3D();
     }
 
     updateAxis(i, state) {
@@ -25,6 +27,7 @@ class GamePad {
                 if(Math.abs(state) > this.deadzone) {
                     this.leftAxis.x = state
                     this.targetObject.translateX(this.leftAxis.x)
+                    this.boatTargetObject.rotateOnWorldAxis(new Vector3(0.0, 1.0, 0.0), -this.leftAxis.x / 60.0) 
                     this.clampY()
                 } else {
                     this.leftAxis.x = 0
@@ -35,6 +38,7 @@ class GamePad {
                     this.leftAxis.y = state
                     this.targetObject.translateZ(this.leftAxis.y)
                     this.clampY()
+                    this.boatTargetObject.translateZ(this.leftAxis.y);
                 } else {
                     this.leftAxis.y = 0
                 }
@@ -43,6 +47,7 @@ class GamePad {
                 if(Math.abs(state) > this.deadzone) {
                     this.rightAxis.x = state
                     this.targetObject.rotateOnWorldAxis(new Vector3(0.0, 1.0, 0.0), -this.rightAxis.x / 60.0) 
+                    this.targetObject.translateZ(this.leftAxis.y)
                 } else {
                     this.rightAxis.x = 0
                 }
