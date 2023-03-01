@@ -6,6 +6,11 @@ CREATE TABLE IF NOT EXISTS players (
   balance NUMERIC(10, 2) NOT NULL DEFAULT 0.00
 );
 
+INSERT INTO players (username, position, balance)
+VALUES
+  ('blair', '{"x": 0, "y": 0, "z": 0}', 1000000.00),
+  ('matt', '{"x": 10, "y": 0, "z": 0}', 25.00);
+
 CREATE TABLE IF NOT EXISTS markers (
   id BIGSERIAL PRIMARY KEY,
   position JSONB NOT NULL,
@@ -24,17 +29,27 @@ CREATE TABLE IF NOT EXISTS links (
   CONSTRAINT uq_links UNIQUE (from_marker_id, to_marker_id)
 );
 
+CREATE INDEX IF NOT EXISTS links_props_idx ON links USING GIN (props);
+
 CREATE TABLE IF NOT EXISTS items (
   id BIGSERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   type VARCHAR(55),
   description TEXT,
-  floor_price NUMERIC(10,2) DEFAULT NULL
+  price NUMERIC(10,2) DEFAULT NULL,
+  max_purchase INTEGER DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS marker_items (
   marker_id BIGINT REFERENCES markers(id) NOT NULL,
   item_id BIGINT REFERENCES items(id) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS player_items (
+  id BIGSERIAL PRIMARY KEY,
+  player_id BIGINT REFERENCES players(id) NOT NULL,
+  item_id BIGINT REFERENCES items(id) NOT NULL,
+  props JSONB
 );
 
 INSERT INTO markers (position, type)
@@ -53,16 +68,16 @@ ON CONFLICT DO NOTHING;
 -- 🎣 Fishing vendor
 WITH vendor_insert AS (
   INSERT INTO markers (position, type, props)
-  VALUES ('{"x": 50, "y": 50, "z": 0}', 'vendor', '{"name": "Bob''s Bait''n''Tackle Shop"}')
+  VALUES ('{"x": 50, "y": 50, "z": 0}', 'vendor', '{"name": "Bob''s Bait''n''Tackle"}')
   RETURNING id
 ),
 item_insert AS (
-  INSERT INTO items (name, description, floor_price, type)
+  INSERT INTO items (name, description, price, type, max_purchase)
   VALUES
-  ('Spincast Rod', 'A simple fishing rod designed to work with spincasting reels.', 25.00, 'fishing_rod'),
-  ('Spinning Rod', 'The most common type of fishing rod, designed to work with spinning reels.', 50.00, 'fishing_rod'),
-  ('Baitcasting Rod', 'A powerful fishing rod designed to work with baitcasting reels.', 100.00, 'fishing_rod'),
-  ('Fly Rod', 'A specialized fishing rod designed for fly fishing.', 200.00, 'fishing_rod')
+  ('Spincast Rod', 'A simple fishing rod designed to work with spincasting reels.', 25.00, 'fishing_rod', 1),
+  ('Spinning Rod', 'The most common type of fishing rod, designed to work with spinning reels.', 50.00, 'fishing_rod', 1),
+  ('Baitcasting Rod', 'A powerful fishing rod designed to work with baitcasting reels.', 100.00, 'fishing_rod', 1),
+  ('Fly Rod', 'A specialized fishing rod designed for fly fishing.', 200.00, 'fishing_rod', 1)
   RETURNING id
 )
 INSERT INTO marker_items (marker_id, item_id)
@@ -75,12 +90,12 @@ WITH vendor_insert AS (
   RETURNING id
 ),
 item_insert AS (
-  INSERT INTO items (name, description, floor_price, type)
+  INSERT INTO items (name, description, price, type, max_purchase)
   VALUES
-  ('Snake Plant', 'A potted Snake Plant, also known as Mother-in-Law’s Tongue.', 20.00, 'plant'),
-  ('Barrel Cactus', 'A potted Barrel Cactus, also known as Ferocactus.', 60.00, 'plant'),
-  ('Boxwood Topiary', 'A potted Boxwood Topiary, pruned into a ball shape.', 35.00, 'plant'),
-  ('Climbing Ivy', 'A potted Climbing Ivy, trained to climb a trellis or wall.', 25.00, 'plant')
+  ('Snake Plant', 'A potted Snake Plant, also known as Mother-in-Law’s Tongue.', 20.00, 'plant', 10),
+  ('Barrel Cactus', 'A potted Barrel Cactus, also known as Ferocactus.', 60.00, 'plant', 10),
+  ('Boxwood Topiary', 'A potted Boxwood Topiary, pruned into a ball shape.', 35.00, 'plant', 10),
+  ('Climbing Ivy', 'A potted Climbing Ivy, trained to climb a trellis or wall.', 25.00, 'plant', 10)
   RETURNING id
 )
 INSERT INTO marker_items (marker_id, item_id)
@@ -93,40 +108,35 @@ WITH vendor_insert AS (
   RETURNING id
 ),
 item_insert AS (
-  INSERT INTO items (name, description, floor_price, type)
+  INSERT INTO items (name, description, price, type, max_purchase)
   VALUES
   -- General Items
-  ('Air Conditioner', 'Cools air inside a boat''s cabin or enclosed space.', 500.00, 'general_item'),
-  ('Solar Panel', 'Converts sunlight into electricity to power onboard systems.', 300.00, 'general_item'),
-  ('Windlass', 'Mechanical device for lifting heavy loads using a crank or handle.', 1000.00, 'general_item'),
-  ('Marine Radio', 'Two-way radio for communication on water.', 200.00, 'general_item'),
-  ('Docking Lines', 'Strong, flexible ropes used to secure the boat to a dock or fixed object.', 75.00, 'general_item'),
+  ('Air Conditioner', 'Cools air inside a boat''s cabin or enclosed space.', 500.00, 'general_item', 1),
+  ('Solar Panel', 'Converts sunlight into electricity to power onboard systems.', 300.00, 'general_item', 6),
   -- Hulls
-  ('Flat-bottomed Hull', 'A type of boat hull that has a flat bottom, making it very stable but slower than other hull types.', 500.00, 'boat_hull'),
-  ('Multi-chine Hull', 'A type of boat hull that has multiple angles or "chines" in its shape, providing good stability and speed.', 1000.00, 'boat_hull'),
-  ('Round-bottomed Hull', 'A type of boat hull that has a round bottom, providing good speed but less stability than flat-bottomed hulls.', 1500.00, 'boat_hull'),
+  ('Flat-bottomed Hull', 'A type of boat hull that has a flat bottom, making it very stable but slower than other hull types.', 500.00, 'boat_hull', 1),
+  ('Multi-chine Hull', 'A type of boat hull that has multiple angles or "chines" in its shape, providing good stability and speed.', 1000.00, 'boat_hull', 1),
+  ('Round-bottomed Hull', 'A type of boat hull that has a round bottom, providing good speed but less stability than flat-bottomed hulls.', 1500.00, 'boat_hull', 1),
   -- Decks
-  ('Fiberglass Deck', 'A type of boat deck made from fiberglass, providing good durability and resistance to water damage.', 750.00, 'boat_deck'),
-  ('Pine Deck', 'A type of boat deck made from pine wood, providing a traditional and classic look.', 500.00, 'boat_deck'),
-  ('Douglas Fir Deck', 'A type of boat deck made from Douglas fir wood, providing good strength and durability.', 1000.00, 'boat_deck'),
-  ('Cedar Deck', 'A type of boat deck made from cedar wood, providing good resistance to water damage and a pleasant aroma.', 1250.00, 'boat_deck'),
-  ('Teak Deck', 'A type of boat deck made from teak wood, providing excellent durability and resistance to water damage.', 2000.00, 'boat_deck'),
-  ('Mahogany Deck', 'A type of boat deck made from mahogany wood, providing a luxurious and classic look.', 2500.00, 'boat_deck'),
+  ('Fiberglass Deck', 'A type of boat deck made from fiberglass, providing good durability and resistance to water damage.', 750.00, 'boat_deck', 1),
+  ('Pine Deck', 'A type of boat deck made from pine wood, providing a traditional and classic look.', 500.00, 'boat_deck', 1),
+  ('Cedar Deck', 'A type of boat deck made from cedar wood, providing good resistance to water damage and a pleasant aroma.', 1250.00, 'boat_deck', 1),
+  ('Mahogany Deck', 'A type of boat deck made from mahogany wood, providing a luxurious and classic look.', 2500.00, 'boat_deck', 1),
   -- Engines
-  ('Outboard Engine', 'A type of boat engine that is mounted on the outside of the boat, providing good speed and maneuverability.', 5000.00, 'boat_engine'),
-  ('Inboard Engine', 'A type of boat engine that is mounted inside the boat, providing good power and torque.', 7500.00, 'boat_engine'),
-  ('Electric Engine', 'A type of boat engine that is powered by electricity, providing quiet and eco-friendly propulsion.', 10000.00, 'boat_engine'),
-  ('Inboard Diesel Engine', 'A type of boat engine that is powered by diesel fuel and mounted inside the boat, providing good power and fuel efficiency.', 12500.00, 'boat_engine'),
+  ('Outboard Engine', 'A type of boat engine that is mounted on the outside of the boat, providing good speed and maneuverability.', 5000.00, 'boat_engine', 1),
+  ('Inboard Engine', 'A type of boat engine that is mounted inside the boat, providing good power and torque.', 7500.00, 'boat_engine', 1),
+  ('Electric Engine', 'A type of boat engine that is powered by electricity, providing quiet and eco-friendly propulsion.', 10000.00, 'boat_engine', 1),
+  ('Inboard Diesel Engine', 'A type of boat engine that is powered by diesel fuel and mounted inside the boat, providing good power and fuel efficiency.', 12500.00, 'boat_engine', 1),
   -- Sterns
-  ('Traditional', 'A classic stern design that provides good stability and handling.', 500.00, 'boat_stern'),
-  ('Semi-Traditional', 'A modern take on the traditional stern design, providing a balance between stability and speed.', 2500.00, 'boat_stern'),
-  ('Cruiser', 'A sleek and stylish stern design that emphasizes speed and maneuverability.', 5000.00, 'boat_stern')
+  ('Traditional', 'A classic stern design that provides good stability and handling.', 500.00, 'boat_stern', 1),
+  ('Semi-Traditional', 'A modern take on the traditional stern design, providing a balance between stability and speed.', 2500.00, 'boat_stern', 1),
+  ('Cruiser', 'A sleek and stylish stern design that emphasizes speed and maneuverability.', 5000.00, 'boat_stern', 1)
   RETURNING id
 )
 INSERT INTO marker_items (marker_id, item_id)
 SELECT vendor_insert.id, item_insert.id FROM vendor_insert, item_insert;
 
--- PostGraphile GQL subscbription for player updates
+-- 📰 PostGraphile GQL subscbription for player updates
 CREATE OR REPLACE FUNCTION notify_player_changes()
   RETURNS TRIGGER AS
 $$
@@ -148,6 +158,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- 🔫 Trigger for player updates
 CREATE TRIGGER player_changes_trigger
   AFTER INSERT OR UPDATE
   ON players
@@ -186,3 +197,40 @@ SELECT
 FROM links_recursive;
 
 COMMENT ON VIEW links_recursive IS E'@foreignKey (to_marker_id) references markers (id)|@foreignFieldName toMarker\n@foreignKey (from_marker_id) references markers (id)|@foreignFieldName fromMarker';
+
+-- 🏪 Purchase item function
+CREATE OR REPLACE FUNCTION purchase_item(player_id INTEGER, item_id INTEGER)
+RETURNS player_items AS $$
+DECLARE
+  player_item player_items;
+BEGIN
+  WITH item_price AS (
+    SELECT price FROM items WHERE id = item_id
+  ),
+  deducted_balance AS (
+    UPDATE players
+    SET balance = balance - (SELECT price FROM item_price)::FLOAT
+    WHERE id = player_id AND balance >= (SELECT price FROM item_price)::FLOAT
+    RETURNING balance
+  ),
+  updated_player_items AS (
+    INSERT INTO player_items(player_id, item_id, props)
+    SELECT player_id, item_id, (SELECT JSONB_BUILD_OBJECT('price', price::FLOAT) FROM item_price)
+    WHERE EXISTS (
+      SELECT 1 FROM deducted_balance
+    )
+    RETURNING *
+  )
+  SELECT upi.*
+  INTO player_item
+  FROM updated_player_items upi
+  WHERE upi.player_id = purchase_item.player_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Insufficient player balance for purchase';
+  END IF;
+
+  RETURN player_item;
+END;
+$$ LANGUAGE plpgsql;
+

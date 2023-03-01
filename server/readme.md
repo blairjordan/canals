@@ -64,6 +64,7 @@ You can access the GraphQL playground at [http://localhost:3000/graphql](http://
 *   `createGridNode(input: GridNodeInput!)`: Create a new grid node.
 *   `updateGridNode(id: ID!, input: GridNodeInput!)`: Update a grid node.
 *   `deleteGridNode(id: ID!)`: Delete a grid node.
+*   `purchaseItem(input: PurchaseItemInput!)`: Purchase an item for a player.
 
 #### Subscriptions
 
