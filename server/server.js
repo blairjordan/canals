@@ -12,6 +12,11 @@ const pluginHook = makePluginHook([PgPubsub])
 // Allow all CORS requests
 app.use(cors())
 
+// 🩺 Health check
+app.get("/healthz", (req, res) => {
+  res.json({ status: "ok" })
+})
+
 app.use(
   postgraphile(
     process.env.DATABASE_URL ||
