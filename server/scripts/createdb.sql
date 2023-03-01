@@ -36,8 +36,7 @@ CREATE TABLE IF NOT EXISTS items (
   name TEXT NOT NULL,
   type VARCHAR(55),
   description TEXT,
-  price NUMERIC(10,2) DEFAULT NULL,
-  max_purchase INTEGER DEFAULT NULL
+  price NUMERIC(10,2) DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS marker_items (
@@ -72,12 +71,12 @@ WITH vendor_insert AS (
   RETURNING id
 ),
 item_insert AS (
-  INSERT INTO items (name, description, price, type, max_purchase)
+  INSERT INTO items (name, description, price, type)
   VALUES
-  ('Spincast Rod', 'A simple fishing rod designed to work with spincasting reels.', 25.00, 'fishing_rod', 1),
-  ('Spinning Rod', 'The most common type of fishing rod, designed to work with spinning reels.', 50.00, 'fishing_rod', 1),
-  ('Baitcasting Rod', 'A powerful fishing rod designed to work with baitcasting reels.', 100.00, 'fishing_rod', 1),
-  ('Fly Rod', 'A specialized fishing rod designed for fly fishing.', 200.00, 'fishing_rod', 1)
+  ('Spincast Rod', 'A simple fishing rod designed to work with spincasting reels.', 25.00, 'fishing_rod'),
+  ('Spinning Rod', 'The most common type of fishing rod, designed to work with spinning reels.', 50.00, 'fishing_rod'),
+  ('Baitcasting Rod', 'A powerful fishing rod designed to work with baitcasting reels.', 100.00, 'fishing_rod'),
+  ('Fly Rod', 'A specialized fishing rod designed for fly fishing.', 200.00, 'fishing_rod')
   RETURNING id
 )
 INSERT INTO marker_items (marker_id, item_id)
@@ -90,12 +89,12 @@ WITH vendor_insert AS (
   RETURNING id
 ),
 item_insert AS (
-  INSERT INTO items (name, description, price, type, max_purchase)
+  INSERT INTO items (name, description, price, type)
   VALUES
-  ('Snake Plant', 'A potted Snake Plant, also known as Mother-in-Law’s Tongue.', 20.00, 'plant', 10),
-  ('Barrel Cactus', 'A potted Barrel Cactus, also known as Ferocactus.', 60.00, 'plant', 10),
-  ('Boxwood Topiary', 'A potted Boxwood Topiary, pruned into a ball shape.', 35.00, 'plant', 10),
-  ('Climbing Ivy', 'A potted Climbing Ivy, trained to climb a trellis or wall.', 25.00, 'plant', 10)
+  ('Snake Plant', 'A potted Snake Plant, also known as Mother-in-Law’s Tongue.', 20.00, 'plant'),
+  ('Barrel Cactus', 'A potted Barrel Cactus, also known as Ferocactus.', 60.00, 'plant'),
+  ('Boxwood Topiary', 'A potted Boxwood Topiary, pruned into a ball shape.', 35.00, 'plant'),
+  ('Climbing Ivy', 'A potted Climbing Ivy, trained to climb a trellis or wall.', 25.00, 'plant')
   RETURNING id
 )
 INSERT INTO marker_items (marker_id, item_id)
@@ -108,29 +107,29 @@ WITH vendor_insert AS (
   RETURNING id
 ),
 item_insert AS (
-  INSERT INTO items (name, description, price, type, max_purchase)
+  INSERT INTO items (name, description, price, type)
   VALUES
   -- General Items
-  ('Air Conditioner', 'Cools air inside a boat''s cabin or enclosed space.', 500.00, 'general_item', 1),
-  ('Solar Panel', 'Converts sunlight into electricity to power onboard systems.', 300.00, 'general_item', 6),
+  ('Air Conditioner', 'Cools air inside a boat''s cabin or enclosed space.', 500.00, 'general_item'),
+  ('Solar Panel', 'Converts sunlight into electricity to power onboard systems.', 300.00, 'general_item'),
   -- Hulls
-  ('Flat-bottomed Hull', 'A type of boat hull that has a flat bottom, making it very stable but slower than other hull types.', 500.00, 'boat_hull', 1),
-  ('Multi-chine Hull', 'A type of boat hull that has multiple angles or "chines" in its shape, providing good stability and speed.', 1000.00, 'boat_hull', 1),
-  ('Round-bottomed Hull', 'A type of boat hull that has a round bottom, providing good speed but less stability than flat-bottomed hulls.', 1500.00, 'boat_hull', 1),
+  ('Flat-bottomed Hull', 'A type of boat hull that has a flat bottom, making it very stable but slower than other hull types.', 500.00, 'boat_hull'),
+  ('Multi-chine Hull', 'A type of boat hull that has multiple angles or "chines" in its shape, providing good stability and speed.', 1000.00, 'boat_hull'),
+  ('Round-bottomed Hull', 'A type of boat hull that has a round bottom, providing good speed but less stability than flat-bottomed hulls.', 1500.00, 'boat_hull'),
   -- Decks
-  ('Fiberglass Deck', 'A type of boat deck made from fiberglass, providing good durability and resistance to water damage.', 750.00, 'boat_deck', 1),
-  ('Pine Deck', 'A type of boat deck made from pine wood, providing a traditional and classic look.', 500.00, 'boat_deck', 1),
-  ('Cedar Deck', 'A type of boat deck made from cedar wood, providing good resistance to water damage and a pleasant aroma.', 1250.00, 'boat_deck', 1),
-  ('Mahogany Deck', 'A type of boat deck made from mahogany wood, providing a luxurious and classic look.', 2500.00, 'boat_deck', 1),
+  ('Fiberglass Deck', 'A type of boat deck made from fiberglass, providing good durability and resistance to water damage.', 750.00, 'boat_deck'),
+  ('Pine Deck', 'A type of boat deck made from pine wood, providing a traditional and classic look.', 500.00, 'boat_deck'),
+  ('Cedar Deck', 'A type of boat deck made from cedar wood, providing good resistance to water damage and a pleasant aroma.', 1250.00, 'boat_deck'),
+  ('Mahogany Deck', 'A type of boat deck made from mahogany wood, providing a luxurious and classic look.', 2500.00, 'boat_deck'),
   -- Engines
-  ('Outboard Engine', 'A type of boat engine that is mounted on the outside of the boat, providing good speed and maneuverability.', 5000.00, 'boat_engine', 1),
-  ('Inboard Engine', 'A type of boat engine that is mounted inside the boat, providing good power and torque.', 7500.00, 'boat_engine', 1),
-  ('Electric Engine', 'A type of boat engine that is powered by electricity, providing quiet and eco-friendly propulsion.', 10000.00, 'boat_engine', 1),
-  ('Inboard Diesel Engine', 'A type of boat engine that is powered by diesel fuel and mounted inside the boat, providing good power and fuel efficiency.', 12500.00, 'boat_engine', 1),
+  ('Outboard Engine', 'A type of boat engine that is mounted on the outside of the boat, providing good speed and maneuverability.', 5000.00, 'boat_engine'),
+  ('Inboard Engine', 'A type of boat engine that is mounted inside the boat, providing good power and torque.', 7500.00, 'boat_engine'),
+  ('Electric Engine', 'A type of boat engine that is powered by electricity, providing quiet and eco-friendly propulsion.', 10000.00, 'boat_engine'),
+  ('Inboard Diesel Engine', 'A type of boat engine that is powered by diesel fuel and mounted inside the boat, providing good power and fuel efficiency.', 12500.00, 'boat_engine'),
   -- Sterns
-  ('Traditional', 'A classic stern design that provides good stability and handling.', 500.00, 'boat_stern', 1),
-  ('Semi-Traditional', 'A modern take on the traditional stern design, providing a balance between stability and speed.', 2500.00, 'boat_stern', 1),
-  ('Cruiser', 'A sleek and stylish stern design that emphasizes speed and maneuverability.', 5000.00, 'boat_stern', 1)
+  ('Traditional', 'A classic stern design that provides good stability and handling.', 500.00, 'boat_stern'),
+  ('Semi-Traditional', 'A modern take on the traditional stern design, providing a balance between stability and speed.', 2500.00, 'boat_stern'),
+  ('Cruiser', 'A sleek and stylish stern design that emphasizes speed and maneuverability.', 5000.00, 'boat_stern')
   RETURNING id
 )
 INSERT INTO marker_items (marker_id, item_id)
