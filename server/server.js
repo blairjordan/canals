@@ -1,4 +1,5 @@
 const express = require("express")
+const cors = require("cors")
 const { postgraphile, makePluginHook } = require("postgraphile")
 const { default: PgPubsub } = require("@graphile/pg-pubsub")
 
@@ -7,6 +8,9 @@ const graphiqlRoute = "/graphiql"
 
 const app = express()
 const pluginHook = makePluginHook([PgPubsub])
+
+// Allow all CORS requests
+app.use(cors())
 
 app.use(
   postgraphile(
