@@ -18,7 +18,8 @@ WORKDIR /app
 COPY --from=base /app /app
 COPY db ./db
 ENTRYPOINT []
-EXPOSE 80
+EXPOSE 3000
+EXPOSE 3001
 
 # Bundle application run time depenendencies
 FROM node:16-alpine as app_bundle
@@ -29,5 +30,6 @@ COPY --from=build /app ./
 FROM node:16-alpine AS app
 WORKDIR /app
 COPY --from=app_bundle /app /app
-EXPOSE 80
+EXPOSE 3000
+EXPOSE 3001
 CMD [ "node", "server.js" ]

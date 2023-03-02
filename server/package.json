@@ -3,7 +3,7 @@
     "start": "node server.js",
     "db:init": "bash ./scripts/createdb.sh",
     "docker:build": "docker build -t canals:latest .",
-    "docker:run": "docker run -p 80:80 canals:latest"
+    "docker:run": "docker run -p 3000:3000 -p 3001:3001 canals:latest"
   },
   "dependencies": {
     "@graphile-contrib/pg-simplify-inflector": "^6.1.0",
