@@ -1,7 +1,9 @@
 {
   "scripts": {
     "start": "node server.js",
-    "db:init": "bash ./scripts/createdb.sh"
+    "db:init": "bash ./scripts/createdb.sh",
+    "docker:build": "docker build -t canals:latest .",
+    "docker:run": "docker run -p 80:80 canals:latest"
   },
   "dependencies": {
     "@graphile-contrib/pg-simplify-inflector": "^6.1.0",
