@@ -28,6 +28,9 @@ class TestScene {
     this.renderTarget = null;
     this.clock = new THREE.Clock();
 
+    this.lastPlayerPosition = new THREE.Vector3();
+    this.currentPlayerPosition = new THREE.Vector3();
+
     const seed = cyrb128('canals-predictable-seed');
     this.canalRand = sfc32(seed[0], seed[1], seed[2], seed[3]); 
 
@@ -149,7 +152,6 @@ class TestScene {
     this.controls.target.set( 0, 5, 0 );
     this.controls.minDistance = 10.0;
     this.controls.maxDistance = 80.0;
-    this.controls.update();
 
     this.controlGroup = new THREE.Group();
     this.controlGroupRotation = new THREE.Vector2();
@@ -172,11 +174,27 @@ class TestScene {
   initPlayer() {
     this.player = new Player(this, this.playerData);
     this.player.init();
+    this.connectivity = new Connectivity(this, this.player.playerGroup);
+    this.connectivity.init();
+
+    this.lastPlayerPosition.copy(this.player.playerGroup.position)
+    this.gamepads.gamePad.boatTargetObject.position.set(
+      Number(this.playerData.position.x),
+      Number(this.playerData.position.z), 
+      Number(this.playerData.position.y))
+
+    this.player.playerGroup.position.copy(this.gamepads.gamePad.boatTargetObject.position);
+
+    this.currentPlayerPosition.copy(this.player.playerGroup.position)
+    this.currentPlayerPosition.sub(this.lastPlayerPosition)
+
+    this.camera.position.add(this.currentPlayerPosition)
+
+    this.controls.target.copy(this.player.playerGroup.position);
+
   }
 
   initControls() {
-    // this.connectivity = new Connectivity(this, this.controlGroup);
-    // this.connectivity.init();
 
     this.gamepads = new GamePads(this);
   }
@@ -223,11 +241,6 @@ class TestScene {
       this.connectivity.update();
       
     }
-    if(this.player) {
-      if(this.player.ready ) {
-        this.controls.target.copy(this.player.playerGroup.position);
-      }
-    }
     if(this.gamepads) this.smoothControls(delta);
     if(this.canalNetwork) this.canalNetwork.update(delta);
   }
@@ -239,9 +252,16 @@ class TestScene {
 
     if(this.player ) {
       if(this.player.ready) {
-        this.player.playerGroup.position.lerp(this.gamepads.gamePad.boatTargetObject.position, delta * 5);
+        this.lastPlayerPosition.copy(this.player.playerGroup.position)
+        this.player.playerGroup.position.lerp(this.gamepads.gamePad.boatTargetObject.position, delta * 3);
         this.player.playerGroup.quaternion.slerp(this.gamepads.gamePad.boatTargetObject.quaternion, delta * 5);
-        this.controls.update();
+
+        this.currentPlayerPosition.copy(this.player.playerGroup.position)
+        this.currentPlayerPosition.sub(this.lastPlayerPosition)
+
+        this.camera.position.add(this.currentPlayerPosition)
+
+        this.controls.target.copy(this.player.playerGroup.position);
       }
     }
 

@@ -1,10 +1,38 @@
 
-import { ApolloClient, InMemoryCache, gql } from '@apollo/client/core';
+import { HttpLink, ApolloClient, InMemoryCache, gql, split } from '@apollo/client/core';
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { getMainDefinition } from '@apollo/client/utilities';
+import { createClient } from 'graphql-ws';
+
 class GraphQL {
     constructor() {
+      const httpLink = new HttpLink({
+        uri: 'https://canals-api.onrender.com/graphql'
+      });
+      
+      const wsLink = new GraphQLWsLink(createClient({
+        url: 'wss://canals-api.onrender.com/subscriptions',
+      }));
+      const splitLink = split(
+        ({ query }) => {
+          const definition = getMainDefinition(query);
+          return (
+            definition.kind === 'OperationDefinition' &&
+            definition.operation === 'subscription'
+          );
+        },
+        wsLink,
+        httpLink,
+      );
+
         this.client = new ApolloClient({
-          uri: 'http://localhost:3000/graphql',
-          cache: new InMemoryCache()
+          link: splitLink,
+          cache: new InMemoryCache(),
+          defaultOptions: {
+            watchQuery: {
+              fetchPolicy: 'no-cache',
+            },
+          },
         });
 
         console.log('GraphQL constructor')
@@ -79,10 +107,72 @@ class GraphQL {
       });
     }
 
-    //
-    getPurchases() {
-      
+    async updatePlayerPosition(id, pos) {
+      return new Promise((resolve) => {
+      this.client.mutate({
+          mutation: gql`
+            mutation UpdatePlayerPos($id: BigInt!, $x: BigFloat, $y: BigFloat, $z: BigFloat) {
+              updatePlayer(input: {patch: {position: { x: $x, y: $y, z: $z}}, id: $id}) {
+                clientMutationId
+              }
+            }
+          `,
+          variables: {
+            "id": id,
+            "x": pos.x,
+            "y": pos.y,
+            "z": pos.z
+          }
+        })
+        .then(result => resolve(result));
+      });
     }
+
+    async getPlayerPosition(id) {
+      return new Promise((resolve) => {
+      this.client.query({
+        query: gql`
+          query GetPlayer($id: BigInt!) {
+            player(id:$id) {
+              position
+            }
+          }
+        `,
+        variables: {
+          "id": id
+        }
+      })
+      .then(result => resolve(result));
+    });
+  }
+
+    //Subscriptions
+    initPlayerSubscriptions(updateCallback) {
+      const playerPosUpdateSUB = gql`
+        subscription {
+          listen(topic: "") {
+            query {
+              players {
+                nodes {
+                  position
+                  id
+                }
+              }
+            }
+          }
+        }
+      `;
+      this.client.subscribe({ query: playerPosUpdateSUB }).subscribe({
+        next(data) {
+          updateCallback(data);
+          console.log('Received data: ', data);
+        },
+        error(error) {
+          console.error('Subscription error: ', error);
+        },
+      });
+    }
+
 }
 
 export default new GraphQL()

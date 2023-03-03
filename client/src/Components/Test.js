@@ -39,8 +39,9 @@ class Test extends Component {
   }
 
   loadScene = async (id) => {
-    const player = await GraphQL.getPlayer(Number(id));
-    const testScene = new TestScene(player.data.player);
+    var storedPlayer = localStorage.getItem("Player");
+    const player = JSON.parse(storedPlayer);
+    const testScene = new TestScene(player);
     testScene.init();
   }
 

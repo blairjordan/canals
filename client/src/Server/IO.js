@@ -1,52 +1,39 @@
 import * as THREE from "three";
 import { io } from "socket.io-client";
 import { Player, randomColor } from "./Player";
+import GraphQL from "../Server/graphQL";
+import graphQL from "../Server/graphQL";
 
 class Connectivity {
   constructor(app, player) {
     this.app = app;
     this.socket = null;
-    this.id = Math.round(Math.random() * 10000);
-    if (this.app.id) {
-      this.id = this.app.id;
-    }
+    this.id = app.playerData.id
     this.color = randomColor();
     console.log("Player id:" + this.id);
     this.player = player;
     this.lastPlayerPosition = new THREE.Vector3();
 
+    this.updateDistance = 2; //1m
+    this.updateTime = 1000; //1s (1000ms)
+    this.timeSinceLastUpdate = 0;
+    this.lastUpdateTime = 0;
+    this.deltaTime = 0;
+
     this.players = [];
     this.updatePlayers = this.updatePlayers.bind(this);
     this.removePlayers = this.removePlayers.bind(this);
+    this.updatePlayerPositions = this.updatePlayerPositions.bind(this);
     this.init = this.init.bind(this);
     this.update = this.update.bind(this);
   }
 
   init() {
-    this.socket = io("http://localhost:3000");
+    GraphQL.initPlayerSubscriptions(this.updatePlayerPositions);
+  }
 
-    this.socket.on("player-update", (socket) => {
-      //console.log('player-update:' + socket.id)
-      this.updatePlayers(socket);
-    });
-    this.socket.on("player-join", (socket) => {
-      console.log("player-join:" + socket.id);
-      this.updatePlayers(socket);
-    });
-    this.socket.on("player-leave", (socket) => {
-      console.log("player-leave:" + socket.id);
-      this.removePlayers(socket);
-    });
-    this.socket.on("update", (socket) => {
-      //console.log('update:' + socket.id)
-      this.updatePlayers(socket);
-    });
-    this.socket.on("item-collected", (socket) => {
-      //console.log(`collect :) ${socket.items} by ${socket.id}`)
-      if (socket.id !== this.id) {
-        this.app.collectItems(socket.items);
-      }
-    });
+  updatePlayerPositions(players) {
+    
   }
 
   removePlayers(socket) {
@@ -124,22 +111,32 @@ class Connectivity {
   update() {
     if (!this.player) return;
 
+    // calculate the difference in milliseconds
     const dist = this.lastPlayerPosition.distanceTo(this.player.position);
 
-    if (dist > 1) {
-      this.socket.emit("update", {
-        id: this.id,
-        positionData: {
-          position: [
-            this.player.position.x,
-            this.player.position.z,
-            this.player.position.y,
-          ],
-          color: this.color.getHex(),
-        },
-      });
+    // const deltaTime = performance.now(); - this.deltaTime; 
+    // this.deltaTime = performance.now();
+    // this.timeSinceLastUpdate += deltaTime;
+
+
+    if (dist > this.updateDistance) {
+      graphQL.updatePlayerPosition(this.id.toString(), {
+         x:this.player.position.x,
+         y:this.player.position.z,
+         z:this.player.position.y })
       this.lastPlayerPosition.copy(this.player.position);
     }
+  }
+
+
+  updateIfNoMoreUpdate(time, id, pos) {
+    if(this.nextUpdatePos) {
+      clearTimeout(this.nextUpdatePos)
+    }
+    this.nextUpdatePos = setTimeout(() => {
+      //we can hold off spamming the connection and make sure we only send update to every 1s.
+      this.nextUpdatePos = null;
+    }, this.updateTime)
   }
 }
 
