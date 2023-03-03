@@ -1,9 +1,14 @@
 import React, { useState, useEffect, Component } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate  } from "react-router-dom";
 import "../Styles/App.css";
 import logo from "../Assets/images/logo.png";
 import GraphQL from "../Server/graphQL";
 // import { Chat } from '../Server/chat';
+
+
+function withNavigation(Component) {
+  return props => <Component {...props} navigate={useNavigate()} />;
+}
 
 class App extends Component {
   state = {
@@ -12,7 +17,6 @@ class App extends Component {
     canPlay: false,
     player: null,
   };
-
   componentDidMount() {
     this.setState(
       {
@@ -47,14 +51,20 @@ class App extends Component {
   }
 
   getPlayer = async (id) => {
-    const player = await GraphQL.getPlayer(id);
-    if(player.data.player) {
+    const {
+      data: { player = null },
+    } = await GraphQL.getPlayer(id);
+
+    if (player) {
       this.setState({
         canPlay: true,
+        player: player,
       });
+      localStorage.setItem("Player", JSON.stringify(player));
     } else {
       this.setState({
         canPlay: false,
+        player: null,
       });
     }
   };
@@ -65,27 +75,38 @@ class App extends Component {
       canSignup: false,
     });
 
-    const guestId = localStorage.getItem("guest")
-    if(guestId) {
+    const guestId = localStorage.getItem("Guest");
+    if (guestId) {
       this.setState({
         id: guestId,
       });
       localStorage.setItem("ID", guestId);
       return;
     }
-    const player = await GraphQL.guestPlayer();
+    const {
+      data: {
+        createPlayer: { player = null },
+      },
+    } = await GraphQL.guestPlayer();
     this.setState({
-      id: player.data.createPlayer.player.id,
-    },
-    () => {
-      this.onIdChange();
+      id: player.id,
+      player: player,
+      canPlay: true,
     });
-    localStorage.setItem("guest", player.data.createPlayer.player.id);
-    localStorage.setItem("ID", player.data.createPlayer.player.id);
+    localStorage.setItem("Guest", player.id);
+    localStorage.setItem("ID", player.id);
+    localStorage.setItem("Player", JSON.stringify(player));
+
+    this.props.navigate(
+      `/test/${player.id}?token=${Math.pow(
+        Math.pow(Math.pow(player.id, 2) + 1, 2) + 1,
+        2
+      )}`
+    );
   };
 
   render() {
-    const { id, canSignup, canPlay } = this.state;
+    const { id, canSignup, canPlay, player } = this.state;
     return (
       <div className="App">
         <header className="App-header">
@@ -100,15 +121,33 @@ class App extends Component {
               onChange={this.changeValue.bind(this)}
             />
             <label htmlFor={1}>Player ID</label>
+            <label
+              style={{ visibility: player ? "hidden" : "visible" }}
+              className="error"
+              htmlFor={1}
+            >
+              Player doesn't exist
+            </label>
           </div>
+
           <div
             id="signup"
-            className={"App-guest " + (canSignup ? "" : "hidden")}
+            className={"App-link guest " + (canSignup ? "" : "hidden")}
             onClick={this.guest}
           >
-            Guest
+            Play as guest
           </div>
-          <Link className={"App-link " + (canPlay ? "" : "disabled")} to={`/test/${id}?token=${Math.pow(Math.pow(Math.pow(id,2)+1,2)+1,2)}`}>
+          <Link
+            className={"App-link " + (canPlay ? "" : "disabled")}
+            to={
+              player
+                ? `/test/${id}?token=${Math.pow(
+                    Math.pow(Math.pow(id, 2) + 1, 2) + 1,
+                    2
+                  )}`
+                : ""
+            }
+          >
             PLAY
           </Link>
         </header>
@@ -132,4 +171,4 @@ class App extends Component {
   }
 }
 
-export default App;
+export default withNavigation(App);
