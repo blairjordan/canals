@@ -9,7 +9,7 @@ class GamePads {
     this.gamePad = new GamePad(app);
     this.keyboardAndMouse = new KeyboardAndMouse(app, this.gamePad)
 
-    this.gameLoop = this.gameLoop.bind(this);
+    this.update = this.update.bind(this);
     this.gamepadHandler = this.gamepadHandler.bind(this);
 
     window.addEventListener(
@@ -26,8 +26,6 @@ class GamePads {
       },
       false
     );
-
-    requestAnimationFrame(this.gameLoop);
   }
 
   gamepadHandler(event, connecting) {
@@ -71,32 +69,72 @@ class GamePads {
     });
   }
 
-  gameLoop() {
-    if (!navigator.getGamepads) return;
+  update() {
 
     const gamepads = navigator.getGamepads();
-    if (gamepads === null) return;
-    Object.keys(gamepads).forEach((key) => {
-      const controller = gamepads[key];
-      if (controller !== null) {
-        let knownController = KNOWN_CONTROLLERS.find((matcher) =>
-          matcher.match(controller.id)
-        );
-        if (knownController) {
-          for (let i = 0; i < controller.buttons.length; i++) {
-            const button = controller.buttons[i];
-            if (typeof button === "object") {
-              this.gamePad.buttonAction(button, i);
+    if (gamepads !== null) {
+      Object.keys(gamepads).forEach((key) => {
+        const controller = gamepads[key];
+        if (controller !== null) {
+          let knownController = KNOWN_CONTROLLERS.find((matcher) =>
+            matcher.match(controller.id)
+          );
+          if (knownController) {
+            for (let i = 0; i < controller.buttons.length; i++) {
+              const button = controller.buttons[i];
+              if (typeof button === "object") {
+                this.gamePad.buttonAction(button, i);
+              }
+            }
+            for (let i = 0; i < controller.axes.length; i++) {
+              const axis = controller.axes[i];
+              this.gamePad.updateAxis(i, axis);
             }
           }
-          for (let i = 0; i < controller.axes.length; i++) {
-            const axis = controller.axes[i];
-            this.gamePad.updateAxis(i, axis);
+        }
+      });
+    }
+    if(this.keyboardAndMouse !== null) {
+      Object.keys(this.keyboardAndMouse.keys).forEach((key) => {
+        if (this.keyboardAndMouse.keys[key]) {
+          switch (key) {
+            case "ArrowLeft":
+            case "a":
+            case "A":
+              this.gamePad.updateAxis(0, -1);
+              break;
+            case "ArrowRight":
+            case "d":
+            case "D":
+              this.gamePad.updateAxis(0, 1);
+              break;
+            case "ArrowUp":
+            case "w":
+            case "W":
+              this.gamePad.updateAxis(1, -1);
+              break;
+            case "ArrowDown":
+            case "s":
+            case "S":
+              this.gamePad.updateAxis(1, 1);
+              break;
+            case "q":
+            case "Q":
+              this.gamePad.updateAxis(2, -1);
+              break;
+            case "e":
+            case "E":
+              this.gamePad.updateAxis(2, 1);
+              break;
+            default:
+              //do nothing (unassigned keys)
+              break;
           }
         }
-      }
-    });
-    requestAnimationFrame(this.gameLoop);
+      });
+    }
+    this.gamePad.update()
+    this.gamePad.clearAxes();
   }
 }
 

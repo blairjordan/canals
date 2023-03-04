@@ -5,13 +5,15 @@ import {
     Object3D
   } from "three";
 
+  //This is more gamepad manager where we can take input from keyboard, mouse and controllers
+  // and so somethings with it.
 class GamePad {
     constructor(app) {
         this.app = app;
         this.buttons = {};
 
         this.euler = new Euler()
-        this.deadzone = 0.01
+        this.deadzone = 0.1
         this.leftAxis = new Vector2()
         this.rightAxis = new Vector2()
 
@@ -19,49 +21,77 @@ class GamePad {
         this.targetObject.position.set(30,30,30)
 
         this.boatTargetObject = new Object3D();
+
+        this.updateAxis0 = new Event("updateAxis0");
+        this.updateAxis1 = new Event("updateAxis1");
+        this.updateAxis2 = new Event("updateAxis2");
+        this.updateAxis3 = new Event("updateAxis3");
+
+        document.addEventListener( "updateAxis0", (e) => {
+                if(Math.abs(this.leftAxis.x) > this.deadzone) {
+                    this.targetObject.translateX(this.leftAxis.x)
+                    this.clampY()
+                    this.boatTargetObject.rotateOnWorldAxis(new Vector3(0.0, 1.0, 0.0), (-this.leftAxis.y >= 0 ? -this.leftAxis.x : this.leftAxis.x) / 60.0) 
+                }
+            }, false );
+        document.addEventListener( "updateAxis1", (e) => {
+                if(Math.abs(this.leftAxis.y) > this.deadzone) {
+                    this.targetObject.translateZ(this.leftAxis.y)
+                    this.clampY()
+                    this.boatTargetObject.translateZ(this.leftAxis.y);
+                }
+            }, false );
+        document.addEventListener( "updateAxis2", (e) => {
+                if(Math.abs(this.rightAxis.x) > this.deadzone) {
+                    this.targetObject.rotateOnWorldAxis(new Vector3(0.0, 1.0, 0.0), -this.rightAxis.x / 60.0) 
+                    this.targetObject.translateZ(this.leftAxis.y)
+                }
+            }, false );
+        document.addEventListener( "updateAxis3", (e) => {
+                if(Math.abs(this.rightAxis.y) > this.deadzone) {
+                    this.targetObject.rotateX(-this.rightAxis.y / 60.0)
+                }
+            }, false );
+    }
+
+    clearAxes() {
+        this.leftAxis.x = 0
+        this.leftAxis.y = 0
+        this.rightAxis.x = 0
+        this.rightAxis.y = 0
     }
 
     updateAxis(i, state) {
         switch(i) {
             case 0: //left/spin left
-                if(Math.abs(state) > this.deadzone) {
-                    this.leftAxis.x = state
-                    this.targetObject.translateX(this.leftAxis.x)
-                    this.boatTargetObject.rotateOnWorldAxis(new Vector3(0.0, 1.0, 0.0), -this.leftAxis.x / 60.0) 
-                    this.clampY()
-                } else {
-                    this.leftAxis.x = 0
-                }
+                this.leftAxis.x = state
             break;
             case 1: //right/spin right
-                if(Math.abs(state) > this.deadzone) {
-                    this.leftAxis.y = state
-                    this.targetObject.translateZ(this.leftAxis.y)
-                    this.clampY()
-                    this.boatTargetObject.translateZ(this.leftAxis.y);
-                } else {
-                    this.leftAxis.y = 0
-                }
+                this.leftAxis.y = state
             break;
             case 2: //forward/up
-                if(Math.abs(state) > this.deadzone) {
-                    this.rightAxis.x = state
-                    this.targetObject.rotateOnWorldAxis(new Vector3(0.0, 1.0, 0.0), -this.rightAxis.x / 60.0) 
-                    this.targetObject.translateZ(this.leftAxis.y)
-                } else {
-                    this.rightAxis.x = 0
-                }
+                this.rightAxis.x = state
             break;
             case 3: //back/down
-                if(Math.abs(state) > this.deadzone) {
-                    this.rightAxis.y = state
-                    this.targetObject.rotateX(-this.rightAxis.y / 60.0)
-                } else {
-                    this.rightAxis.y = 0
-                }
+                this.rightAxis.y = state
             break;
             default:
                 break;
+        }
+    }
+
+    update() {
+        if(Math.abs(this.leftAxis.x) > this.deadzone) {
+            document.dispatchEvent(this.updateAxis0);
+        }
+        if(Math.abs(this.leftAxis.y) > this.deadzone) {
+            document.dispatchEvent(this.updateAxis1);
+        }
+        if(Math.abs(this.rightAxis.x) > this.deadzone) {
+            document.dispatchEvent(this.updateAxis2);
+        }
+        if(Math.abs(this.rightAxis.y) > this.deadzone) {
+            document.dispatchEvent(this.updateAxis3);
         }
     }
 

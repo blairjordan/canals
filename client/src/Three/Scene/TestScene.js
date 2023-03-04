@@ -15,8 +15,9 @@ import { Player } from "../Objects/Player";
 import { OrbitControls } from "../Controls/OrbitControls";
 
 class TestScene {
-  constructor(playerData) {
+  constructor(playerData, updateSpeed) {
     this.playerData = playerData;
+    this.updateSpeed = updateSpeed;
 
     this.container = null;
     this.stats = null;
@@ -29,6 +30,12 @@ class TestScene {
     this.renderTarget = null;
     this.clock = new THREE.Clock();
 
+    //Calulating speed
+    this.frameCounter = 0;
+    this.lastSpeedCheckPos = new THREE.Vector3();
+    this.lastSpeedCheckTime = 0
+
+    this.vector3 = new THREE.Vector3();
     this.lastPlayerPosition = new THREE.Vector3();
     this.currentPlayerPosition = new THREE.Vector3();
 
@@ -233,6 +240,10 @@ class TestScene {
 
     let delta = this.clock.getDelta();
     let time = this.clock.getElapsedTime();
+    this.frameCounter++;
+    if(this.frameCounter>99) {
+      this.frameCounter = 0;
+    }
 
     this.update(delta);
 
@@ -247,7 +258,10 @@ class TestScene {
       
     }
     TWEEN.update();
-    if(this.gamepads) this.smoothControls(delta);
+    if(this.gamepads) {
+      if(this.gamepads) this.gamepads.update()
+      this.smoothControls(delta);
+    }
     if(this.canalNetwork) this.canalNetwork.update(delta);
   }
 
@@ -259,8 +273,8 @@ class TestScene {
     if(this.player ) {
       if(this.player.ready) {
         this.lastPlayerPosition.copy(this.player.playerGroup.position)
-        this.player.playerGroup.position.lerp(this.gamepads.gamePad.boatTargetObject.position, delta * 3);
-        this.player.playerGroup.quaternion.slerp(this.gamepads.gamePad.boatTargetObject.quaternion, delta * 5);
+        this.player.playerGroup.position.lerp(this.gamepads.gamePad.boatTargetObject.position, 0.2);
+        this.player.playerGroup.quaternion.slerp(this.gamepads.gamePad.boatTargetObject.quaternion, 0.2);
 
         this.currentPlayerPosition.copy(this.player.playerGroup.position)
         this.currentPlayerPosition.sub(this.lastPlayerPosition)
@@ -268,11 +282,29 @@ class TestScene {
         this.camera.position.add(this.currentPlayerPosition)
 
         this.controls.target.copy(this.player.playerGroup.position);
+
+
+        if(this.frameCounter%5===0) {
+          this.vector3.set(0,0,0)
+          this.distance = this.vector3.distanceTo(this.currentPlayerPosition)
+          this.updateSpeedProp(this.distance, delta)
+        }
       }
     }
 
     this.controlGroup.position.lerp(this.gamepads.gamePad.targetObject.position, delta * 5)
     this.controlGroup.quaternion.slerp(this.gamepads.gamePad.targetObject.quaternion, delta * 5)
+  }
+
+  updateSpeedProp(distance, delta) {
+    
+    const timeSec = delta;
+    //const mps = distance/timeSec;
+    const kph = (distance/1000.0)/(timeSec/3600.0);
+    const mph = kph / 1.609;
+		const nph = mph * 0.868976;
+     
+    this.updateSpeed(nph.toFixed(2));
   }
 
   //are we close enough to an item to collect

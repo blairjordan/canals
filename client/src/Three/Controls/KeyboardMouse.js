@@ -39,6 +39,12 @@ class KeyboardAndMouse {
         passive: false,
       });
     }
+    document.addEventListener("visibilitychange", (e) => {
+      //set keys to false on any tab change.
+      Object.keys(this.keys).forEach((key) => {
+        this.keys[key] = false
+      })
+    });
   }
 
   onContextMenu(event) {
@@ -49,8 +55,50 @@ class KeyboardAndMouse {
 
   onKeyUp(event) {
     event = event || window.event;
-
     this.keys[event.key] = false;
+    switch (event.key) {
+      case "ArrowLeft":
+      case "a":
+      case "A":
+        this.keys["ArrowLeft"] = false;
+        this.keys["a"] = false;
+        this.keys["A"] = false;
+        break;
+      case "ArrowRight":
+      case "d":
+      case "D":
+        this.keys["ArrowRight"] = false;
+        this.keys["d"] = false;
+        this.keys["D"] = false;
+        break;
+      case "ArrowUp":
+      case "w":
+      case "W":
+        this.keys["ArrowUp"] = false;
+        this.keys["w"] = false;
+        this.keys["W"] = false;
+        break;
+      case "ArrowDown":
+      case "s":
+      case "S":
+        this.keys["ArrowDown"] = false;
+        this.keys["s"] = false;
+        this.keys["S"] = false;
+        break;
+      case "q":
+      case "Q":
+        this.keys["q"] = false;
+        this.keys["Q"] = false;
+        break;
+      case "e":
+      case "E":
+        this.keys["e"] = false;
+        this.keys["ArroEwLeft"] = false;
+        break;
+      default:
+        //do nothing (unassigned keys)
+        break;
+    }
   }
 
   onKeyDown(event) {
@@ -59,43 +107,7 @@ class KeyboardAndMouse {
     event = event || window.event;
     this.keys[event.key] = true;
 
-    Object.keys(this.keys).forEach((key) => {
-      if (this.keys[key]) {
-        switch (key) {
-          case "ArrowLeft":
-          case "a":
-          case "A":
-            this.gamePad.updateAxis(0, -1);
-            break;
-          case "ArrowRight":
-          case "d":
-          case "D":
-            this.gamePad.updateAxis(0, 1);
-            break;
-          case "ArrowUp":
-          case "w":
-          case "W":
-            this.gamePad.updateAxis(1, -1);
-            break;
-          case "ArrowDown":
-          case "s":
-          case "S":
-            this.gamePad.updateAxis(1, 1);
-            break;
-          case "q":
-          case "Q":
-            this.gamePad.updateAxis(2, -1);
-            break;
-          case "e":
-          case "E":
-            this.gamePad.updateAxis(2, 1);
-            break;
-          default:
-            //do nothing (unassigned keys)
-            break;
-        }
-      }
-    });
+    this.gamePad.clearAxes();
   }
 
   onPointerDown(event) {
