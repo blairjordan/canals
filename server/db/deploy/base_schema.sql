@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS players (
   username TEXT NOT NULL,
   meta JSONB,
   position JSONB,
-  balance NUMERIC(10, 2) NOT NULL DEFAULT 0.00
+  balance NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+  last_fished TIMESTAMP WITHOUT TIME ZONE -- The last time the player fished (used for cooldown)
 );
 
 INSERT INTO players (username, position, balance)
@@ -37,30 +38,87 @@ CREATE INDEX IF NOT EXISTS links_props_idx ON links USING GIN (props);
 
 CREATE TABLE IF NOT EXISTS items (
   id BIGSERIAL PRIMARY KEY,
+  item_key VARCHAR(55) NOT NULL,
   name TEXT NOT NULL,
   type VARCHAR(55),
   description TEXT,
-  price NUMERIC(10,2) DEFAULT NULL
+  price NUMERIC(10,2) DEFAULT NULL,
+  props JSONB
 );
 
 CREATE TABLE IF NOT EXISTS marker_items (
   marker_id BIGINT REFERENCES markers(id) NOT NULL,
-  item_id BIGINT REFERENCES items(id) NOT NULL
+  item_id BIGINT REFERENCES items(id) NOT NULL,
+  props JSONB
 );
 
 CREATE TABLE IF NOT EXISTS player_items (
   id BIGSERIAL PRIMARY KEY,
   player_id BIGINT REFERENCES players(id) NOT NULL,
   item_id BIGINT REFERENCES items(id) NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
   props JSONB
 );
 
+-- 📍 Geo markers
 INSERT INTO markers (position, type)
 VALUES
   ('{"x": 0, "y": 0, "z": 0}', 'geo_marker'),
   ('{"x": 500, "y": 0, "z": 0}', 'geo_marker'),
   ('{"x": 500, "y": 0, "z": 500}', 'geo_marker')
 ON CONFLICT DO NOTHING;
+
+-- Fish 🐠
+INSERT INTO items (name, item_key, description, type, props)
+VALUES
+-- Common Fish
+('Sea Bass', 'sea_bass', 'A popular game fish with mild, white flesh and a rich flavor.', 'fish', '{"rarity": "common"}'),
+('Trout', 'trout', 'A freshwater fish with delicate, flaky flesh that is mild in flavor.', 'fish', '{"rarity": "common"}'),
+('Salmon', 'salmon', 'A fatty fish with a rich, buttery flavor and tender flesh.', 'fish', '{"rarity": "common"}'),
+('Pike', 'pike', 'A freshwater fish with firm, white flesh that is often smoked or pickled.', 'fish', '{"rarity": "common"}'),
+('Carp', 'carp', 'A freshwater fish with a mild, sweet flavor and firm texture that is often used in European cuisine.', 'fish', '{"rarity": "common"}'),
+-- Uncommon Fish
+('Zander', 'zander', 'A freshwater fish with firm, white flesh that is prized for its mild, delicate flavor.', 'fish', '{"rarity": "uncommon"}'),
+('Grayling', 'grayling', 'A freshwater fish with delicate, white flesh that is similar in taste to trout.', 'fish', '{"rarity": "uncommon"}'),
+-- Rare Fish
+('Catfish', 'catfish', 'A freshwater fish with firm, white flesh that is often used in stews and soups.',  'fish', '{"rarity": "rare"}'),
+-- Epic fish
+('Sturgeon', 'sturgeon', 'A large, prehistoric-looking fish with firm, flavorful flesh that is prized for its caviar.', 'fish', '{"rarity": "epic"}'),
+-- Legendary,
+('Bull Shark', 'bull_shark', 'A large, aggressive shark with a reputation for attacking humans. Bull sharks are known for their strong, muscular bodies and sharp teeth.', 'fish', '{"rarity": "legendary"}');
+;
+
+-- 🐟 A fishing spot marker
+WITH fishing_spot_insert AS (
+  INSERT INTO markers (position, type)
+  VALUES ('{"x": 200, "y": 0, "z": 250}', 'fishing_spot')
+  RETURNING id
+),
+fishing_spot_fish AS (
+  SELECT id, '{"chance": 0.1 }'::JSONB AS props FROM items WHERE item_key = 'sea_bass'
+  UNION SELECT id, '{"chance": 0.2 }'::JSONB AS props FROM items WHERE item_key = 'trout'
+  UNION SELECT id, '{"chance": 0.05 }'::JSONB AS props FROM items WHERE item_key = 'salmon'
+  UNION SELECT id, '{"chance": 0.15 }'::JSONB AS props FROM items WHERE item_key = 'pike'
+  UNION SELECT id, '{"chance": 0.05 }'::JSONB AS props FROM items WHERE item_key = 'zander'
+)
+INSERT INTO marker_items (marker_id, item_id, props)
+SELECT fishing_spot_insert.id, fishing_spot_fish.id, fishing_spot_fish.props FROM fishing_spot_insert, fishing_spot_fish;
+
+-- 🐟 A second fishing spot marker
+WITH fishing_spot_insert AS (
+  INSERT INTO markers (position, type)
+  VALUES ('{"x": 50, "y": 0, "z": 25}', 'fishing_spot')
+  RETURNING id
+),
+fishing_spot_fish AS (
+  SELECT id, '{"chance": 0.05 }'::JSONB AS props FROM items WHERE item_key = 'sea_bass'
+  UNION SELECT id, '{"chance": 0.15 }'::JSONB AS props FROM items WHERE item_key = 'trout'
+  UNION SELECT id, '{"chance": 0.2 }'::JSONB AS props FROM items WHERE item_key = 'salmon'
+  UNION SELECT id, '{"chance": 0.05 }'::JSONB AS props FROM items WHERE item_key = 'pike'
+  UNION SELECT id, '{"chance": 0.15 }'::JSONB AS props FROM items WHERE item_key = 'zander'
+)
+INSERT INTO marker_items (marker_id, item_id, props)
+SELECT fishing_spot_insert.id, fishing_spot_fish.id, fishing_spot_fish.props FROM fishing_spot_insert, fishing_spot_fish;
 
 INSERT INTO links (from_marker_id, to_marker_id)
 VALUES
@@ -75,16 +133,25 @@ WITH vendor_insert AS (
   RETURNING id
 ),
 item_insert AS (
-  INSERT INTO items (name, description, price, type)
+  INSERT INTO items (name, item_key, description, price, type, props)
   VALUES
-  ('Spincast Rod', 'A simple fishing rod designed to work with spincasting reels.', 25.00, 'fishing_rod'),
-  ('Spinning Rod', 'The most common type of fishing rod, designed to work with spinning reels.', 50.00, 'fishing_rod'),
-  ('Baitcasting Rod', 'A powerful fishing rod designed to work with baitcasting reels.', 100.00, 'fishing_rod'),
-  ('Fly Rod', 'A specialized fishing rod designed for fly fishing.', 200.00, 'fishing_rod')
+  ('Spincast Rod', 'spincast_rod', 'A simple fishing rod designed to work with spincasting reels.', 25.00, 'fishing_rod', '{"chance_multipler": 1}'::JSONB),
+  ('Spinning Rod', 'spinning_rod', 'The most common type of fishing rod, designed to work with spinning reels.', 50.00, 'fishing_rod', '{"chance_multipler": 1.05}'::JSONB),
+  ('Baitcasting Rod', 'baitcasting_rod', 'A powerful fishing rod designed to work with baitcasting reels.', 100.00, 'fishing_rod', '{"chance_multipler": 1.1}'::JSONB),
+  ('Fly Rod', 'fly_rod', 'A specialized fishing rod designed for fly fishing.', 200.00, 'fishing_rod', '{"chance_multipler": 1.15}'::JSONB)
   RETURNING id
 )
 INSERT INTO marker_items (marker_id, item_id)
 SELECT vendor_insert.id, item_insert.id FROM vendor_insert, item_insert;
+
+-- 👬 Give demo players a rod
+WITH fishing_rod AS (
+  SELECT id FROM items WHERE item_key = 'spincast_rod'
+)
+INSERT INTO player_items (player_id, item_id, props)
+SELECT players.id, fishing_rod.id, '{"equipped": true}'::JSONB
+FROM players
+CROSS JOIN fishing_rod;
 
 -- 🪴 Florist vendor
 WITH vendor_insert AS (
@@ -93,12 +160,12 @@ WITH vendor_insert AS (
   RETURNING id
 ),
 item_insert AS (
-  INSERT INTO items (name, description, price, type)
+  INSERT INTO items (name, item_key, description, price, type)
   VALUES
-  ('Snake Plant', 'A potted Snake Plant, also known as Mother-in-Law’s Tongue.', 20.00, 'plant'),
-  ('Barrel Cactus', 'A potted Barrel Cactus, also known as Ferocactus.', 60.00, 'plant'),
-  ('Boxwood Topiary', 'A potted Boxwood Topiary, pruned into a ball shape.', 35.00, 'plant'),
-  ('Climbing Ivy', 'A potted Climbing Ivy, trained to climb a trellis or wall.', 25.00, 'plant')
+  ('Snake Plant', 'snake_plant', 'A potted Snake Plant, also known as Mother-in-Law’s Tongue.', 20.00, 'plant'),
+  ('Barrel Cactus', 'barrel_cactus', 'A potted Barrel Cactus, also known as Ferocactus.', 60.00, 'plant'),
+  ('Boxwood Topiary', 'boxwood_topiary', 'A potted Boxwood Topiary, pruned into a ball shape.', 35.00, 'plant'),
+  ('Climbing Ivy', 'climbing_ivy', 'A potted Climbing Ivy, trained to climb a trellis or wall.', 25.00, 'plant')
   RETURNING id
 )
 INSERT INTO marker_items (marker_id, item_id)
@@ -111,29 +178,29 @@ WITH vendor_insert AS (
   RETURNING id
 ),
 item_insert AS (
-  INSERT INTO items (name, description, price, type)
+  INSERT INTO items (name, item_key, description, price, type)
   VALUES
   -- General Items
-  ('Air Conditioner', 'Cools air inside a boat''s cabin or enclosed space.', 500.00, 'general_item'),
-  ('Solar Panel', 'Converts sunlight into electricity to power onboard systems.', 300.00, 'general_item'),
+  ('Air Conditioner', 'air_conditioner', 'Cools air inside a boat''s cabin or enclosed space.', 500.00, 'general_item'),
+  ('Solar Panel', 'solar_panel', 'Converts sunlight into electricity to power onboard systems.', 300.00, 'general_item'),
   -- Hulls
-  ('Flat-bottomed Hull', 'A type of boat hull that has a flat bottom, making it very stable but slower than other hull types.', 500.00, 'boat_hull'),
-  ('Multi-chine Hull', 'A type of boat hull that has multiple angles or "chines" in its shape, providing good stability and speed.', 1000.00, 'boat_hull'),
-  ('Round-bottomed Hull', 'A type of boat hull that has a round bottom, providing good speed but less stability than flat-bottomed hulls.', 1500.00, 'boat_hull'),
+  ('Flat-bottomed Hull', 'flat_hull', 'A type of boat hull that has a flat bottom, making it very stable but slower than other hull types.', 500.00, 'boat_hull'),
+  ('Multi-chine Hull', 'multi_chine_hull', 'A type of boat hull that has multiple angles or "chines" in its shape, providing good stability and speed.', 1000.00, 'boat_hull'),
+  ('Round-bottomed Hull', 'round_hull', 'A type of boat hull that has a round bottom, providing good speed but less stability than flat-bottomed hulls.', 1500.00, 'boat_hull'),
   -- Decks
-  ('Fiberglass Deck', 'A type of boat deck made from fiberglass, providing good durability and resistance to water damage.', 750.00, 'boat_deck'),
-  ('Pine Deck', 'A type of boat deck made from pine wood, providing a traditional and classic look.', 500.00, 'boat_deck'),
-  ('Cedar Deck', 'A type of boat deck made from cedar wood, providing good resistance to water damage and a pleasant aroma.', 1250.00, 'boat_deck'),
-  ('Mahogany Deck', 'A type of boat deck made from mahogany wood, providing a luxurious and classic look.', 2500.00, 'boat_deck'),
+  ('Fiberglass Deck', 'fiberglass_deck', 'A type of boat deck made from fiberglass, providing good durability and resistance to water damage.', 750.00, 'boat_deck'),
+  ('Pine Deck',  'pine_deck', 'A type of boat deck made from pine wood, providing a traditional and classic look.', 500.00, 'boat_deck'),
+  ('Cedar Deck', 'cedar_deck','A type of boat deck made from cedar wood, providing good resistance to water damage and a pleasant aroma.', 1250.00, 'boat_deck'),
+  ('Mahogany Deck', 'mahogany_deck', 'A type of boat deck made from mahogany wood, providing a luxurious and classic look.', 2500.00, 'boat_deck'),
   -- Engines
-  ('Outboard Engine', 'A type of boat engine that is mounted on the outside of the boat, providing good speed and maneuverability.', 5000.00, 'boat_engine'),
-  ('Inboard Engine', 'A type of boat engine that is mounted inside the boat, providing good power and torque.', 7500.00, 'boat_engine'),
-  ('Electric Engine', 'A type of boat engine that is powered by electricity, providing quiet and eco-friendly propulsion.', 10000.00, 'boat_engine'),
-  ('Inboard Diesel Engine', 'A type of boat engine that is powered by diesel fuel and mounted inside the boat, providing good power and fuel efficiency.', 12500.00, 'boat_engine'),
+  ('Outboard Engine', 'outboard_engine', 'A type of boat engine that is mounted on the outside of the boat, providing good speed and maneuverability.', 5000.00, 'boat_engine'),
+  ('Inboard Engine', 'inboard_engine', 'A type of boat engine that is mounted inside the boat, providing good power and torque.', 7500.00, 'boat_engine'),
+  ('Electric Engine', 'electric_engine', 'A type of boat engine that is powered by electricity, providing quiet and eco-friendly propulsion.', 10000.00, 'boat_engine'),
+  ('Inboard Diesel Engine', 'inboard_diesel_engine', 'A type of boat engine that is powered by diesel fuel and mounted inside the boat, providing good power and fuel efficiency.', 12500.00, 'boat_engine'),
   -- Sterns
-  ('Traditional', 'A classic stern design that provides good stability and handling.', 500.00, 'boat_stern'),
-  ('Semi-Traditional', 'A modern take on the traditional stern design, providing a balance between stability and speed.', 2500.00, 'boat_stern'),
-  ('Cruiser', 'A sleek and stylish stern design that emphasizes speed and maneuverability.', 5000.00, 'boat_stern')
+  ('Traditional', 'traditional_stern', 'A classic stern design that provides good stability and handling.', 500.00, 'boat_stern'),
+  ('Semi-Traditional', 'semi_traditional_stern', 'A modern take on the traditional stern design, providing a balance between stability and speed.', 2500.00, 'boat_stern'),
+  ('Cruiser', 'cruiser_stern', 'A sleek and stylish stern design that emphasizes speed and maneuverability.', 5000.00, 'boat_stern')
   RETURNING id
 )
 INSERT INTO marker_items (marker_id, item_id)
@@ -201,11 +268,15 @@ FROM links_recursive;
 
 COMMENT ON VIEW links_recursive IS E'@foreignKey (to_marker_id) references markers (id)|@foreignFieldName toMarker\n@foreignKey (from_marker_id) references markers (id)|@foreignFieldName fromMarker';
 
+-- 📝 Note: player_ids are not validated.
+-- The reason for this is that player_id will be removed from the parameters and 
+-- sourced in DB session once JWT auth is implemented.
+
 -- 🏪 Purchase item function
 CREATE OR REPLACE FUNCTION purchase_item(player_id INTEGER, item_id INTEGER)
 RETURNS player_items AS $$
 DECLARE
-  player_item player_items;
+  player_item player_items; -- items purchased in player's inventory
 BEGIN
   WITH item_price AS (
     SELECT price FROM items WHERE id = item_id
@@ -234,6 +305,52 @@ BEGIN
   END IF;
 
   RETURN player_item;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 🎣 Fishin' function
+CREATE OR REPLACE FUNCTION go_fish(
+  player_id INTEGER,
+  marker_id INTEGER
+  )
+RETURNS player_items AS $$
+  #variable_conflict use_variable
+DECLARE
+  player_item player_items := NULL; -- The fish caught by the player
+  chance_multiplier NUMERIC;
+BEGIN
+
+  SELECT (items.props ->> 'chance_multipler')::NUMERIC AS chance_multiplier
+  INTO chance_multiplier
+  FROM players
+  LEFT OUTER JOIN player_items on players.id = player_items.player_id
+  LEFT OUTER JOIN items on player_items.item_id = items.id
+  WHERE players.id = player_id
+  AND COALESCE(last_fished, '-infinity') < now() - interval '30 seconds'
+  AND items.type = 'fishing_rod'
+  AND player_items.props ->> 'equipped' = 'true';
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Fishing action on cooldown';
+  END IF;
+
+  UPDATE players
+  SET last_fished = now()
+  WHERE id = player_id;
+
+  INSERT INTO player_items(player_id, item_id)
+  SELECT player_id, item_id
+  FROM marker_items
+  INNER JOIN items ON marker_items.item_id = items.id
+  WHERE marker_id = 4
+  AND random() < (marker_items.props ->> 'chance')::NUMERIC * chance_multiplier
+  ORDER BY random()
+  LIMIT 1
+  RETURNING * INTO player_item;
+
+  -- Return the caught fish
+  RETURN player_item;
+
 END;
 $$ LANGUAGE plpgsql;
 
