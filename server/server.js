@@ -20,9 +20,10 @@ app.get("/healthz", (req, res) => {
 app.use(
   postgraphile(
     process.env.DATABASE_URL ||
-      "postgres://canaluser:canalpassword@localhost:5431/canaldb",
+      "postgres://canaluser:canalpassword@localhost:5432/canaldb",
     "public",
     {
+      ownerConnectionString: process.env.DATABASE_URL,
       graphqlRoute,
       graphiqlRoute,
       pluginHook,

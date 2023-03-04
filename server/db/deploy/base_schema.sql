@@ -1,3 +1,7 @@
+-- Deploy canals:base_schema to pg
+
+BEGIN;
+
 CREATE TABLE IF NOT EXISTS players (
   id BIGSERIAL PRIMARY KEY,
   username TEXT NOT NULL,
@@ -158,14 +162,14 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- 🔫 Trigger for player updates
-CREATE TRIGGER player_changes_trigger
+CREATE OR REPLACE TRIGGER player_changes_trigger
   AFTER INSERT OR UPDATE
   ON players
   FOR EACH ROW
   EXECUTE FUNCTION notify_player_changes();
 
 -- A nice view to return the grid node links recursively 👀
-CREATE VIEW links_recursive AS
+CREATE OR REPLACE VIEW links_recursive AS
 WITH RECURSIVE links_recursive AS (
     -- 🛑 Non-recursive term
     SELECT
@@ -233,3 +237,4 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+COMMIT;
