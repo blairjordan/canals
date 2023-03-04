@@ -2,6 +2,7 @@
 import React, { Component } from 'react';
 import GraphQL from '../Server/graphQL';
 import '../Styles/App.css';
+import '../Styles/Game.css';
 import { TestScene } from '../Three/Scene/TestScene';
 import { useParams } from "react-router-dom";
 
@@ -11,6 +12,7 @@ function withParams(Component) {
 
 class Test extends Component {
   state = {
+    speed: 0,
   };
 
   componentDidMount() {
@@ -38,17 +40,28 @@ class Test extends Component {
     }
   }
 
+  updateSpeed(speed) {
+    this.setState({
+      speed: speed,
+    });
+  }
+
   loadScene = async (id) => {
     var storedPlayer = localStorage.getItem("Player");
     const player = JSON.parse(storedPlayer);
-    const testScene = new TestScene(player);
+    const testScene = new TestScene(player, this.updateSpeed.bind(this));
     testScene.init();
   }
 
   render() {
+    const { speed } = this.state;
     return (
       <div className="App">
         <div id="canvasContainer"/>
+
+        <div id="gameUI">
+          <div id="playerSpeed">{speed} nph</div>
+        </div>
       </div>
     );
   }
