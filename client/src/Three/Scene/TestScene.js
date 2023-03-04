@@ -6,6 +6,7 @@ import { Sky } from "../Objects/Sky";
 
 import waterNormals from "../../Assets/textures/waternormals.jpg";
 
+import TWEEN from "@tweenjs/tween.js";
 import { Connectivity } from "../../Server/IO";
 import { GamePads } from "../Controls/GamePads";
 import { cyrb128, sfc32 } from "../Utils/utils";
@@ -172,16 +173,21 @@ class TestScene {
   }
 
   initPlayer() {
+    const transform = JSON.parse(this.playerData.position)
     this.player = new Player(this, this.playerData);
     this.player.init();
+
     this.connectivity = new Connectivity(this, this.player.playerGroup);
     this.connectivity.init();
+    this.connectivity.players.push(this.player)
+
 
     this.lastPlayerPosition.copy(this.player.playerGroup.position)
     this.gamepads.gamePad.boatTargetObject.position.set(
-      Number(this.playerData.position.x),
-      Number(this.playerData.position.z), 
-      Number(this.playerData.position.y))
+      Number(transform.x),
+      Number(transform.z), 
+      Number(transform.y))
+    if(transform.r) this.gamepads.gamePad.boatTargetObject.rotation.y = transform.r
 
     this.player.playerGroup.position.copy(this.gamepads.gamePad.boatTargetObject.position);
 
@@ -191,7 +197,6 @@ class TestScene {
     this.camera.position.add(this.currentPlayerPosition)
 
     this.controls.target.copy(this.player.playerGroup.position);
-
   }
 
   initControls() {
@@ -241,6 +246,7 @@ class TestScene {
       this.connectivity.update();
       
     }
+    TWEEN.update();
     if(this.gamepads) this.smoothControls(delta);
     if(this.canalNetwork) this.canalNetwork.update(delta);
   }

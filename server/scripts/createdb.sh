@@ -7,9 +7,7 @@ POSTGRES_CONTAINER_NAME=canal-postgres
 POSTGRES_USER=canaluser
 POSTGRES_PASSWORD=canalpassword
 POSTGRES_DB=canaldb
-POSTGRES_PORT=5432
-POSTGRES_HOST=localhost
-SQITCH_TARGET=db:pg://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB
+POSTGRES_PORT=5431
 
 echo "🚧 Stopping and removing existing container ..."
 docker stop $POSTGRES_CONTAINER_NAME >/dev/null 2>&1
@@ -25,25 +23,20 @@ docker run -d \
   -e POSTGRES_PASSWORD=canalpassword \
   -e POSTGRES_DB=canaldb \
   -e POSTGRES_HOST_AUTH_METHOD=trust \
-  -p 5432:5432 \
+  -p 5431:5432 \
   postgres:latest >/dev/null 2>&1
 
 sleep 5
 
-cd db
+echo "🚚 Copying SQL to container ..."
 
-echo "🐳 Pulling sqitch image ..."
+docker cp $SCRIPT_DIR/createdb.sql $POSTGRES_CONTAINER_NAME:/createdb.sql
 
-docker pull -q sqitch/sqitch
+echo "🌊 Creating DB objects ..."
 
-echo "⬇ Downloading Sqitch bash script ..."
-
-curl -sL https://git.io/JJKCn -o sqitch && chmod +x sqitch
-
-echo "🌊 Deploying DB objects ..."
-./sqitch deploy --target $SQITCH_TARGET
+docker exec $POSTGRES_CONTAINER_NAME psql -U canaluser canaldb -f ./createdb.sql
 
 echo -n "🌏 Container IP ($POSTGRES_CONTAINER_NAME):"
 printf " %s\n" $(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $POSTGRES_CONTAINER_NAME)
 
-echo -e "🔗 PostgreSQL Connection String: \033[0;36mpostgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB"
+echo -e "🔗 PostgreSQL Connection String: \033[0;36mpostgres://$POSTGRES_USER:$POSTGRES_PASSWORD@localhost:$POSTGRES_PORT/$POSTGRES_DB"

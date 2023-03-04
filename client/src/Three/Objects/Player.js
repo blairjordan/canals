@@ -1,5 +1,5 @@
 
-import { Group } from "three";
+import { Group, Color } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import boatModelUrl from "../../Assets/models/test_boat.glb";
 
@@ -16,13 +16,17 @@ class Player {
         this.init = this.init.bind(this);
     }
 
-    async init() {
+    async init(callback = null) {
 
         await this.loadPlayerBoat();
 
         this.app.scene.add(this.playerGroup);
 
         this.ready = true
+
+        if(callback) {
+          callback()
+        }
     }
 
     async loadPlayerBoat() {
@@ -40,4 +44,11 @@ class Player {
     }
 }
 
-export {Player}
+function randomColor() {
+  const i = Math.round(Math.random() * 63.99)
+  const c = new Color();
+  c.setHSL(i%8 / 8, 0.2 + (((i/8)/8) * 0.8), 0 + ((i/8)/8));
+  return c;
+} 
+
+export {Player, randomColor}
