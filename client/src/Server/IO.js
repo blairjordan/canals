@@ -20,6 +20,12 @@ class Connectivity {
     this.lastUpdateTime = 0;
     this.deltaTime = 0;
 
+    this.updateDistance = 2; //1m
+    this.updateTime = 1000; //1s (1000ms)
+    this.timeSinceLastUpdate = 0;
+    this.lastUpdateTime = 0;
+    this.deltaTime = 0;
+
     this.players = [];
     this.updatePlayerPositions = this.updatePlayerPositions.bind(this);
     this.init = this.init.bind(this);

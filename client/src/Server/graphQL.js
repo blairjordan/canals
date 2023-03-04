@@ -108,12 +108,6 @@ class GraphQL {
     }
 
     async updatePlayerPosition(id, pos) {
-      // mutation UpdatePlayerPos($id: BigInt!, $position: JSON!) {
-      //   updatePlayer(input: {patch: {position: $position}, id: $id}) {
-      //     clientMutationId
-      //   }
-      // }
-      
       const gqlMute = gql(`
         mutation {
           updatePlayer(
@@ -157,27 +151,28 @@ class GraphQL {
     //Subscriptions
     initPlayerSubscriptions(updateCallback) {
       const playerPosUpdateSUB = gql`
-      subscription {
-        listen(topic: "player_updated") {
-          relatedNode {
-            ... on Player {
-              id
-              position
+        subscription {
+          listen(topic: "") {
+            query {
+              players {
+                nodes {
+                  position
+                  id
+                }
+              }
             }
           }
         }
-      }
       `;
       this.client.subscribe({ query: playerPosUpdateSUB }).subscribe({
-        next(result) {
-          updateCallback(result?.data?.listen?.relatedNode);
+        next(data) {
+          updateCallback(data);
+          console.log('Received data: ', data);
         },
         error(error) {
           console.error('Subscription error: ', error);
         },
       });
-
-      console.log('init subscription')
     }
 
 }
