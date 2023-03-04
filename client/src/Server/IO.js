@@ -1,8 +1,7 @@
 import * as THREE from "three";
-import { io } from "socket.io-client";
-import { Player, randomColor } from "./Player";
 import GraphQL from "../Server/graphQL";
-import graphQL from "../Server/graphQL";
+import TWEEN from "@tweenjs/tween.js";
+import { Player, randomColor } from "../Three/Objects/Player";
 
 class Connectivity {
   constructor(app, player) {
@@ -10,19 +9,18 @@ class Connectivity {
     this.socket = null;
     this.id = app.playerData.id
     this.color = randomColor();
-    console.log("Player id:" + this.id);
     this.player = player;
     this.lastPlayerPosition = new THREE.Vector3();
+    this.lastPlayerRotation = 0;
 
     this.updateDistance = 2; //1m
+    this.updateRotation = 0.1 //5deg in radians
     this.updateTime = 1000; //1s (1000ms)
     this.timeSinceLastUpdate = 0;
     this.lastUpdateTime = 0;
     this.deltaTime = 0;
 
     this.players = [];
-    this.updatePlayers = this.updatePlayers.bind(this);
-    this.removePlayers = this.removePlayers.bind(this);
     this.updatePlayerPositions = this.updatePlayerPositions.bind(this);
     this.init = this.init.bind(this);
     this.update = this.update.bind(this);
@@ -32,73 +30,62 @@ class Connectivity {
     GraphQL.initPlayerSubscriptions(this.updatePlayerPositions);
   }
 
-  updatePlayerPositions(players) {
-    
-  }
+  updatePlayerPositions(data) {
+    if(data) {
+      if(data.id !== this.id) {
+        //update player position
+        const transform = JSON.parse(data.position);
+        let playerIndex = this.findPlayer(data.id);
+        if(playerIndex>=0) {
+          this.updatePlayerPosition(playerIndex, transform);
+        } else {
+          playerIndex = this.players.length
+          const callback = () => {
+            this.updatePlayerPosition(playerIndex, transform)
+          }
 
-  removePlayers(socket) {
-    let index = -1;
-    for (let i = 0; i < this.players.length; i++) {
-      if (this.players[i].id === socket.id) {
-        index = i;
-      }
-    }
-    if (index >= 0) {
-      this.players[index].mesh.geometry.dispose();
-      this.players[index].mesh.material.dispose();
-      this.app.scene.remove(this.players[index].mesh);
-      this.players.splice(index, 1);
-    }
-  }
-
-  updatePlayers(socket) {
-    let updated = false;
-    for (let i = 0; i < this.players.length; i++) {
-      if (this.players[i].id === socket.id) {
-        if (socket.id !== this.id) {
-          this.players[i].positionData.position[0] =
-            socket.positionData.position[0];
-          this.players[i].positionData.position[1] =
-            socket.positionData.position[1];
-          this.players[i].positionData.position[2] =
-            socket.positionData.position[2];
-          this.players[i].mesh.position.set(
-            this.players[i].positionData.position[0],
-            this.players[i].positionData.position[2],
-            this.players[i].positionData.position[1]
-          );
+          const player = new Player(this.app, data);
+          this.players.push(player)
+          player.init(callback);
         }
-        updated = true;
       }
-    }
-
-    if (!updated) {
-      this.createOtherPlayer(socket);
     }
   }
 
-  createOtherPlayer(socket) {
-    const player = new Player();
-    player.id = socket.id;
-    player.positionData.position[0] = socket.positionData.position[0];
-    player.positionData.position[1] = socket.positionData.position[1];
-    player.positionData.position[2] = socket.positionData.position[2];
-    player.positionData.color = socket.positionData.color;
+  updatePlayerPosition(playerIndex, transform) {
+    const initVal = { 
+      x:this.players[playerIndex].playerGroup.position.x,
+      y:this.players[playerIndex].playerGroup.position.z,
+      z:this.players[playerIndex].playerGroup.position.y,
+      r:this.players[playerIndex].playerGroup.rotation.y  };
+    if(this.players[playerIndex].updateTween) {
+      this.players[playerIndex].updateTween.stop()
+    }
+    this.players[playerIndex].updateTween = new TWEEN.Tween(initVal)
+      .to({ 
+        x: transform.x, 
+        y: transform.y, 
+        z: transform.z, 
+        r: transform.r ? transform.r : this.players[playerIndex].playerGroup.rotation.y }
+        , 250)
+      .onUpdate(() => {
+        this.players[playerIndex].playerGroup.position.x = initVal.x
+        this.players[playerIndex].playerGroup.position.y = initVal.z
+        this.players[playerIndex].playerGroup.position.z = initVal.y
+        this.players[playerIndex].playerGroup.rotation.y = initVal.r
+      })
+      .start();
+  }
 
-    const color = new THREE.Color();
-    color.setHex(player.positionData.color);
-    const geometry = new THREE.SphereGeometry(5, 5, 5);
-    const material = new THREE.MeshBasicMaterial({ color: color, opacity: 0.5, transparent: true });
-    const mesh = new THREE.Mesh(geometry, material);
-    player.mesh = mesh;
-    player.mesh.position.set(
-      player.positionData.position[0],
-      player.positionData.position[2],
-      player.positionData.position[1]
-    );
-    this.app.scene.add(player.mesh);
-
-    this.players.push(player);
+  findPlayer(id) {
+    let index = -1
+    for (let i = 0; i < this.players.length; i++) {
+      if (this.players[i].playerData.id === id) {
+        index = i;
+        break;
+      }
+    }
+    return index;
   }
 
   itemsCollected(items) {
@@ -113,18 +100,21 @@ class Connectivity {
 
     // calculate the difference in milliseconds
     const dist = this.lastPlayerPosition.distanceTo(this.player.position);
+    const rot = Math.abs(this.lastPlayerRotation-this.player.rotation.y)
 
     // const deltaTime = performance.now(); - this.deltaTime; 
     // this.deltaTime = performance.now();
     // this.timeSinceLastUpdate += deltaTime;
 
 
-    if (dist > this.updateDistance) {
-      graphQL.updatePlayerPosition(this.id.toString(), {
+    if (dist > this.updateDistance || rot > this.updateRotation) {
+      GraphQL.updatePlayerPosition(this.id.toString(), {
          x:this.player.position.x,
          y:this.player.position.z,
-         z:this.player.position.y })
+         z:this.player.position.y,
+         r:this.player.rotation.y})
       this.lastPlayerPosition.copy(this.player.position);
+      this.lastPlayerRotation = this.player.rotation.y;
     }
   }
 

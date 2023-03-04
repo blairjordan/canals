@@ -11,7 +11,7 @@ class GraphQL {
       });
       
       const wsLink = new GraphQLWsLink(createClient({
-        url: 'wss://canals-api.onrender.com/subscriptions',
+        url: 'wss://canals-api.onrender.com/graphql',
       }));
       const splitLink = split(
         ({ query }) => {
@@ -108,21 +108,29 @@ class GraphQL {
     }
 
     async updatePlayerPosition(id, pos) {
+      // mutation UpdatePlayerPos($id: BigInt!, $position: JSON!) {
+      //   updatePlayer(input: {patch: {position: $position}, id: $id}) {
+      //     clientMutationId
+      //   }
+      // }
+      
+      const gqlMute = gql(`
+        mutation {
+          updatePlayer(
+            input: {patch: {position: `+JSON.stringify(JSON.stringify(pos))+`}, id: `+JSON.stringify(id)+`}
+          ) {
+            player {
+              id
+              position
+            }
+          }
+        }
+        `)
+
+
       return new Promise((resolve) => {
       this.client.mutate({
-          mutation: gql`
-            mutation UpdatePlayerPos($id: BigInt!, $x: BigFloat, $y: BigFloat, $z: BigFloat) {
-              updatePlayer(input: {patch: {position: { x: $x, y: $y, z: $z}}, id: $id}) {
-                clientMutationId
-              }
-            }
-          `,
-          variables: {
-            "id": id,
-            "x": pos.x,
-            "y": pos.y,
-            "z": pos.z
-          }
+          mutation: gqlMute
         })
         .then(result => resolve(result));
       });
@@ -149,28 +157,27 @@ class GraphQL {
     //Subscriptions
     initPlayerSubscriptions(updateCallback) {
       const playerPosUpdateSUB = gql`
-        subscription {
-          listen(topic: "") {
-            query {
-              players {
-                nodes {
-                  position
-                  id
-                }
-              }
+      subscription {
+        listen(topic: "player_updated") {
+          relatedNode {
+            ... on Player {
+              id
+              position
             }
           }
         }
+      }
       `;
       this.client.subscribe({ query: playerPosUpdateSUB }).subscribe({
-        next(data) {
-          updateCallback(data);
-          console.log('Received data: ', data);
+        next(result) {
+          updateCallback(result?.data?.listen?.relatedNode);
         },
         error(error) {
           console.error('Subscription error: ', error);
         },
       });
+
+      console.log('init subscription')
     }
 
 }
