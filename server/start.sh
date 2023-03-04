@@ -3,7 +3,7 @@
 echo "🚢 Deploying database"
 
 # Run Sqitch deployment
-cd db && sqitch deploy db:$DATABASE_URL
+cd db && sqitch rebase db:$DATABASE_URL
 
 echo "🏝 Database deployed to $DATABASE_URL"
 
