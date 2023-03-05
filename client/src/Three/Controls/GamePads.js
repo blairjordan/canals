@@ -69,8 +69,7 @@ class GamePads {
     });
   }
 
-  update() {
-
+  update(delta) {
     const gamepads = navigator.getGamepads();
     if (gamepads !== null) {
       Object.keys(gamepads).forEach((key) => {
@@ -95,6 +94,23 @@ class GamePads {
       });
     }
     if(this.keyboardAndMouse !== null) {
+
+        // case 0: //a
+        // case 1: //b
+        // case 2: //x
+        // case 3: //y
+        // case 4: //lb (left top button)
+        // case 5: //lr (right top button)
+        // case 6: //lt (left trigger)
+        // case 7: //rt (right trigger)
+        // case 8: //select
+        // case 9: //start
+        // case 10: //left joystick
+        // case 11: //right joystick
+        // case 12: //dpad up
+        // case 13: //dpad down
+        // case 14: //dpad left
+        // case 15: //dpad right
       Object.keys(this.keyboardAndMouse.keys).forEach((key) => {
         if (this.keyboardAndMouse.keys[key]) {
           switch (key) {
@@ -126,6 +142,10 @@ class GamePads {
             case "E":
               this.gamePad.updateAxis(2, 1);
               break;
+            case "f":
+            case "F":
+              this.gamePad.buttonAction({pressed: true, value: 1}, 3); //(same as y)
+              break;
             default:
               //do nothing (unassigned keys)
               break;
@@ -133,8 +153,8 @@ class GamePads {
         }
       });
     }
-    this.gamePad.update()
-    this.gamePad.clearAxes();
+    this.gamePad.update(delta)
+    this.gamePad.clearInputs();
   }
 }
 
