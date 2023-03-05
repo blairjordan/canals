@@ -107,7 +107,8 @@ class KeyboardAndMouse {
     event = event || window.event;
     this.keys[event.key] = true;
 
-    this.gamePad.clearAxes();
+    //remove this.. test before doing so
+    //this.gamePad.clearInputs();
   }
 
   onPointerDown(event) {

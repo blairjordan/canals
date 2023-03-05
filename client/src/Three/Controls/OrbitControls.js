@@ -76,6 +76,9 @@ class OrbitControls extends EventDispatcher {
     this.autoRotate = false;
     this.autoRotateSpeed = 2.0; // 30 seconds per orbit when fps is 60
 
+    this.controllerRotateLeft = 0;
+    this.controllerRotateUp = 0;
+
     // The four arrow keys
     this.keys = {
       LEFT: "ArrowLeft",
@@ -158,7 +161,7 @@ class OrbitControls extends EventDispatcher {
 
       const twoPI = 2 * Math.PI;
 
-      return function update() {
+      return function update(left = null, up = null) {
         const position = scope.object.position;
 
         offset.copy(position).sub(scope.target);
@@ -168,6 +171,13 @@ class OrbitControls extends EventDispatcher {
 
         // angle from z-axis around y-axis
         spherical.setFromVector3(offset);
+
+        if(left) {
+          rotateLeft(left);
+        }
+        if(up !== 0) {
+          rotateUp(up);
+        }
 
         if (scope.autoRotate && state === STATE.NONE) {
           rotateLeft(getAutoRotationAngle());

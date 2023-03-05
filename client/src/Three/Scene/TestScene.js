@@ -67,7 +67,7 @@ class TestScene {
       1,
       20000
     );
-    this.camera.position.set(0, 0, 0);
+    this.camera.position.set(20, 20, 20);
 
     this.sun = new THREE.Vector3();
 
@@ -180,7 +180,7 @@ class TestScene {
   }
 
   initPlayer() {
-    const transform = JSON.parse(this.playerData.position)
+    const transform = (typeof this.playerData.position === 'object') ? this.playerData.position : JSON.parse(this.playerData.position)
     this.player = new Player(this, this.playerData);
     this.player.init();
 
@@ -259,7 +259,7 @@ class TestScene {
     }
     TWEEN.update();
     if(this.gamepads) {
-      if(this.gamepads) this.gamepads.update()
+      if(this.gamepads) this.gamepads.update(delta)
       this.smoothControls(delta);
     }
     if(this.canalNetwork) this.canalNetwork.update(delta);
