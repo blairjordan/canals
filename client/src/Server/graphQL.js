@@ -152,7 +152,7 @@ class GraphQL {
     initPlayerSubscriptions(updateCallback) {
       const playerPosUpdateSUB = gql`
         subscription {
-          listen(topic: "") {
+          listen(topic: "player_updated") {
             query {
               players {
                 nodes {
