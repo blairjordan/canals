@@ -1,72 +1,80 @@
-
-import { HttpLink, ApolloClient, InMemoryCache, gql, split } from '@apollo/client/core';
-import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
-import { getMainDefinition } from '@apollo/client/utilities';
-import { createClient } from 'graphql-ws';
+import {
+  HttpLink,
+  ApolloClient,
+  InMemoryCache,
+  gql,
+  split,
+} from "@apollo/client/core"
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions"
+import { getMainDefinition } from "@apollo/client/utilities"
+import { createClient } from "graphql-ws"
 
 class GraphQL {
-    constructor() {
-      const httpLink = new HttpLink({
-        uri: 'https://canals-api.onrender.com/graphql'
-      });
-      
-      const wsLink = new GraphQLWsLink(createClient({
-        url: 'wss://canals-api.onrender.com/graphql',
-      }));
-      const splitLink = split(
-        ({ query }) => {
-          const definition = getMainDefinition(query);
-          return (
-            definition.kind === 'OperationDefinition' &&
-            definition.operation === 'subscription'
-          );
+  constructor() {
+    const httpLink = new HttpLink({
+      uri: "https://canals-api.onrender.com/graphql",
+    })
+
+    const wsLink = new GraphQLWsLink(
+      createClient({
+        url: "wss://canals-api.onrender.com/graphql",
+      })
+    )
+    const splitLink = split(
+      ({ query }) => {
+        const definition = getMainDefinition(query)
+        return (
+          definition.kind === "OperationDefinition" &&
+          definition.operation === "subscription"
+        )
+      },
+      wsLink,
+      httpLink
+    )
+
+    this.client = new ApolloClient({
+      link: splitLink,
+      cache: new InMemoryCache(),
+      defaultOptions: {
+        watchQuery: {
+          fetchPolicy: "no-cache",
         },
-        wsLink,
-        httpLink,
-      );
+      },
+    })
 
-        this.client = new ApolloClient({
-          link: splitLink,
-          cache: new InMemoryCache(),
-          defaultOptions: {
-            watchQuery: {
-              fetchPolicy: 'no-cache',
-            },
-          },
-        });
+    console.log("GraphQL constructor")
+  }
 
-        console.log('GraphQL constructor')
-    }
-
-    //Get all players
-    getPlayers() 
-    {
-      return new Promise((resolve) => {
-      this.client.query({
-        query: gql`
-          query {
-            players {
-              nodes {
-                id
-                username
-                meta
-                position
+  //Get all players
+  getPlayers() {
+    return new Promise((resolve) => {
+      this.client
+        .query({
+          query: gql`
+            query {
+              players {
+                nodes {
+                  id
+                  username
+                  meta
+                  position
+                }
               }
             }
-          }
-        `
-      })
-        .then(result => resolve(result));
-      });
-    }
+          `,
+        })
+        .then((result) => resolve(result))
+    })
+  }
 
-    //Get player with inventory
-    async getPlayer(id) {
-      return new Promise((resolve) => {
-      this.client.query({
+  //Get player with inventory
+  async getPlayer(id) {
+    return new Promise((resolve) => {
+      this.client
+        .query({
           query: gql`
             query GetPlayer($id: BigInt!) {
-              player(id:$id) {
+              player(id: $id) {
                 id
                 username
                 meta
@@ -75,19 +83,20 @@ class GraphQL {
             }
           `,
           variables: {
-            "id": id
-          }
+            id: id,
+          },
         })
-        .then(result => resolve(result));
-      });
-    }
+        .then((result) => resolve(result))
+    })
+  }
 
-    async guestPlayer() {
-      return new Promise((resolve) => {
-      this.client.mutate({
+  async guestPlayer() {
+    return new Promise((resolve) => {
+      this.client
+        .mutate({
           mutation: gql`
             mutation CreatePlayer($username: String!) {
-              createPlayer(input: {player: {username: $username}}) {
+              createPlayer(input: { player: { username: $username } }) {
                 player {
                   username
                   position
@@ -100,18 +109,18 @@ class GraphQL {
             }
           `,
           variables: {
-            "username": "guest"
-          }
+            username: "guest",
+          },
         })
-        .then(result => resolve(result));
-      });
-    }
+        .then((result) => resolve(result))
+    })
+  }
 
-    async updatePlayerPosition(id, pos) {
-      const gqlMute = gql(`
-        mutation {
+  async updatePlayerPosition(id, position) {
+    const gqlMute = gql(`
+        mutation UpdatePlayer($id: BigInt!, $position: JSON!) {
           updatePlayer(
-            input: {patch: {position: `+JSON.stringify(JSON.stringify(pos))+`}, id: `+JSON.stringify(id)+`}
+            input: {patch: {position: $position}, id: $id}
           ) {
             player {
               id
@@ -121,59 +130,63 @@ class GraphQL {
         }
         `)
 
-
-      return new Promise((resolve) => {
-      this.client.mutate({
-          mutation: gqlMute
+    return new Promise((resolve) => {
+      this.client
+        .mutate({
+          mutation: gqlMute,
+          variables: {
+            id,
+            position,
+          },
         })
-        .then(result => resolve(result));
-      });
-    }
-
-    async getPlayerPosition(id) {
-      return new Promise((resolve) => {
-      this.client.query({
-        query: gql`
-          query GetPlayer($id: BigInt!) {
-            player(id:$id) {
-              position
-            }
-          }
-        `,
-        variables: {
-          "id": id
-        }
-      })
-      .then(result => resolve(result));
-    });
+        .then((result) => resolve(result))
+    })
   }
 
-    //Subscriptions
-    initPlayerSubscriptions(updateCallback) {
-      const playerPosUpdateSUB = gql`
-        subscription {
-          listen(topic: "player_updated") {
-            query {
-              players {
-                nodes {
-                  position
-                  id
-                }
+  async getPlayerPosition(id) {
+    return new Promise((resolve) => {
+      this.client
+        .query({
+          query: gql`
+            query GetPlayer($id: BigInt!) {
+              player(id: $id) {
+                position
+              }
+            }
+          `,
+          variables: {
+            id: id,
+          },
+        })
+        .then((result) => resolve(result))
+    })
+  }
+
+  //Subscriptions
+  initPlayerSubscriptions(updateCallback) {
+    const playerPosUpdateSUB = gql`
+      subscription {
+        listen(topic: "player_updated") {
+          query {
+            players {
+              nodes {
+                position
+                id
               }
             }
           }
         }
-      `;
-      this.client.subscribe({ query: playerPosUpdateSUB }).subscribe({
-        next(result) {
-          updateCallback(result?.data?.listen?.query?.players.nodes);
-        },
-        error(error) {
-          console.error('Subscription error: ', error);
-        },
-      });
-    }
-
+      }
+    `
+    this.client.subscribe({ query: playerPosUpdateSUB }).subscribe({
+      next(result) {
+        updateCallback(result?.data?.listen?.query?.players.nodes)
+      },
+      error(error) {
+        console.error("Subscription error: ", error)
+      },
+    })
+  }
 }
 
 export default new GraphQL()
