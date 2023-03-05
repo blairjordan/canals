@@ -165,9 +165,8 @@ class GraphQL {
         }
       `;
       this.client.subscribe({ query: playerPosUpdateSUB }).subscribe({
-        next(data) {
-          updateCallback(data);
-          console.log('Received data: ', data);
+        next(result) {
+          updateCallback(result?.data?.listen?.query?.players.nodes);
         },
         error(error) {
           console.error('Subscription error: ', error);

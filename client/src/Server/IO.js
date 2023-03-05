@@ -36,23 +36,30 @@ class Connectivity {
     GraphQL.initPlayerSubscriptions(this.updatePlayerPositions);
   }
 
-  updatePlayerPositions(data) {
-    if(data) {
-      if(data.id !== this.id) {
-        //update player position
-        const transform = JSON.parse(data.position);
-        let playerIndex = this.findPlayer(data.id);
-        if(playerIndex>=0) {
-          this.updatePlayerPosition(playerIndex, transform);
-        } else {
-          playerIndex = this.players.length
-          const callback = () => {
-            this.updatePlayerPosition(playerIndex, transform)
-          }
+  updatePlayerPositions(result) {
+    if(result) {
+      for(let i = 0; i < result.length; i++) {
+        var data = result[i]
+        if(data) {
+          if(data.id !== this.id) {
+            //update player position
+            if(data.position) {
+              const transform = (typeof data.position === 'object') ? data.position : JSON.parse(data.position);
+              let playerIndex = this.findPlayer(data.id);
+              if(playerIndex>=0) {
+                this.updatePlayerPosition(playerIndex, transform);
+              } else {
+                playerIndex = this.players.length
+                const callback = () => {
+                  this.updatePlayerPosition(playerIndex, transform)
+                }
 
-          const player = new Player(this.app, data);
-          this.players.push(player)
-          player.init(callback);
+                const player = new Player(this.app, data);
+                this.players.push(player)
+                player.init(callback);
+              }
+            }
+          }
         }
       }
     }
