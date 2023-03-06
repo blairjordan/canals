@@ -2,6 +2,7 @@ const express = require("express")
 const cors = require("cors")
 const { postgraphile, makePluginHook } = require("postgraphile")
 const { default: PgPubsub } = require("@graphile/pg-pubsub")
+const ConnectionFilterPlugin = require("postgraphile-plugin-connection-filter")
 
 const graphqlRoute = "/graphql"
 const graphiqlRoute = "/graphiql"
@@ -35,7 +36,10 @@ app.use(
       ignoreRBAC: false,
       showErrorStack: "json",
       extendedErrors: ["hint", "detail", "errcode"],
-      appendPlugins: [require("@graphile-contrib/pg-simplify-inflector")],
+      appendPlugins: [
+        require("@graphile-contrib/pg-simplify-inflector"),
+        ConnectionFilterPlugin,
+      ],
       exportGqlSchemaPath: "schema.graphql",
       enhanceGraphiql: true,
       enableQueryBatching: true,

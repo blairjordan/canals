@@ -69,23 +69,23 @@ VALUES
 ON CONFLICT DO NOTHING;
 
 -- Fish 🐠
-INSERT INTO items (name, item_key, description, type, props)
+INSERT INTO items (name, item_key, description, price, type, props)
 VALUES
 -- Common Fish
-('Sea Bass', 'sea_bass', 'A popular game fish with mild, white flesh and a rich flavor.', 'fish', '{"rarity": "common"}'),
-('Trout', 'trout', 'A freshwater fish with delicate, flaky flesh that is mild in flavor.', 'fish', '{"rarity": "common"}'),
-('Salmon', 'salmon', 'A fatty fish with a rich, buttery flavor and tender flesh.', 'fish', '{"rarity": "common"}'),
-('Pike', 'pike', 'A freshwater fish with firm, white flesh that is often smoked or pickled.', 'fish', '{"rarity": "common"}'),
-('Carp', 'carp', 'A freshwater fish with a mild, sweet flavor and firm texture that is often used in European cuisine.', 'fish', '{"rarity": "common"}'),
+('Sea Bass', 'sea_bass', 'A popular game fish with mild, white flesh and a rich flavor.', 4, 'fish', '{"rarity": "common"}'),
+('Trout', 'trout', 'A freshwater fish with delicate, flaky flesh that is mild in flavor.', 4, 'fish', '{"rarity": "common"}'),
+('Salmon', 'salmon', 'A fatty fish with a rich, buttery flavor and tender flesh.', 6, 'fish', '{"rarity": "common"}'),
+('Pike', 'pike', 'A freshwater fish with firm, white flesh that is often smoked or pickled.', 7, 'fish', '{"rarity": "common"}'),
+('Carp', 'carp', 'A freshwater fish with a mild, sweet flavor and firm texture that is often used in European cuisine.', 8, 'fish', '{"rarity": "common"}'),
 -- Uncommon Fish
-('Zander', 'zander', 'A freshwater fish with firm, white flesh that is prized for its mild, delicate flavor.', 'fish', '{"rarity": "uncommon"}'),
-('Grayling', 'grayling', 'A freshwater fish with delicate, white flesh that is similar in taste to trout.', 'fish', '{"rarity": "uncommon"}'),
+('Zander', 'zander', 'A freshwater fish with firm, white flesh that is prized for its mild, delicate flavor.', 14, 'fish', '{"rarity": "uncommon"}'),
+('Grayling', 'grayling', 'A freshwater fish with delicate, white flesh that is similar in taste to trout.', 15, 'fish', '{"rarity": "uncommon"}'),
 -- Rare Fish
-('Catfish', 'catfish', 'A freshwater fish with firm, white flesh that is often used in stews and soups.',  'fish', '{"rarity": "rare"}'),
+('Catfish', 'catfish', 'A freshwater fish with firm, white flesh that is often used in stews and soups.', 22, 'fish', '{"rarity": "rare"}'),
 -- Epic fish
-('Sturgeon', 'sturgeon', 'A large, prehistoric-looking fish with firm, flavorful flesh that is prized for its caviar.', 'fish', '{"rarity": "epic"}'),
+('Sturgeon', 'sturgeon', 'A large, prehistoric-looking fish with firm, flavorful flesh that is prized for its caviar.', 47, 'fish', '{"rarity": "epic"}'),
 -- Legendary,
-('Bull Shark', 'bull_shark', 'A large, aggressive shark with a reputation for attacking humans. Bull sharks are known for their strong, muscular bodies and sharp teeth.', 'fish', '{"rarity": "legendary"}');
+('Bull Shark', 'bull_shark', 'A large, aggressive shark with a reputation for attacking humans. Bull sharks are known for their strong, muscular bodies and sharp teeth.', 250, 'fish', '{"rarity": "legendary"}');
 ;
 
 -- 🐟 A fishing spot marker
@@ -144,6 +144,10 @@ item_insert AS (
 INSERT INTO marker_items (marker_id, item_id)
 SELECT vendor_insert.id, item_insert.id FROM vendor_insert, item_insert;
 
+-- 🦐 Fishmonger (purchaser of fish items)
+INSERT INTO markers (position, type, props)
+VALUES ('{"x": 75, "y": 75, "z": 75}', 'vendor', '{"name": "The Salmon Slinger", "purchase_item_types": ["fish"]}');
+
 -- 👬 Give demo players a rod
 WITH fishing_rod AS (
   SELECT id FROM items WHERE item_key = 'spincast_rod'
@@ -152,6 +156,18 @@ INSERT INTO player_items (player_id, item_id, props)
 SELECT players.id, fishing_rod.id, '{"equipped": true}'::JSONB
 FROM players
 CROSS JOIN fishing_rod;
+
+-- 🐡 Give player some fish to sell
+WITH fish AS (
+  SELECT id FROM items WHERE item_key = 'catfish'
+  UNION SELECT id FROM items WHERE item_key = 'trout'
+  UNION SELECT id FROM items WHERE item_key = 'salmon'
+)
+INSERT INTO player_items (player_id, item_id)
+SELECT players.id, fish.id
+FROM players
+CROSS JOIN fish
+WHERE players.username = 'matt';
 
 -- 🪴 Florist vendor
 WITH vendor_insert AS (
@@ -268,16 +284,16 @@ FROM links_recursive;
 
 COMMENT ON VIEW links_recursive IS E'@foreignKey (to_marker_id) references markers (id)|@foreignFieldName toMarker\n@foreignKey (from_marker_id) references markers (id)|@foreignFieldName fromMarker';
 
--- 📝 Note: player_ids are not validated.
--- The reason for this is that player_id will be removed from the parameters and 
--- sourced in DB session once JWT auth is implemented.
-
 -- 🏪 Purchase item function
 CREATE OR REPLACE FUNCTION purchase_item(player_id INTEGER, item_id INTEGER)
 RETURNS player_items AS $$
 DECLARE
   player_item player_items; -- items purchased in player's inventory
 BEGIN
+
+  -- TODO: Validate player session. Source player_id from session.
+  -- TODO: Validate player and a vendor with the item are in the same location.
+
   WITH item_price AS (
     SELECT price FROM items WHERE id = item_id
   ),
@@ -320,6 +336,9 @@ DECLARE
   chance_multiplier NUMERIC;
 BEGIN
 
+  -- TODO: Validate player session
+  -- TODO: Validate player and marker are in the same location
+
   SELECT (items.props ->> 'chance_multipler')::NUMERIC AS chance_multiplier
   INTO chance_multiplier
   FROM players
@@ -350,6 +369,65 @@ BEGIN
 
   -- Return the caught fish
   RETURN player_item;
+
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION sell_item(
+  marker_id INTEGER, -- vendor's marker id
+  player_item_id INTEGER
+) RETURNS players AS $$
+  #variable_conflict use_variable
+DECLARE
+  player players := NULL; -- The player selling the item
+BEGIN
+
+-- TODO: Validate player session
+-- TODO: Validate player and marker are in the same location
+
+-- Returns true if vendor sells item, and player has item
+PERFORM 1
+  FROM player_items pi
+    INNER JOIN items i ON pi.item_id = i.id
+    INNER JOIN (
+      SELECT m.id AS vendor_id,
+        jsonb_array_elements_text(m.props->'purchase_item_types') AS purchase_item_type
+      FROM markers m
+      WHERE m.type = 'vendor'
+        AND m.props->'purchase_item_types' IS NOT NULL
+        AND jsonb_array_length(m.props->'purchase_item_types') > 0
+    ) vi ON i.type = vi.purchase_item_type
+  WHERE vi.vendor_id = marker_id
+    AND pi.id = player_item_id
+  ;
+
+IF NOT FOUND THEN
+  RAISE EXCEPTION 'Item cannot be sold';
+END IF;
+
+-- 💰 Add to the player's balance
+WITH player_item AS (
+  SELECT pi.player_id, COALESCE(i.price, 0) as item_price
+  FROM player_items pi
+    INNER JOIN items i ON pi.item_id = i.id
+  WHERE pi.id = player_item_id
+)
+UPDATE players
+SET balance = balance + (SELECT item_price FROM player_item)
+WHERE id = (SELECT player_id FROM player_item);
+
+-- 🧑 Player to return
+SELECT p.*
+INTO player
+FROM players p
+INNER JOIN player_items pi on p.id = pi.player_id
+WHERE pi.id = player_item_id;
+
+-- 🔻 Remove the item from the player's inventory
+DELETE FROM player_items
+WHERE id = player_item_id;
+
+RETURN player;
 
 END;
 $$ LANGUAGE plpgsql;

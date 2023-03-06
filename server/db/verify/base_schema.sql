@@ -22,4 +22,8 @@ SELECT EXISTS(SELECT 1 FROM information_schema.views WHERE table_name = 'links_r
 
 SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'purchase_item');
 
+SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'go_fish');
+
+SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'sell_item');
+
 ROLLBACK;
