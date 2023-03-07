@@ -93,7 +93,7 @@ class KeyboardAndMouse {
       case "e":
       case "E":
         this.keys["e"] = false;
-        this.keys["ArroEwLeft"] = false;
+        this.keys["E"] = false;
         break;
       default:
         //do nothing (unassigned keys)

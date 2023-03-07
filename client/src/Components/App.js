@@ -51,9 +51,7 @@ class App extends Component {
   }
 
   getPlayer = async (id) => {
-    const {
-      data: { player = null },
-    } = await GraphQL.getPlayer(id);
+    const player = await GraphQL.players.getPlayer(id);
 
     if (player) {
       this.setState({
@@ -83,11 +81,7 @@ class App extends Component {
       localStorage.setItem("ID", guestId);
       return;
     }
-    const {
-      data: {
-        createPlayer: { player = null },
-      },
-    } = await GraphQL.guestPlayer();
+    const player = await GraphQL.players.guestPlayer();
     this.setState({
       id: player.id,
       player: player,

@@ -232,7 +232,6 @@ class Canal {
 
     //remove intersecting lines... (don't really need to)
     const intersected = [];
-    console.log(this.connections.length);
     for (let i = 0; i < this.connections.length; i++) {
         for (let j = 0; j < this.connections.length; j++) {
             const intersect = getIntersectionOnAPoint(this.connections[i][0].positionV2(), this.connections[i][1].positionV2(),
@@ -243,7 +242,6 @@ class Canal {
             }
         }
     }
-    console.log(intersected.length);
     
 
     //Clipper is shit slow

@@ -13,6 +13,8 @@ class Player {
         this.playerGroup = new Group();
         this.playerGroup.rotation.order = "YXZ";
 
+        this.wake = null;
+
         this.init = this.init.bind(this);
     }
 
@@ -37,9 +39,14 @@ class Player {
             child.material.emissive.set(0xffffff);
             child.material.emissiveMap = child.material.map;
             child.material.emissiveIntensity = 1.0;
+
+            //when testing under the boat
+            // child.material.opacity = 0.2
+            // child.material.transparent = true
           }
         });
         //gltf.scene.rotateY(Math.PI * 0.5);
+        
         this.playerGroup.add(gltf.scene);
     }
 }

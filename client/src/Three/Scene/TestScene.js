@@ -1,10 +1,12 @@
 import * as THREE from "three";
 import { mergeBufferGeometries } from "three/examples/jsm/utils/BufferGeometryUtils";
 
+import { BaseScene } from "./BaseScene";
 import { Water } from "../Objects/Water";
 import { Sky } from "../Objects/Sky";
 
 import waterNormals from "../../Assets/textures/waternormals.jpg";
+import waterWake from "../../Assets/textures/wake.png";
 
 import TWEEN from "@tweenjs/tween.js";
 import { Connectivity } from "../../Server/IO";
@@ -13,22 +15,20 @@ import { cyrb128, sfc32 } from "../Utils/utils";
 import { Canal } from "./Canal";
 import { Player } from "../Objects/Player";
 import { OrbitControls } from "../Controls/OrbitControls";
+import MeshLine from "../Utils/MeshLine";
+import MeshLineMaterial from "../Utils/MeshLineMaterial";
+import TrailRenderer from "../Utils/trailRenderer";
 
-class TestScene {
+class TestScene extends BaseScene {
   constructor(playerData, updateSpeed) {
+    super();
+
     this.playerData = playerData;
     this.updateSpeed = updateSpeed;
 
-    this.container = null;
-    this.stats = null;
-    this.camera = null;
-    this.scene = null;
-    this.renderer = null;
     this.water = null;
     this.sun = null;
     this.meshes = [];
-    this.renderTarget = null;
-    this.clock = new THREE.Clock();
 
     //Calulating speed
     this.frameCounter = 0;
@@ -39,35 +39,11 @@ class TestScene {
     this.lastPlayerPosition = new THREE.Vector3();
     this.currentPlayerPosition = new THREE.Vector3();
 
-    const seed = cyrb128('canals-predictable-seed');
-    this.canalRand = sfc32(seed[0], seed[1], seed[2], seed[3]); 
-
-    this.animate = this.animate.bind(this);
-    this.update = this.update.bind(this);
     this.updateSun = this.updateSun.bind(this);
-    this.init = this.init.bind(this);
   }
 
   init() {
-    this.onWindowResize = this.onWindowResize.bind(this);
-
-    this.container = document.getElementById("canvasContainer");
-
-    this.renderer = new THREE.WebGLRenderer();
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.container.appendChild(this.renderer.domElement);
-
-    this.scene = new THREE.Scene();
-
-    this.camera = new THREE.PerspectiveCamera(
-      55,
-      window.innerWidth / window.innerHeight,
-      1,
-      20000
-    );
-    this.camera.position.set(20, 20, 20);
+    super.init();
 
     this.sun = new THREE.Vector3();
 
@@ -98,13 +74,7 @@ class TestScene {
     //this.water.material.wireframe = true
     this.water.rotation.x = -Math.PI / 2;
 
-
     this.scene.add(this.water);
-
-    // this.waterWireframe = new THREE.Mesh(waterGeometry, new THREE.MeshBasicMaterial({wireframe:true}));
-    // this.waterWireframe.rotation.x = -Math.PI / 2;
-    // this.scene.add(this.waterWireframe);
-    // Skybox
 
     this.sky = new Sky();
     this.sky.scale.setScalar(10000);
@@ -161,28 +131,24 @@ class TestScene {
     this.controls.minDistance = 10.0;
     this.controls.maxDistance = 80.0;
 
-    this.controlGroup = new THREE.Group();
-    this.controlGroupRotation = new THREE.Vector2();
-    this.controlGroup.position.set(30, 30, 30);
-    this.controlGroup.rotation.order = "YXZ";
-    this.scene.add(this.controlGroup);
-    this.scene.add(this.camera);
-
-    window.addEventListener("resize", this.onWindowResize);
-
     this.updateSun();
-
-    this.animate();
 
     this.initControls();
 
     this.initPlayer();
   }
 
+  async getWaterTrialTexture() {
+      const map = await this.texLoader.loadAsync( waterWake );
+      map.wrapS = THREE.RepeatWrapping;
+      map.wrapT = THREE.RepeatWrapping;
+      return map;
+  }
+
   initPlayer() {
     const transform = (typeof this.playerData.position === 'object') ? this.playerData.position : JSON.parse(this.playerData.position)
     this.player = new Player(this, this.playerData);
-    this.player.init();
+    this.player.init(this.addWake.bind(this));
 
     this.connectivity = new Connectivity(this, this.player.playerGroup);
     this.connectivity.init();
@@ -204,6 +170,80 @@ class TestScene {
     this.camera.position.add(this.currentPlayerPosition)
 
     this.controls.target.copy(this.player.playerGroup.position);
+  }
+
+  async addWake() {
+    this.waterTrial = await this.getWaterTrialTexture();
+
+    const points = [];
+    for (let j = 0; j < 120; j++) {
+      points.push(new THREE.Vector3(this.player.playerGroup.position.x+(j*0.1), 0.1, this.player.playerGroup.position.z+(j*0.1)));
+    }
+
+    const line = new MeshLine();
+    const trailGeom = new THREE.BufferGeometry()
+    trailGeom.setFromPoints(points, p => 1-p)
+    trailGeom.computeBoundingBox()
+    line.setGeometry(trailGeom);
+    let lineMaterial = new MeshLineMaterial({
+        color: new THREE.Color('white'),
+        map: this.waterTrial,
+        useMap: 1,
+        alphaMap: this.waterTrial,
+        useAlphaMap: 1,
+        transparent:true,
+        opacity: 1.0,
+        //alphaTest: 0.2,
+        repeat: new THREE.Vector2(1,1),
+        resolution: new THREE.Vector2(window.innerWidth,window.innerHeight),
+        sizeAttenuation: false,
+        lineWidth: 1200,
+        length: 360,
+        // near: this.camera.near,
+        // far: this.camera.far
+      });
+    lineMaterial.fog = false;
+    const mesh = new THREE.Mesh(line, lineMaterial);
+    mesh.frustumCulled = false;
+    mesh.visible = false;
+    mesh.renderOrder = -1;
+    this.scene.add(mesh);
+
+
+
+    var trailPoint = new THREE.Object3D();
+    this.player.playerGroup.add(trailPoint)
+    trailPoint.translateZ(-6)
+    trailPoint.translateY(0.1)
+
+    var trailRenderer = new TrailRenderer( this.scene, false );
+    var trailLength = 20+Math.floor(Math.random() * 2);
+    var trailMaterial = trailRenderer.createTexturedMaterial();	
+    trailMaterial.uniforms.textureMap.value = this.waterTrial;
+    trailMaterial.uniforms.headColor.value.set(1.0, 1.0, 1.0, 0.4)
+    trailMaterial.uniforms.tailColor.value.set(1.0, 1.0, 1.0, 0.0)
+    trailMaterial.uniforms.lengthScale.value = 0.25;
+
+    const width =0.5;
+    trailMaterial.side = THREE.DoubleSide;
+    var trailHeadGeometry = [];
+    trailHeadGeometry.push( 
+        new THREE.Vector3(width, 0.0, 0.0), 
+        //new THREE.Vector3(0, -0.2, 0.0),
+        new THREE.Vector3(-width, 0.0, 0.0)
+    );
+    trailRenderer.initialize(trailMaterial, trailLength, false, 0, trailHeadGeometry, trailPoint);
+    trailRenderer.frustumCulled = false;
+    trailRenderer.activate();
+    trailMaterial.uniforms.textureTileFactor.value = new THREE.Vector2( 1.0,1.0);
+
+    this.player.wake = {
+      trailRenderer: trailRenderer,
+      trailPoint: trailPoint,
+      trailPoints: points,
+      trailIndex: 0,
+      trailMat: lineMaterial,
+    }
   }
 
   initControls() {
@@ -229,14 +269,25 @@ class TestScene {
     this.scene.environment = this.renderTarget.texture;
   }
 
-  onWindowResize() {
-    this.camera.aspect = window.innerWidth / window.innerHeight;
-    this.camera.updateProjectionMatrix();
+  updateTrail() {
 
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    if(this.frameCounter%3===0) {
+      if(this.player.wake.trailRenderer) {
+          this.player.wake.trailPoint.getWorldPosition(this.vector3)
+          this.vector3.y = 0.1+ Math.random()*0.3
+          
+          this.player.wake.trailIndex = 
+          this.player.wake.trailIndex-1 < 0 ? 
+          this.player.wake.trailPoints.length-1 :  
+          this.player.wake.trailIndex-1;
+      }
+      this.player.wake.trailRenderer.advance();
+      this.player.wake.trailRenderer.updateHead();
+    }
   }
 
   animate() {
+    super.animate()
 
     let delta = this.clock.getDelta();
     let time = this.clock.getElapsedTime();
@@ -245,13 +296,15 @@ class TestScene {
       this.frameCounter = 0;
     }
 
-    this.update(delta);
+    // this.update(delta);
 
-    requestAnimationFrame(this.animate);
-    this.render();
+    // requestAnimationFrame(this.animate);
+    // this.render();
   }
 
   update(delta) {
+    super.update(delta);
+
     if (this.connectivity) {
       this.checkItems();
       this.connectivity.update();
@@ -262,6 +315,9 @@ class TestScene {
       if(this.gamepads) this.gamepads.update(delta)
       this.smoothControls(delta);
     }
+    if(this.player?.ready) {
+      if(this.player.wake) this.updateTrail()
+    } 
     if(this.canalNetwork) this.canalNetwork.update(delta);
   }
 
@@ -336,6 +392,8 @@ class TestScene {
   }
 
   render() {
+    super.render()
+
     const time = performance.now() * 0.001;
 
     for (let i = 0; i < this.meshes.length; i++) {
@@ -344,9 +402,8 @@ class TestScene {
       this.meshes[i].rotation.z = time * 0.51;
     }
 
-    this.water.material.uniforms["time"].value += 1.0 / 60.0;
+    if(this.water) this.water.material.uniforms["time"].value += 1.0 / 60.0;
 
-    this.renderer.render(this.scene, this.camera);
   }
 }
 

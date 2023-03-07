@@ -1,4 +1,5 @@
 import { GamePad } from "./GamePad";
+import { GamePadMapping } from "./GamePadMapping";
 import { KeyboardAndMouse } from "./KeyboardMouse";
 import { KNOWN_CONTROLLERS } from "./KnownControllers";
 
@@ -7,6 +8,7 @@ class GamePads {
     this.app = app;
 
     this.gamePad = new GamePad(app);
+    this.mapping = new GamePadMapping(app);
     this.keyboardAndMouse = new KeyboardAndMouse(app, this.gamePad)
 
     this.update = this.update.bind(this);
@@ -136,15 +138,15 @@ class GamePads {
               break;
             case "q":
             case "Q":
-              this.gamePad.updateAxis(2, -1);
+              this.gamePad.updateAxis(2, 1);
               break;
             case "e":
             case "E":
-              this.gamePad.updateAxis(2, 1);
+              this.gamePad.updateAxis(2, -1);
               break;
             case "f":
             case "F":
-              this.gamePad.buttonAction({pressed: true, value: 1}, 3); //(same as y)
+              this.gamePad.buttonAction({pressed: true, value: 1}, this.mapping.getMapping('f'));
               break;
             default:
               //do nothing (unassigned keys)

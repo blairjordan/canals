@@ -9,6 +9,7 @@ class BaseScene {
     this.scene = null;
     this.renderer = null;
     this.clock = new THREE.Clock();
+    this.texLoader = new THREE.TextureLoader();
 
     const seed = cyrb128('canals-predictable-seed');
     this.canalRand = sfc32(seed[0], seed[1], seed[2], seed[3]); 
@@ -37,14 +38,14 @@ class BaseScene {
       1,
       20000
     );
-    this.camera.position.set(0, 0, 0);
+    this.camera.position.set(20, 20, 20);
 
     this.controlGroup = new THREE.Group();
     this.controlGroupRotation = new THREE.Vector2();
-    this.controlGroup.add(this.camera);
     this.controlGroup.position.set(30, 30, 30);
     this.controlGroup.rotation.order = "YXZ";
     this.scene.add(this.controlGroup);
+    this.scene.add(this.camera);
 
     window.addEventListener("resize", this.onWindowResize);
 
@@ -64,13 +65,13 @@ class BaseScene {
     let time = this.clock.getElapsedTime();
 
     this.update(delta);
-
     requestAnimationFrame(this.animate);
     this.render();
   }
 
   update(delta) {
   }
+
   render() {
     this.renderer.render(this.scene, this.camera);
   }

@@ -8,6 +8,9 @@ import {
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions"
 import { getMainDefinition } from "@apollo/client/utilities"
 import { createClient } from "graphql-ws"
+import { GraphQLMarkers } from "./graphQLMarkers"
+import { GraphQLPlayers } from "./graphQLPlayers"
+import { GraphQLSubscriptions } from "./graphQLSubscriptions"
 
 class GraphQL {
   constructor() {
@@ -42,151 +45,11 @@ class GraphQL {
       },
     })
 
-    console.log("GraphQL constructor")
+    this.markers = new GraphQLMarkers(this.client);
+    this.players = new GraphQLPlayers(this.client);
+    this.subscriptions = new GraphQLSubscriptions(this.client);
   }
 
-  //Get all players
-  getPlayers() {
-    return new Promise((resolve) => {
-      this.client
-        .query({
-          query: gql`
-            query {
-              players {
-                nodes {
-                  id
-                  username
-                  meta
-                  position
-                }
-              }
-            }
-          `,
-        })
-        .then((result) => resolve(result))
-    })
-  }
-
-  //Get player with inventory
-  async getPlayer(id) {
-    return new Promise((resolve) => {
-      this.client
-        .query({
-          query: gql`
-            query GetPlayer($id: BigInt!) {
-              player(id: $id) {
-                id
-                username
-                meta
-                position
-              }
-            }
-          `,
-          variables: {
-            id: id,
-          },
-        })
-        .then((result) => resolve(result))
-    })
-  }
-
-  async guestPlayer() {
-    return new Promise((resolve) => {
-      this.client
-        .mutate({
-          mutation: gql`
-            mutation CreatePlayer($username: String!) {
-              createPlayer(input: { player: { username: $username } }) {
-                player {
-                  username
-                  position
-                  nodeId
-                  meta
-                  id
-                  balance
-                }
-              }
-            }
-          `,
-          variables: {
-            username: "guest",
-          },
-        })
-        .then((result) => resolve(result))
-    })
-  }
-
-  async updatePlayerPosition(id, position) {
-    const gqlMute = gql(`
-        mutation UpdatePlayer($id: BigInt!, $position: JSON!) {
-          updatePlayer(
-            input: {patch: {position: $position}, id: $id}
-          ) {
-            player {
-              id
-              position
-            }
-          }
-        }
-        `)
-
-    return new Promise((resolve) => {
-      this.client
-        .mutate({
-          mutation: gqlMute,
-          variables: {
-            id,
-            position,
-          },
-        })
-        .then((result) => resolve(result))
-    })
-  }
-
-  async getPlayerPosition(id) {
-    return new Promise((resolve) => {
-      this.client
-        .query({
-          query: gql`
-            query GetPlayer($id: BigInt!) {
-              player(id: $id) {
-                position
-              }
-            }
-          `,
-          variables: {
-            id: id,
-          },
-        })
-        .then((result) => resolve(result))
-    })
-  }
-
-  //Subscriptions
-  initPlayerSubscriptions(updateCallback) {
-    const playerPosUpdateSUB = gql`
-      subscription {
-        listen(topic: "player_updated") {
-          query {
-            players {
-              nodes {
-                position
-                id
-              }
-            }
-          }
-        }
-      }
-    `
-    this.client.subscribe({ query: playerPosUpdateSUB }).subscribe({
-      next(result) {
-        updateCallback(result?.data?.listen?.query?.players.nodes)
-      },
-      error(error) {
-        console.error("Subscription error: ", error)
-      },
-    })
-  }
 }
 
 export default new GraphQL()

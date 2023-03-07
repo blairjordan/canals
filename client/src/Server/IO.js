@@ -33,7 +33,7 @@ class Connectivity {
   }
 
   init() {
-    GraphQL.initPlayerSubscriptions(this.updatePlayerPositions);
+    GraphQL.subscriptions.initPlayerSubscriptions(this.updatePlayerPositions);
   }
 
   updatePlayerPositions(result) {
@@ -121,7 +121,7 @@ class Connectivity {
 
 
     if (dist > this.updateDistance || rot > this.updateRotation) {
-      GraphQL.updatePlayerPosition(this.id.toString(), {
+      GraphQL.players.updatePlayerPosition(this.id.toString(), {
          x:this.player.position.x,
          y:this.player.position.z,
          z:this.player.position.y,
