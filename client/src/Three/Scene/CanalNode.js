@@ -108,8 +108,10 @@ class CanalNode {
       this.vector2.set(center.x, center.y);
       nodePoints.push(new THREE.Vector2(this.vector2.x, -this.vector2.y));
     }
-
+    
     if (nodePoints.length > 2) {
+      //make curved, has issues.
+
       nodeShape.setFromPoints(nodePoints);
       const nodeGeom = new THREE.ShapeGeometry(nodeShape);
       nodeGeoms.push(nodeGeom);
@@ -184,7 +186,6 @@ class CanalNode {
         (angle - 22.5) * THREE.MathUtils.DEG2RAD
       );
       connPoints.push(new THREE.Vector2(this.vector2.x, -this.vector2.y));
-      connShape.moveTo(this.vector2.x, -this.vector2.y);
 
 
       //end left
@@ -196,7 +197,6 @@ class CanalNode {
         (angle + 180 + 22.5) * THREE.MathUtils.DEG2RAD
       );
       connPoints.push(new THREE.Vector2(this.vector2.x, -this.vector2.y));
-      connShape.bezierCurveTo(this.vector2.x, -this.vector2.y);
 
       //end mid (creates peaks)
       //   center.set(this.nodes[i].position.x, this.nodes[i].position.z);
@@ -216,7 +216,6 @@ class CanalNode {
         (angle + 180 - 22.5) * THREE.MathUtils.DEG2RAD
       );
       connPoints.push(new THREE.Vector2(this.vector2.x, -this.vector2.y));
-      connShape.bezierCurveTo(this.vector2.x, -this.vector2.y);
 
       //start right
       center.set(this.position.x, this.position.z);
@@ -226,9 +225,8 @@ class CanalNode {
         (angle + 22.5) * THREE.MathUtils.DEG2RAD
       );
       connPoints.push(new THREE.Vector2(this.vector2.x, -this.vector2.y));
-      connShape.bezierCurveTo(this.vector2.x, -this.vector2.y);
 
-      //connShape.setFromPoints(connPoints);
+      connShape.setFromPoints(connPoints);
       const connGeom = new THREE.ShapeGeometry(connShape);
 
       // if(angle>44 && angle < 46) //east

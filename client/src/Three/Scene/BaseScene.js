@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { cyrb128, sfc32 } from "../Utils/utils";
+import SoundManager from "../Utils/Audio/soundManager";
 
 class BaseScene {
   constructor() {
@@ -10,6 +11,7 @@ class BaseScene {
     this.renderer = null;
     this.clock = new THREE.Clock();
     this.texLoader = new THREE.TextureLoader();
+    this.soundManager = new SoundManager(this);
 
     const seed = cyrb128('canals-predictable-seed');
     this.canalRand = sfc32(seed[0], seed[1], seed[2], seed[3]); 
@@ -49,6 +51,7 @@ class BaseScene {
 
     window.addEventListener("resize", this.onWindowResize);
 
+    this.soundManager.initAsync(); 
     this.animate();
   }
 
@@ -57,6 +60,13 @@ class BaseScene {
     this.camera.updateProjectionMatrix();
 
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  onAudioLoaded() {
+    console.log('[audio loaded]');
+    this.soundManager.setVolumeMusic(1);
+    this.soundManager.setVolumeSFX(1);
+    this.soundManager.play()
   }
 
   animate() {
@@ -70,6 +80,9 @@ class BaseScene {
   }
 
   update(delta) {
+    if(this.soundManager) {
+      this.soundManager.update(delta);
+    }
   }
 
   render() {

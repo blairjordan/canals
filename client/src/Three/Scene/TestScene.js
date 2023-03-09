@@ -360,6 +360,8 @@ class TestScene extends BaseScene {
     const mph = kph / 1.609;
 		const nph = mph * 0.868976;
      
+
+    this.soundManager.targetEngineVolume = (nph/250)
     this.updateSpeed(nph.toFixed(2));
   }
 
