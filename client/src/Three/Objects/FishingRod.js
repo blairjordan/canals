@@ -88,8 +88,14 @@ class FishingRod {
         this.app.scene.add(gltfRod.scene);
     
         const gltfRodArm = await loader.loadAsync(rodArmatureUrl);
+        gltfRodArm.scene.traverse((child) => {
+            if (child.isMesh) {
+                child.material.color.set('#222')
+            }
+        })
         this.app.scene.add(gltfRodArm.scene);
         this.gltfRodArm = gltfRodArm.scene;
+        this.gltfRodArm.scale.set(0.1,0.5,0.1)
         const b1 = gltfRodArm.scene.getObjectByName('B1')
         const b2 = gltfRodArm.scene.getObjectByName('B2')
         const b3 = gltfRodArm.scene.getObjectByName('B3')
@@ -134,16 +140,18 @@ class FishingRod {
           if(this.gltfRodArm) {
             this.helperObject.position.copy(this.app.player.playerGroup.position)
             this.helperObject.rotation.copy(this.app.player.playerGroup.rotation)
-            this.helperObject.translateZ(-6.5)
+            this.helperObject.translateX(-0.34)
+            this.helperObject.translateY(0.99)
+            this.helperObject.translateZ(-2.8)
             this.gltfRodArm.position.copy(this.helperObject.position)
             //base of rod
             this.gltfRodArm.rotation.set(0,0,0)
-            this.gltfRodArm.rotateY((Math.PI * -0.5))
-            this.gltfRodArm.rotateX(Math.sin(this.time)*0.5)
+            this.gltfRodArm.rotateX(-0.5)
+            // this.gltfRodArm.rotateX(Math.sin(this.time)*0.5)
             
             for(let i = 1; i < 7; i++) {
               this.rodBones[i].rotation.set(0,0,0)
-              this.rodBones[i].rotateX(Math.PI * (Math.sin(this.time*2)*0.1) * (i/8))
+              this.rodBones[i].rotateX(Math.PI * (Math.sin(this.time*2)*0.1))
             }
             this.rodBoneTip.getWorldPosition(this.vector3);
             
