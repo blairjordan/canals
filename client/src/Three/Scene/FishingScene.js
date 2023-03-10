@@ -10,6 +10,7 @@ import { Sky } from "../Objects/Sky";
 import waterNormals from "../../Assets/textures/waternormals.jpg";
 import boatModelUrl from "../../Assets/models/test_boat.glb";
 import rodHookUrl from "../../Assets/models/rod_hook.glb";
+import rodArmatureUrl from "../../Assets/models/rod_armature.glb";
 
 import { VerletJS, Particle, Composite } from "../Utils/Verlet/verlet";
 import Vec3 from "../Utils/Verlet/vec3";
@@ -17,6 +18,7 @@ import { DistanceConstraint } from "../Utils/Verlet/constraint";
 
 import TWEEN from "@tweenjs/tween.js";
 import { downloadTxt, wait } from "../Utils/utils.js";
+import { Vector2, Vector3 } from "three";
 
 class FishingScene extends BaseScene {
   constructor(id) {
@@ -29,6 +31,7 @@ class FishingScene extends BaseScene {
     this.sky = null;
     this.meshes = [];
     this.renderTarget = null;
+    this.vector3 = new Vector3()
 
     this.lineIn = false
     document.addEventListener("keydown", this.keyDown.bind(this), false);
@@ -111,11 +114,11 @@ class FishingScene extends BaseScene {
     this.fishingWorld = new VerletJS(256, 256);
     this.fishingRod = new Composite();
     //Fishing Rod
-    for (let i = 0; i < 9; i++) {
-      this.fishingRod.particles.push(
-        new Particle(new Vec3(i, 128 + 5.555555555555556 * i))
-      );
-    }
+    // for (let i = 0; i < 9; i++) {
+    //   this.fishingRod.particles.push(
+    //     new Particle(new Vec3(i, 128 + 5.555555555555556 * i))
+    //   );
+    // }
 
     //Fishing Line
     for (let i = 0; i < 12; i++) {
@@ -194,6 +197,8 @@ class FishingScene extends BaseScene {
     const gltfRod = await loader.loadAsync(rodHookUrl);
     gltfRod.scene.traverse((child) => {
       if (child.isMesh) {
+        child.material.opacity=0.4
+        child.material.transparent = true
         switch (child.name) {
           case "Rod_01":
             this.rod.push(child);
@@ -231,6 +236,21 @@ class FishingScene extends BaseScene {
       }
     });
     this.scene.add(gltfRod.scene);
+
+    const gltfRodArm = await loader.loadAsync(rodArmatureUrl);
+    this.scene.add(gltfRodArm.scene);
+    this.gltfRodArm = gltfRodArm.scene;
+    const b1 = gltfRodArm.scene.getObjectByName('B1')
+    const b2 = gltfRodArm.scene.getObjectByName('B2')
+    const b3 = gltfRodArm.scene.getObjectByName('B3')
+    const b4 = gltfRodArm.scene.getObjectByName('B4')
+    const b5 = gltfRodArm.scene.getObjectByName('B5')
+    const b6 = gltfRodArm.scene.getObjectByName('B6')
+    const b7 = gltfRodArm.scene.getObjectByName('B7')
+    const b8 = gltfRodArm.scene.getObjectByName('B8')
+    const b9 = gltfRodArm.scene.getObjectByName('B9')
+    this.rodBones = [b1,b2,b3,b4,b5,b6,b7,b8,b9]
+    console.log(this.rodBones)
   }
 
   updateSun() {
@@ -330,9 +350,31 @@ class FishingScene extends BaseScene {
 
   renderWorld() {
     if (this.fishingWorld) {
-      this.tipPin.pos.x = 18 + Math.sin(this.time) * 12;
-      this.tipPin.pos.y = 178 + Math.sin(this.time) * 6;
-      this.tipPin.pos.z = 0 + Math.sin(this.time * 3) * -2;
+
+      if(this.gltfRodArm) {
+        //base of rod
+        this.rod[0].getWorldPosition(this.vector3)
+        this.gltfRodArm.position.copy(this.vector3)
+        this.gltfRodArm.rotation.set(0,0,0)
+        this.gltfRodArm.rotateY((Math.PI * -0.5))
+        
+        for(let i = 1; i <=8; i++) {
+          this.rodBones[i].rotation.set(0,0,0)
+          this.rodBones[i].rotateX(Math.PI * (Math.sin(this.time*2)*0.1) * (i/8))
+        }
+
+        // this.tipPin.pos.x = (this.rodBones[8].position.x * 10);
+        // this.tipPin.pos.y = (this.rodBones[8].position.y * 10);
+        // this.tipPin.pos.z = this.rodBones[8].position.z;
+        this.tipPin.pos.x = 0;//Math.sin(this.time) * 12;
+        this.tipPin.pos.y = 178 + Math.sin(this.time) * 6;
+        this.tipPin.pos.z = 0;// + Math.sin(this.time * 3) * -2;
+      } else {
+        this.tipPin.pos.x = 0;//Math.sin(this.time) * 12;
+        this.tipPin.pos.y = 178 + Math.sin(this.time) * 6;
+        this.tipPin.pos.z = 0 + Math.sin(this.time * 3) * -2;
+      }
+
       this.hookPin.pos.x = 25 + Math.sin(this.time) * 20;
       this.hookPin.pos.y = 63 + Math.sin(this.time * 3) * 10;
       this.hookPin.pos.z = 0 + Math.sin(this.time * 3) * 2;
@@ -390,7 +432,10 @@ class FishingScene extends BaseScene {
                 this.rod[i].rotateX(Math.PI * 0.5);
               }
             }
+
+
           }
+
         }
       }
     }

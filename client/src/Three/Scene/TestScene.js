@@ -18,6 +18,7 @@ import { OrbitControls } from "../Controls/OrbitControls";
 import MeshLine from "../Utils/MeshLine";
 import MeshLineMaterial from "../Utils/MeshLineMaterial";
 import TrailRenderer from "../Utils/trailRenderer";
+import { FishingRod } from "../Objects/FishingRod";
 
 class TestScene extends BaseScene {
   constructor(playerData, updateSpeed) {
@@ -170,6 +171,9 @@ class TestScene extends BaseScene {
     this.camera.position.add(this.currentPlayerPosition)
 
     this.controls.target.copy(this.player.playerGroup.position);
+
+    this.fishingRod = new FishingRod(this);
+    this.fishingRod.init()
   }
 
   async addWake() {
@@ -319,6 +323,7 @@ class TestScene extends BaseScene {
       if(this.player.wake) this.updateTrail()
     } 
     if(this.canalNetwork) this.canalNetwork.update(delta);
+    if(this.fishingRod) this.fishingRod.update(delta);
   }
 
   smoothControls(delta) {
