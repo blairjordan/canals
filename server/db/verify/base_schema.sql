@@ -2,6 +2,10 @@
 
 BEGIN;
 
+SELECT EXISTS(SELECT 1 FROM pg_available_extensions WHERE name = 'postgis');
+
+SELECT EXISTS(SELECT * FROM pg_type WHERE typname = 'nearby_players');
+
 SELECT EXISTS(SELECT FROM pg_tables WHERE tablename = 'players');
 
 SELECT EXISTS(SELECT FROM pg_tables WHERE tablename = 'markers');

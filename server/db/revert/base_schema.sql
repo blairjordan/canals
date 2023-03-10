@@ -2,6 +2,12 @@
 
 BEGIN;
 
+DROP EXTENSION IF EXISTS postgis;
+
+DROP FUNCTION IF EXISTS nearby_players(current_player_id INTEGER, distance FLOAT);
+
+DROP TYPE IF EXISTS nearby_players;
+
 DROP FUNCTION IF EXISTS sell_item(marker_id INTEGER, player_item_id INTEGER);
 
 DROP FUNCTION IF EXISTS go_fish(player_id INTEGER, marker_id INTEGER);

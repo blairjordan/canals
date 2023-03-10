@@ -2,6 +2,8 @@
 
 BEGIN;
 
+CREATE EXTENSION IF NOT EXISTS postgis;
+
 CREATE TABLE IF NOT EXISTS players (
   id BIGSERIAL PRIMARY KEY,
   username TEXT NOT NULL,
@@ -376,7 +378,8 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION sell_item(
   marker_id INTEGER, -- vendor's marker id
   player_item_id INTEGER
-) RETURNS players AS $$
+) 
+RETURNS players AS $$
   #variable_conflict use_variable
 DECLARE
   player players := NULL; -- The player selling the item
@@ -432,4 +435,48 @@ RETURN player;
 END;
 $$ LANGUAGE plpgsql;
 
+DO $$ BEGIN
+  CREATE TYPE nearby_players AS (
+    player_id INTEGER,
+    distance FLOAT
+  );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+COMMENT ON TYPE nearby_players IS '@foreignKey (player_id) references players (id)';
+
+CREATE OR REPLACE FUNCTION nearby_players(current_player_id INTEGER, distance FLOAT)
+RETURNS SETOF nearby_players AS $$
+  -- Find players within the given distance of the current player's position
+  WITH current_player AS (
+    SELECT position
+    FROM players
+    WHERE id = current_player_id
+  ),
+  player_distances AS (
+    SELECT
+      p.id,
+      ST_Distance(
+      ST_MakePoint(
+        (cp.position->>'x')::double precision,
+        (cp.position->>'y')::double precision,
+        (cp.position->>'z')::double precision
+      ),
+      ST_MakePoint(
+        (p.position->>'x')::double precision,
+        (p.position->>'y')::double precision,
+        (p.position->>'z')::double precision
+      )
+    ) AS player_distance
+    FROM players p
+    CROSS JOIN current_player cp
+    WHERE p.id <> current_player_id
+  )
+  SELECT pd.id, pd.player_distance
+  FROM player_distances pd
+  WHERE pd.player_distance <= distance;
+$$ LANGUAGE sql STABLE;
+
 COMMIT;
+

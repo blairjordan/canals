@@ -17,7 +17,7 @@ docker rm $POSTGRES_CONTAINER_NAME >/dev/null 2>&1
 
 sleep 5
 
-echo "🐘 Creating PostgreSQL container ..."
+echo "🐘 Creating PostgreSQL container (🌐 including GIS) ..."
 
 docker run -d \
   --name $POSTGRES_CONTAINER_NAME \
@@ -26,7 +26,7 @@ docker run -d \
   -e POSTGRES_DB=canaldb \
   -e POSTGRES_HOST_AUTH_METHOD=trust \
   -p 5432:5432 \
-  postgres:latest >/dev/null 2>&1
+  postgis/postgis:latest >/dev/null 2>&1
 
 sleep 5
 
@@ -42,6 +42,9 @@ curl -sL https://git.io/JJKCn -o sqitch && chmod +x sqitch
 
 echo "🌊 Deploying DB objects ..."
 ./sqitch deploy --target $SQITCH_TARGET
+
+echo "👀 Verifying deployment ..."
+./sqitch verify --target $SQITCH_TARGET
 
 echo -n "🌏 Container IP ($POSTGRES_CONTAINER_NAME):"
 printf " %s\n" $(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $POSTGRES_CONTAINER_NAME)
