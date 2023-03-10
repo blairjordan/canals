@@ -129,7 +129,7 @@ class TestScene extends BaseScene {
     this.controls = new OrbitControls( this.camera, this.renderer.domElement );
     this.controls.maxPolarAngle = Math.PI * 0.495;
     this.controls.target.set( 0, 5, 0 );
-    this.controls.minDistance = 10.0;
+    this.controls.minDistance = 4.0;
     this.controls.maxDistance = 80.0;
 
     this.updateSun();
@@ -217,7 +217,7 @@ class TestScene extends BaseScene {
 
     var trailPoint = new THREE.Object3D();
     this.player.playerGroup.add(trailPoint)
-    trailPoint.translateZ(-6)
+    trailPoint.translateZ(-2.5)
     trailPoint.translateY(0.1)
 
     var trailRenderer = new TrailRenderer( this.scene, false );
