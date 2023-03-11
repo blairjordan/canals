@@ -173,7 +173,21 @@ class TestScene extends BaseScene {
     this.controls.target.copy(this.player.playerGroup.position);
 
     this.fishingRod = new FishingRod(this);
-    this.fishingRod.init()
+    this.fishingRod.init(this.onFishingRodInit.bind(this))
+  }
+
+  onFishingRodInit() {
+    
+    document.addEventListener( ("buttonAction3"), (e) => {
+      const button = this.gamepads.gamePad.buttons[3]
+      if(button.pressed && button.pressed !== button.lastFrame) {
+        this.fishingRod.onPressButton()
+      } else if(button.pressed) {
+        this.fishingRod.onHoldButton()
+      } else if(button.release) {
+        this.fishingRod.onReleaseButton()
+    }
+  }, false );
   }
 
   async addWake() {
