@@ -89,7 +89,7 @@ class TestScene extends BaseScene {
     skyUniforms["mieDirectionalG"].value = 0.8;
 
     this.parameters = {
-      elevation: 2,
+      elevation: 2,//-20,
       azimuth: 180,
     };
 
@@ -312,15 +312,22 @@ class TestScene extends BaseScene {
     if (this.connectivity) {
       this.checkItems();
       this.connectivity.update();
-      
     }
+
+
     TWEEN.update();
     if(this.gamepads) {
       if(this.gamepads) this.gamepads.update(delta)
       this.smoothControls(delta);
     }
     if(this.player?.ready) {
-      if(this.player.wake) this.updateTrail()
+      if(this.player.wake) { 
+        this.updateTrail()
+      }
+      if(this.bokehPass && this.frameCounter%5===0) {
+        const dist = this.camera.position.distanceTo(this.player.playerGroup.position)
+        this.bokehPass.uniforms.focus.value = dist
+      }
     } 
     if(this.canalNetwork) this.canalNetwork.update(delta);
     if(this.fishingRod) this.fishingRod.update(delta);

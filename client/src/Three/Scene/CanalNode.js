@@ -43,6 +43,7 @@ class CanalNode {
     this.vector2.set(this.position.x, this.position.z);
     const nodeShape = new THREE.Shape();
     const nodePoints = [];
+    const nodePointsFull = [];
 
     const center = new THREE.Vector2(this.position.x, this.position.z);
 
@@ -101,6 +102,16 @@ class CanalNode {
       }
     }
 
+    for(let i = 0; i < 8; i++) {
+      center.set(this.position.x, this.position.z);
+      this.vector2.set(center.x + this.nodeWidth, center.y);
+      this.vector2.rotateAround(
+        center,
+        ((i*45) + 22.5) * THREE.MathUtils.DEG2RAD
+      );
+      nodePointsFull.push(new THREE.Vector2(this.vector2.x, -this.vector2.y));
+    }
+
     const nodeGeoms = [];
 
     //End point, we could make it square or trianglar
@@ -111,8 +122,8 @@ class CanalNode {
     
     if (nodePoints.length > 2) {
       //make curved, has issues.
-
-      nodeShape.setFromPoints(nodePoints);
+      
+      nodeShape.setFromPoints(nodePointsFull); //nodePoints);
       const nodeGeom = new THREE.ShapeGeometry(nodeShape);
       nodeGeoms.push(nodeGeom);
     }

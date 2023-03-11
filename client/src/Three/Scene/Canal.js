@@ -28,202 +28,220 @@ class Canal {
   generateNetwork(rand) {
     //generate all the node positions
     //this.nodes.push(new CanalNode(this, new THREE.Vector3(0, 0, 0), 40));
-    for (let i = -15; i < 15; i++) {
-      for (let j = -15; j < 15; j++) {
-        let x = i * 500;
-        let z = j * 500;
-        this.vector2a.set(x, z);
-        if (this.vector2.distanceTo(this.vector2a) < 7501) {
-          this.nodes.push(new CanalNode(this, new THREE.Vector3(x, 0, z), 40, i, j));
-        }
-      }
-    }
+    // for (let i = -15; i < 15; i++) {
+    //   for (let j = -15; j < 15; j++) {
+    //     let x = i * 500;
+    //     let z = j * 500;
+    //     this.vector2a.set(x, z);
+    //     if (this.vector2.distanceTo(this.vector2a) < 7501) {
+    //       this.nodes.push(new CanalNode(this, new THREE.Vector3(x, 0, z), 40, i, j));
+    //     }
+    //   }
+    // }
+    this.nodes.push(new CanalNode(this, new THREE.Vector3(0, 0, 0), 40, 0, 0));
+    this.nodes.push(new CanalNode(this, new THREE.Vector3(500, 0, 0), 40, 1, 0));
+    this.nodes.push(new CanalNode(this, new THREE.Vector3(500, 0, 500), 40, 1, 1));
+    this.nodes.push(new CanalNode(this, new THREE.Vector3(-500, 0, -500), 40, 0, 0));
+
+    this.nodes[0].nodes.push(this.nodes[1]);
+    this.nodes[0].nodes.push(this.nodes[3]);
+    this.nodes[1].nodes.push(this.nodes[0]);
+    this.nodes[1].nodes.push(this.nodes[2]);
+    this.nodes[2].nodes.push(this.nodes[1]);
+    this.nodes[3].nodes.push(this.nodes[0]);
+
+    this.connections.push([this.nodes[0], this.nodes[1]])
+    this.connections.push([this.nodes[1], this.nodes[2]])
+    this.connections.push([this.nodes[0], this.nodes[3]])
 
     //Find connections (snap to)
-    for (let i = 0; i < this.nodes.length; i++) {
-      this.vector2.set(this.nodes[i].position.x, this.nodes[i].position.z);
-      this.vector2a.set(this.nodes[i].position.x, this.nodes[i].position.z);
-      this.vector2a.sub(this.vector2);
-      const closestByLength = {
-        d45: { id: -1, dist: 10000 },
-        d90: { id: -1, dist: 10000 },
-        d135: { id: -1, dist: 10000 },
-        d180: { id: -1, dist: 10000 },
-        d225: { id: -1, dist: 10000 },
-        d270: { id: -1, dist: 10000 },
-        d315: { id: -1, dist: 10000 },
-        d360: { id: -1, dist: 10000 },
-      };
-      for (let j = 0; j < this.nodes.length; j++) {
-        if (i !== j) {
-         this.vector2a.set(this.nodes[j].position.x, this.nodes[j].position.z);
-          this.vector2b.set(this.nodes[j].position.x, this.nodes[j].position.z);
-          this.vector2b.sub(this.vector2);
-          let angle = this.vector2b.angle() * THREE.MathUtils.RAD2DEG;
+    const autoConnections = false
+    if(autoConnections) {
+      for (let i = 0; i < this.nodes.length; i++) {
+        this.vector2.set(this.nodes[i].position.x, this.nodes[i].position.z);
+        this.vector2a.set(this.nodes[i].position.x, this.nodes[i].position.z);
+        this.vector2a.sub(this.vector2);
+        const closestByLength = {
+          d45: { id: -1, dist: 10000 },
+          d90: { id: -1, dist: 10000 },
+          d135: { id: -1, dist: 10000 },
+          d180: { id: -1, dist: 10000 },
+          d225: { id: -1, dist: 10000 },
+          d270: { id: -1, dist: 10000 },
+          d315: { id: -1, dist: 10000 },
+          d360: { id: -1, dist: 10000 },
+        };
+        for (let j = 0; j < this.nodes.length; j++) {
+          if (i !== j) {
+          this.vector2a.set(this.nodes[j].position.x, this.nodes[j].position.z);
+            this.vector2b.set(this.nodes[j].position.x, this.nodes[j].position.z);
+            this.vector2b.sub(this.vector2);
+            let angle = this.vector2b.angle() * THREE.MathUtils.RAD2DEG;
 
-          this.vector2b.set(this.nodes[j].position.x, this.nodes[j].position.z);
-          let dist = this.vector2.distanceTo(this.vector2b);
+            this.vector2b.set(this.nodes[j].position.x, this.nodes[j].position.z);
+            let dist = this.vector2.distanceTo(this.vector2b);
 
-          if (angle > 44 && angle < 46) {
-            if (dist < closestByLength.d45.dist) {
-              closestByLength.d45.id = j;
-              closestByLength.d45.dist = dist;
-            }
-          } else if (angle > 89 && angle < 91) {
-            if (dist < closestByLength.d90.dist) {
-              closestByLength.d90.id = j;
-              closestByLength.d90.dist = dist;
-            }
-          } else if (angle > 134 && angle < 136) {
-            if (dist < closestByLength.d135.dist) {
-              closestByLength.d135.id = j;
-              closestByLength.d135.dist = dist;
-            }
-          } else if (angle > 179 && angle < 181) {
-            if (dist < closestByLength.d180.dist) {
-              closestByLength.d180.id = j;
-              closestByLength.d180.dist = dist;
-            }
-          } else if (angle > 224 && angle < 226) {
-            if (dist < closestByLength.d225.dist) {
-              closestByLength.d225.id = j;
-              closestByLength.d225.dist = dist;
-            }
-          } else if (angle > 269 && angle < 271) {
-            if (dist < closestByLength.d270.dist) {
-              closestByLength.d270.id = j;
-              closestByLength.d270.dist = dist;
-            }
-          } else if (angle > 315 && angle < 316) {
-            if (dist < closestByLength.d315.dist) {
-              closestByLength.d315.id = j;
-              closestByLength.d315.dist = dist;
-            }
-          } else if ((angle > 359 && angle < 361) || (angle > -1 && angle < 1)) {
-            if (dist < closestByLength.d360.dist) {
-              closestByLength.d360.id = j;
-              closestByLength.d360.dist = dist;
+            if (angle > 44 && angle < 46) {
+              if (dist < closestByLength.d45.dist) {
+                closestByLength.d45.id = j;
+                closestByLength.d45.dist = dist;
+              }
+            } else if (angle > 89 && angle < 91) {
+              if (dist < closestByLength.d90.dist) {
+                closestByLength.d90.id = j;
+                closestByLength.d90.dist = dist;
+              }
+            } else if (angle > 134 && angle < 136) {
+              if (dist < closestByLength.d135.dist) {
+                closestByLength.d135.id = j;
+                closestByLength.d135.dist = dist;
+              }
+            } else if (angle > 179 && angle < 181) {
+              if (dist < closestByLength.d180.dist) {
+                closestByLength.d180.id = j;
+                closestByLength.d180.dist = dist;
+              }
+            } else if (angle > 224 && angle < 226) {
+              if (dist < closestByLength.d225.dist) {
+                closestByLength.d225.id = j;
+                closestByLength.d225.dist = dist;
+              }
+            } else if (angle > 269 && angle < 271) {
+              if (dist < closestByLength.d270.dist) {
+                closestByLength.d270.id = j;
+                closestByLength.d270.dist = dist;
+              }
+            } else if (angle > 315 && angle < 316) {
+              if (dist < closestByLength.d315.dist) {
+                closestByLength.d315.id = j;
+                closestByLength.d315.dist = dist;
+              }
+            } else if ((angle > 359 && angle < 361) || (angle > -1 && angle < 1)) {
+              if (dist < closestByLength.d360.dist) {
+                closestByLength.d360.id = j;
+                closestByLength.d360.dist = dist;
+              }
             }
           }
         }
-      }
 
-      let order = [0, 1, 2, 3, 4, 5, 6, 7];
-      order = shuffle(order, rand);
-
-      if(this.nodes[i].x % 2 === 0) {
-        order = [0,2,4,6];
+        let order = [0, 1, 2, 3, 4, 5, 6, 7];
         order = shuffle(order, rand);
-        let tempOrder = [1,3,5,7]
-        tempOrder = shuffle(tempOrder, rand);
-        order.push(tempOrder);
-      }
-      else if(this.nodes[i].y % 2 === 0) {
-        order = [1,3,5,7];
-        order = shuffle(order, rand);
-        let tempOrder = [0,2,4,6]
-        tempOrder = shuffle(tempOrder, rand);
-        order.push(tempOrder);
-      }
 
-      const count = 4; //due to both ends have 3x randomness then you will end up with between 3-6 connections on each node.
-      let chances = [false, false, false, false, false, false, false, false];
-      for (let i = 0; i < count; i++) {
-        chances[order[i]] = true
-      }
-      
-      if (closestByLength.d45.id >= 0) {
-        if (closestByLength.d45.dist < 1000) {
-          if (chances[0]) {
-            this.nodes[closestByLength.d45.id].nodes.push(this.nodes[i]);
-            this.nodes[i].nodes.push(this.nodes[closestByLength.d45.id]);
+        if(this.nodes[i].x % 2 === 0) {
+          order = [0,2,4,6];
+          order = shuffle(order, rand);
+          let tempOrder = [1,3,5,7]
+          tempOrder = shuffle(tempOrder, rand);
+          order.push(tempOrder);
+        }
+        else if(this.nodes[i].y % 2 === 0) {
+          order = [1,3,5,7];
+          order = shuffle(order, rand);
+          let tempOrder = [0,2,4,6]
+          tempOrder = shuffle(tempOrder, rand);
+          order.push(tempOrder);
+        }
 
-            if(!this.containsConnection(this.connections, this.nodes[i], this.nodes[closestByLength.d45.id])) {
-                this.connections.push([this.nodes[i], this.nodes[closestByLength.d45.id]])
+        const count = 4; //due to both ends have 3x randomness then you will end up with between 3-6 connections on each node.
+        let chances = [false, false, false, false, false, false, false, false];
+        for (let i = 0; i < count; i++) {
+          chances[order[i]] = true
+        }
+        
+        if (closestByLength.d45.id >= 0) {
+          if (closestByLength.d45.dist < 1000) {
+            if (chances[0]) {
+              this.nodes[closestByLength.d45.id].nodes.push(this.nodes[i]);
+              this.nodes[i].nodes.push(this.nodes[closestByLength.d45.id]);
+
+              if(!this.containsConnection(this.connections, this.nodes[i], this.nodes[closestByLength.d45.id])) {
+                  this.connections.push([this.nodes[i], this.nodes[closestByLength.d45.id]])
+              }
             }
           }
         }
-      }
-      if (closestByLength.d90.id >= 0) {
-        if (closestByLength.d90.dist < 1000) {
-          if (chances[1]) {
-            this.nodes[closestByLength.d90.id].nodes.push(this.nodes[i]);
-            this.nodes[i].nodes.push(this.nodes[closestByLength.d90.id]);
+        if (closestByLength.d90.id >= 0) {
+          if (closestByLength.d90.dist < 1000) {
+            if (chances[1]) {
+              this.nodes[closestByLength.d90.id].nodes.push(this.nodes[i]);
+              this.nodes[i].nodes.push(this.nodes[closestByLength.d90.id]);
 
-            if(!this.containsConnection(this.connections, this.nodes[i], this.nodes[closestByLength.d90.id])) {
-                this.connections.push([this.nodes[i], this.nodes[closestByLength.d90.id]])
+              if(!this.containsConnection(this.connections, this.nodes[i], this.nodes[closestByLength.d90.id])) {
+                  this.connections.push([this.nodes[i], this.nodes[closestByLength.d90.id]])
+              }
             }
           }
         }
-      }
-      if (closestByLength.d135.id >= 0) {
-        if (closestByLength.d135.dist < 1000) {
-          if (chances[2]) {
-            this.nodes[closestByLength.d135.id].nodes.push(this.nodes[i]);
-            this.nodes[i].nodes.push(this.nodes[closestByLength.d135.id]);
+        if (closestByLength.d135.id >= 0) {
+          if (closestByLength.d135.dist < 1000) {
+            if (chances[2]) {
+              this.nodes[closestByLength.d135.id].nodes.push(this.nodes[i]);
+              this.nodes[i].nodes.push(this.nodes[closestByLength.d135.id]);
 
-            if(!this.containsConnection(this.connections, this.nodes[i], this.nodes[closestByLength.d135.id])) {
-                this.connections.push([this.nodes[i], this.nodes[closestByLength.d135.id]])
+              if(!this.containsConnection(this.connections, this.nodes[i], this.nodes[closestByLength.d135.id])) {
+                  this.connections.push([this.nodes[i], this.nodes[closestByLength.d135.id]])
+              }
             }
           }
         }
-      }
-      if (closestByLength.d180.id >= 0) {
-        if (closestByLength.d180.dist < 1000) {
-          if (chances[3]) {
-            this.nodes[closestByLength.d180.id].nodes.push(this.nodes[i]);
-            this.nodes[i].nodes.push(this.nodes[closestByLength.d180.id]);
+        if (closestByLength.d180.id >= 0) {
+          if (closestByLength.d180.dist < 1000) {
+            if (chances[3]) {
+              this.nodes[closestByLength.d180.id].nodes.push(this.nodes[i]);
+              this.nodes[i].nodes.push(this.nodes[closestByLength.d180.id]);
 
-            if(!this.containsConnection(this.connections, this.nodes[i], this.nodes[closestByLength.d180.id])) {
-                this.connections.push([this.nodes[i], this.nodes[closestByLength.d180.id]])
+              if(!this.containsConnection(this.connections, this.nodes[i], this.nodes[closestByLength.d180.id])) {
+                  this.connections.push([this.nodes[i], this.nodes[closestByLength.d180.id]])
+              }
             }
           }
         }
-      }
-      if (closestByLength.d225.id >= 0) {
-        if (closestByLength.d225.dist < 1000) {
-          if (chances[4]) {
-            this.nodes[closestByLength.d225.id].nodes.push(this.nodes[i]);
-            this.nodes[i].nodes.push(this.nodes[closestByLength.d225.id]);
+        if (closestByLength.d225.id >= 0) {
+          if (closestByLength.d225.dist < 1000) {
+            if (chances[4]) {
+              this.nodes[closestByLength.d225.id].nodes.push(this.nodes[i]);
+              this.nodes[i].nodes.push(this.nodes[closestByLength.d225.id]);
 
-            if(!this.containsConnection(this.connections, this.nodes[i], this.nodes[closestByLength.d225.id])) {
-                this.connections.push([this.nodes[i], this.nodes[closestByLength.d225.id]])
+              if(!this.containsConnection(this.connections, this.nodes[i], this.nodes[closestByLength.d225.id])) {
+                  this.connections.push([this.nodes[i], this.nodes[closestByLength.d225.id]])
+              }
             }
           }
         }
-      }
-      if (closestByLength.d270.id >= 0) {
-        if (closestByLength.d270.dist < 1000) {
-          if (chances[5]) {
-            this.nodes[closestByLength.d270.id].nodes.push(this.nodes[i]);
-            this.nodes[i].nodes.push(this.nodes[closestByLength.d270.id]);
+        if (closestByLength.d270.id >= 0) {
+          if (closestByLength.d270.dist < 1000) {
+            if (chances[5]) {
+              this.nodes[closestByLength.d270.id].nodes.push(this.nodes[i]);
+              this.nodes[i].nodes.push(this.nodes[closestByLength.d270.id]);
 
-            if(!this.containsConnection(this.connections, this.nodes[i], this.nodes[closestByLength.d270.id])) {
-                this.connections.push([this.nodes[i], this.nodes[closestByLength.d270.id]])
+              if(!this.containsConnection(this.connections, this.nodes[i], this.nodes[closestByLength.d270.id])) {
+                  this.connections.push([this.nodes[i], this.nodes[closestByLength.d270.id]])
+              }
             }
           }
         }
-      }
-      if (closestByLength.d315.id >= 0) {
-        if (closestByLength.d315.dist < 1000) {
-          if (chances[6]) {
-            this.nodes[closestByLength.d315.id].nodes.push(this.nodes[i]);
-            this.nodes[i].nodes.push(this.nodes[closestByLength.d315.id]);
+        if (closestByLength.d315.id >= 0) {
+          if (closestByLength.d315.dist < 1000) {
+            if (chances[6]) {
+              this.nodes[closestByLength.d315.id].nodes.push(this.nodes[i]);
+              this.nodes[i].nodes.push(this.nodes[closestByLength.d315.id]);
 
-            if(!this.containsConnection(this.connections, this.nodes[i], this.nodes[closestByLength.d315.id])) {
-                this.connections.push([this.nodes[i], this.nodes[closestByLength.d315.id]])
+              if(!this.containsConnection(this.connections, this.nodes[i], this.nodes[closestByLength.d315.id])) {
+                  this.connections.push([this.nodes[i], this.nodes[closestByLength.d315.id]])
+              }
             }
           }
         }
-      }
-      if (closestByLength.d360.id >= 0) {
-        if (closestByLength.d360.dist < 1000) {
-          if (chances[7]) {
-            this.nodes[closestByLength.d360.id].nodes.push(this.nodes[i]);
-            this.nodes[i].nodes.push(this.nodes[closestByLength.d360.id]);
+        if (closestByLength.d360.id >= 0) {
+          if (closestByLength.d360.dist < 1000) {
+            if (chances[7]) {
+              this.nodes[closestByLength.d360.id].nodes.push(this.nodes[i]);
+              this.nodes[i].nodes.push(this.nodes[closestByLength.d360.id]);
 
-            if(!this.containsConnection(this.connections, this.nodes[i], this.nodes[closestByLength.d360.id])) {
-                this.connections.push([this.nodes[i], this.nodes[closestByLength.d360.id]])
+              if(!this.containsConnection(this.connections, this.nodes[i], this.nodes[closestByLength.d360.id])) {
+                  this.connections.push([this.nodes[i], this.nodes[closestByLength.d360.id]])
+              }
             }
           }
         }
