@@ -62,8 +62,6 @@ class Player {
         this.boatItems[nameCheck].parts.push(child);
       }
     });
-    console.log(this.boatItems)
-
     //default parts
       this.addPart('hull_flooring')
       this.addPart('hull_v_shaped')
@@ -110,11 +108,24 @@ class Player {
     //sterns
       //stern_traditional
         //house_boat_stern_traditional
+    const whichOne = Math.random();
+    if(whichOne < 0.34)  {
     this.addPart('house_boat_stern_traditional')
     this.addPart('house_boat_stern_traditional_window_01')
     this.addPart('house_boat_stern_traditional_window_02')
     this.addPart('house_boat_stern_traditional_window_03')
     this.addPart('house_boat_stern_traditional_window_04')
+    } else if(whichOne < 0.68)  {
+    this.addPart('house_boat_stern_semi_cruiser_handrail')
+    this.addPart('house_boat_stern_semi_cruiser_wall')
+    this.addPart('house_boat_stern_semi_cruiser_window_01')
+    this.addPart('house_boat_main_door_02')
+    } else {
+    this.addPart('house_boat_stern_semi_traditional_door')
+    this.addPart('house_boat_stern_semi_traditional_seating')
+    this.addPart('house_boat_stern_semi_traditional_walls')
+    this.addPart('house_boat_stern_semi_traditional_window_01')
+    }
   }
 
   addPart(partName) {

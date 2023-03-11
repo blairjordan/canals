@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
 import rodHookUrl from "../../Assets/models/rod_hook.glb";
-import rodArmatureUrl from "../../Assets/models/rod_armature.glb";
+import rodShapesUrl from "../../Assets/models/rod_shapes.glb";
 
 class FishingRod {
     constructor(app) {
@@ -14,6 +14,7 @@ class FishingRod {
         this.fishingGroup.rotation.order = "YXZ";
         this.vector3 = new THREE.Vector3()
         this.vector3b = new THREE.Vector3()
+        this.vector3c = new THREE.Vector3()
         this.helperObject = new THREE.Object3D();
         this.time = 0;
 
@@ -87,25 +88,16 @@ class FishingRod {
         });
         this.app.scene.add(gltfRod.scene);
     
-        const gltfRodArm = await loader.loadAsync(rodArmatureUrl);
-        gltfRodArm.scene.traverse((child) => {
-            if (child.isMesh) {
-                child.material.color.set('#222')
-            }
-        })
+        const gltfRodArm = await loader.loadAsync(rodShapesUrl);
+        const rod = gltfRodArm.scene.getObjectByName('decor_fishing_rod_01001_rod')
+        
+        this.rod = rod
+        this.rodDict = rod.morphTargetDictionary
+        this.rodInfluences = rod.morphTargetInfluences
         this.app.scene.add(gltfRodArm.scene);
         this.gltfRodArm = gltfRodArm.scene;
-        this.gltfRodArm.scale.set(0.1,0.5,0.1)
-        const b1 = gltfRodArm.scene.getObjectByName('B1')
-        const b2 = gltfRodArm.scene.getObjectByName('B2')
-        const b3 = gltfRodArm.scene.getObjectByName('B3')
-        const b4 = gltfRodArm.scene.getObjectByName('B4')
-        const b5 = gltfRodArm.scene.getObjectByName('B5')
-        const b6 = gltfRodArm.scene.getObjectByName('B6')
-        const b7 = gltfRodArm.scene.getObjectByName('B7')
-        const b8 = gltfRodArm.scene.getObjectByName('B8')
-        this.rodBones = [b1,b2,b3,b4,b5,b6,b7]
-        this.rodBoneTip = b8
+        this.gltfRodArm.rotateY(Math.PI)
+    //     this.rodBoneTip = b9
     }
 
     initPhysics() {
@@ -138,23 +130,29 @@ class FishingRod {
  
         //Just doing a poor mans rod casting now
           if(this.gltfRodArm) {
-            this.helperObject.position.copy(this.app.player.playerGroup.position)
-            this.helperObject.rotation.copy(this.app.player.playerGroup.rotation)
-            this.helperObject.translateX(-0.34)
-            this.helperObject.translateY(0.99)
-            this.helperObject.translateZ(-2.8)
-            this.gltfRodArm.position.copy(this.helperObject.position)
-            //base of rod
-            this.gltfRodArm.rotation.set(0,0,0)
-            this.gltfRodArm.rotateX(-0.5)
-            // this.gltfRodArm.rotateX(Math.sin(this.time)*0.5)
+            this.gltfRodArm.position.copy(this.app.player.playerGroup.position)
+            this.gltfRodArm.rotation.copy(this.app.player.playerGroup.rotation)
+            this.gltfRodArm.rotateY(Math.PI)
             
-            for(let i = 1; i < 7; i++) {
-              this.rodBones[i].rotation.set(0,0,0)
-              this.rodBones[i].rotateX(Math.PI * (Math.sin(this.time*2)*0.1))
-            }
-            this.rodBoneTip.getWorldPosition(this.vector3);
+            const casting = Math.sin(this.time*5) 
+            this.rodInfluences[0] = Math.max(casting, 0)
+            this.rodInfluences[1] = 0 + (casting < 0 ? Math.abs(casting) : 0)
+
+            this.vector3.fromBufferAttribute( this.rod.geometry.attributes.position, 100 );
+            this.vector3b.fromBufferAttribute( this.rod.geometry.morphAttributes.position[0], 100 );
+            this.vector3c.fromBufferAttribute( this.rod.geometry.morphAttributes.position[1], 100 );
             
+            this.rod.localToWorld(this.vector3)
+            this.helperObject.position.set(0,0,0)
+            this.helperObject.rotation.set(0,0,0)
+            this.helperObject.rotateY(Math.PI+this.app.player.playerGroup.rotation.y)
+            this.helperObject.localToWorld(this.vector3b)
+            this.helperObject.localToWorld(this.vector3c)
+            this.vector3b.multiplyScalar(this.rodInfluences[0]) 
+            this.vector3c.multiplyScalar(this.rodInfluences[1]) 
+            this.vector3.add(this.vector3b)
+            this.vector3.add(this.vector3c)
+
             const distToBoat = this.hook.position.distanceTo(this.app.player.playerGroup.position)
             if(distToBoat > 20) {
                 const offsetDist = (distToBoat-20) * delta * 10
