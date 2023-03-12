@@ -30,7 +30,7 @@ class GamePad {
         this.buttons = {};
         //init buttons
         for(let i = 0; i < 16; i++) {
-            this.buttons[i] = {pressed: false, lastFrame: false, touched: false, value: 0}
+            this.buttons[i] = {pressed: false, release: false, lastFrame: false, touched: false, value: 0}
         }
 
         this.euler = new Euler()
@@ -139,11 +139,11 @@ class GamePad {
             }
         }, false );
         document.addEventListener( ("buttonAction3"), (e) => {
-            if(this.buttons[3].pressed && this.buttons[3].pressed !== this.buttons[3].lastFrame) {
-                console.log('press Y')
-            } else if(this.buttons[3].pressed) {
-                console.log('hold Y')
-            }
+            // if(this.buttons[3].pressed && this.buttons[3].pressed !== this.buttons[3].lastFrame) {
+            //     console.log('press Y')
+            // } else if(this.buttons[3].pressed) {
+            //     console.log('hold Y')
+            // }
         }, false );
         document.addEventListener( ("buttonAction4"), (e) => {
             console.log('press Left Top Button')
@@ -233,7 +233,15 @@ class GamePad {
         for(let i = 0; i < 16; i++) {
             if(this.buttons[i]) {
                 if(this.buttons[i].pressed) {
+                    this.buttons[i].release = false
                     document.dispatchEvent(this.buttonEventMapping[i]);
+                } else {
+                    if(this.buttons[i].lastFrame) {
+                        if(!this.buttons[i].release) {
+                            this.buttons[i].release = true;
+                            document.dispatchEvent(this.buttonEventMapping[i]);
+                        }
+                    }
                 }
                 this.buttons[i].lastFrame = this.buttons[i].pressed;
             }
