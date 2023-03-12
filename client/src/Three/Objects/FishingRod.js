@@ -5,6 +5,8 @@ import rodHookUrl from "../../Assets/models/rod_hook.glb";
 import rodShapesUrl from "../../Assets/models/rod_shapes.glb";
 
 import TWEEN from "@tweenjs/tween.js";
+import GraphQL from "../../Server/graphQL";
+import { rotateAroundPoint } from "../Utils/utils";
 
 class FishingRod {
   constructor(app) {
@@ -24,6 +26,7 @@ class FishingRod {
     this.gltfRodArm = null;
 
     this.isFishing = false
+    this.fishingMarkers = null
 
     this.init = this.init.bind(this);
   }
@@ -36,9 +39,33 @@ class FishingRod {
 
     this.ready = true;
 
+    this.getFishingSpots();
+
     if (callback) {
       callback();
     }
+  }
+
+  async getFishingSpots() {
+    this.fishingMarkers = await GraphQL.fishing.getFishingSpots();
+    if(!this.fishingMarkers) return;
+
+    for(let  j = 0; j < this.fishingMarkers.length; j++) {
+      const points = [];
+      const vec2Center = new THREE.Vector2()
+      const vec2 = new THREE.Vector2()
+      for(let i = 0; i < 100; i++) {
+        vec2.set(25-(i/5), 0);
+        rotateAroundPoint(vec2Center, vec2, i*10)
+        points.push( new THREE.Vector3(this.fishingMarkers[j].position.x + vec2.x, i*0.05, this.fishingMarkers[j].position.z +vec2.y ) );
+      }
+      
+      const material = new THREE.LineBasicMaterial( { color: 0x0000ff } );
+      const geometry = new THREE.BufferGeometry().setFromPoints( points );
+      const line = new THREE.Line( geometry, material );
+      this.app.scene.add(line);
+    }
+    
   }
 
   async loadFishingGear() {
@@ -243,7 +270,33 @@ class FishingRod {
             this.rodInfluences[0] = initVal.castBack
             this.rodInfluences[1] = initVal.castForward
       })
+      .onComplete(() => {
+        this.goFish();
+      })
       .start();
+  }
+
+  async goFish() {
+    //Get closest marker
+    let closest = -1
+    let closestDist = 10000
+    for(let i = 0; i < this.fishingMarkers.length; i++) {
+      this.vector3.set(this.fishingMarkers[i].position.x,this.fishingMarkers[i].position.y,this.fishingMarkers[i].position.z);
+      const dist = this.app.player.playerGroup.position.distanceTo(this.vector3)
+      if(dist < closestDist) {
+        closestDist = dist
+        closest = i
+      }
+    }
+
+    if(closest>=0) {
+      const fish = await GraphQL.fishing.goFish(this.app.player.playerData.id, this.fishingMarkers[closest].id);
+      if(fish) {
+        console.log(fish)
+      } else {
+        console.log('No fish caught');
+      }
+    }
   }
 
   finishFishing() {
