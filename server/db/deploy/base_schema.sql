@@ -137,10 +137,10 @@ WITH vendor_insert AS (
 item_insert AS (
   INSERT INTO items (name, item_key, description, price, type, props)
   VALUES
-  ('Spincast Rod', 'spincast_rod', 'A simple fishing rod designed to work with spincasting reels.', 25.00, 'fishing_rod', '{"chance_multipler": 1}'::JSONB),
-  ('Spinning Rod', 'spinning_rod', 'The most common type of fishing rod, designed to work with spinning reels.', 50.00, 'fishing_rod', '{"chance_multipler": 1.05}'::JSONB),
-  ('Baitcasting Rod', 'baitcasting_rod', 'A powerful fishing rod designed to work with baitcasting reels.', 100.00, 'fishing_rod', '{"chance_multipler": 1.1}'::JSONB),
-  ('Fly Rod', 'fly_rod', 'A specialized fishing rod designed for fly fishing.', 200.00, 'fishing_rod', '{"chance_multipler": 1.15}'::JSONB)
+  ('Spincast Rod', 'spincast_rod', 'A simple fishing rod designed to work with spincasting reels.', 25.00, 'fishing_rod', '{"chance_multiplier": 1}'::JSONB),
+  ('Spinning Rod', 'spinning_rod', 'The most common type of fishing rod, designed to work with spinning reels.', 50.00, 'fishing_rod', '{"chance_multiplier": 1.05}'::JSONB),
+  ('Baitcasting Rod', 'baitcasting_rod', 'A powerful fishing rod designed to work with baitcasting reels.', 100.00, 'fishing_rod', '{"chance_multiplier": 1.1}'::JSONB),
+  ('Fly Rod', 'fly_rod', 'A specialized fishing rod designed for fly fishing.', 200.00, 'fishing_rod', '{"chance_multiplier": 1.15}'::JSONB)
   RETURNING id
 )
 INSERT INTO marker_items (marker_id, item_id)
@@ -327,21 +327,55 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- 🎣 Fishin' function
-CREATE OR REPLACE FUNCTION go_fish(
-  player_id INTEGER,
-  marker_id INTEGER
+CREATE OR REPLACE FUNCTION fish(
+  player_id INTEGER
   )
 RETURNS player_items AS $$
   #variable_conflict use_variable
 DECLARE
   player_item player_items := NULL; -- The fish caught by the player
+  marker_id_found INTEGER := NULL;
+  marker_distance_limit NUMERIC := 1000;
   chance_multiplier NUMERIC;
 BEGIN
 
   -- TODO: Validate player session
-  -- TODO: Validate player and marker are in the same location
 
-  SELECT (items.props ->> 'chance_multipler')::NUMERIC AS chance_multiplier
+  -- Find closest marker within the given distance of the current player's position
+  WITH current_player AS (
+    SELECT position
+    FROM players
+    WHERE id = 1
+  ),
+  player_distances AS (
+    SELECT
+      m.id,
+        ST_Distance(
+        ST_MakePoint(
+          (cp.position->>'x')::double precision,
+          (cp.position->>'z')::double precision
+        ),
+        ST_MakePoint(
+          (m.position->>'x')::double precision,
+          (m.position->>'z')::double precision
+        )
+    ) AS marker_distance
+    FROM markers m
+    CROSS JOIN current_player cp
+    WHERE m.type = 'fishing_spot'
+  )
+  SELECT pd.id
+  INTO marker_id_found
+  FROM player_distances pd
+  WHERE pd.marker_distance <= marker_distance_limit
+  ORDER BY pd.marker_distance ASC
+  LIMIT 1;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'No fishing markers found';
+  END IF;
+
+  SELECT (items.props ->> 'chance_multiplier')::NUMERIC AS chance_multiplier
   INTO chance_multiplier
   FROM players
   LEFT OUTER JOIN player_items on players.id = player_items.player_id
@@ -363,7 +397,7 @@ BEGIN
   SELECT player_id, item_id
   FROM marker_items
   INNER JOIN items ON marker_items.item_id = items.id
-  WHERE marker_id = 4
+  WHERE marker_id = marker_id_found
   AND random() < (marker_items.props ->> 'chance')::NUMERIC * chance_multiplier
   ORDER BY random()
   LIMIT 1
