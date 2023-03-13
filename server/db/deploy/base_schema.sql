@@ -386,7 +386,8 @@ BEGIN
   AND player_items.props ->> 'equipped' = 'true';
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'Fishing action on cooldown';
+    -- 🕤 Fishing action on cooldown (return NULL)
+    RETURN player_item;
   END IF;
 
   UPDATE players
