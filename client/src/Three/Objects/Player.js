@@ -14,6 +14,19 @@ class Player {
 
     this.wake = null;
 
+    //speed value of 10 = 20 Nautical miles / hour
+    //speed value of 20 = 40 Nautical miles / hour
+    //speed value of 30 = 60 Nautical miles / hour
+
+    //turnSpeed value of 1 (45°/s)
+
+    this.boatStats = {
+      speed: 8,
+      turnSpeed: 0.5,
+      acceleration: 1,
+      brakes: 1,
+    }
+
     this.boatItems = {
       //example object
       // item: {

@@ -16,6 +16,41 @@
     color:white
 }
 
+#fishingAction {
+  position: absolute;
+  bottom: 5vh;
+  left: 45vw;
+  width: 10vw;
+  height: 24px;
+  border: 1px white solid;
+  border-radius: 8px;
+
+}
+
+.fishingActionBar {
+  border-radius: 8px;
+  background: white;
+  position: relative;
+  width: 0%;
+  height: 100%;
+  transform-origin: top left;
+}
+
+#fishCaught {
+  position: absolute;
+  bottom: calc(5vh + 48px);
+  left: 40vw;
+  width: 20vw;
+  height: fit-content;
+  border: 1px rgba(255,255,255,0.5) solid;
+  border-radius: 32px;
+  font-family: "Gotham SSm A", "Gotham SSm B", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color:white;
+  background: #512da8;
+
+}
 
 @keyframes fadein {
     from {
@@ -117,22 +152,22 @@
   }
   
 .fade-in {
-    -webkit-animation: fadein 5s;
-    -moz-animation: fadein 5s;
-    -ms-animation: fadein 5s;
-    -o-animation: fadein 5s;
-    animation: fadein 5s;
+    -webkit-animation: fadein 2s;
+    -moz-animation: fadein 2s;
+    -ms-animation: fadein 3s;
+    -o-animation: fadein 2s;
+    animation: fadein 2s;
   }
-  
-  .fade-out {
-    -webkit-animation: fadeout 1s;
-    -moz-animation: fadeout 1s;
-    -ms-animation: fadeout 1s;
-    -o-animation: fadeout 1s;
-    animation: fadeout 1s;
-    animation-fill-mode: forwards;
-    -webkit-animation-fill-mode: forwards;
-  }
+
+.fade-out {
+  -webkit-animation: fadeout 1s;
+  -moz-animation: fadeout 1s;
+  -ms-animation: fadeout 1s;
+  -o-animation: fadeout 1s;
+  animation: fadeout 1s;
+  animation-fill-mode: forwards;
+  -webkit-animation-fill-mode: forwards;
+}
   
 
 #music-track {
@@ -166,4 +201,9 @@
     font-size: 1.8rem;
     font-style: italic;
     color: #69a8bd;
+  }
+
+  .hidden {
+    visibility: hidden;
+    display: none;
   }

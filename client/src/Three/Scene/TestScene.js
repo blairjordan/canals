@@ -39,6 +39,9 @@ class TestScene extends BaseScene {
     this.vector3 = new THREE.Vector3();
     this.lastPlayerPosition = new THREE.Vector3();
     this.currentPlayerPosition = new THREE.Vector3();
+    this.speedStack = 0;
+    this.speedCheckDistance = 0;
+    this.speedCheckDelta = 0;
 
     this.updateSun = this.updateSun.bind(this);
   }
@@ -127,7 +130,7 @@ class TestScene extends BaseScene {
     //
 
     this.controls = new OrbitControls( this.camera, this.renderer.domElement );
-    this.controls.maxPolarAngle = Math.PI * 0.495;
+    this.controls.maxPolarAngle = Math.PI * 0.470;
     this.controls.target.set( 0, 5, 0 );
     this.controls.minDistance = 4.0;
     this.controls.maxDistance = 80.0;
@@ -154,7 +157,6 @@ class TestScene extends BaseScene {
     this.connectivity = new Connectivity(this, this.player.playerGroup);
     this.connectivity.init();
     this.connectivity.players.push(this.player)
-
 
     this.lastPlayerPosition.copy(this.player.playerGroup.position)
     this.gamepads.gamePad.boatTargetObject.position.set(
@@ -194,13 +196,13 @@ class TestScene extends BaseScene {
     this.waterTrial = await this.getWaterTrialTexture();
 
     const points = [];
-    for (let j = 0; j < 120; j++) {
+    for (let j = 0; j < 60; j++) {
       points.push(new THREE.Vector3(this.player.playerGroup.position.x+(j*0.1), 0.1, this.player.playerGroup.position.z+(j*0.1)));
     }
 
     const line = new MeshLine();
     const trailGeom = new THREE.BufferGeometry()
-    trailGeom.setFromPoints(points, p => 1-p)
+    trailGeom.setFromPoints(points, p => 0.75-p)
     trailGeom.computeBoundingBox()
     line.setGeometry(trailGeom);
     let lineMaterial = new MeshLineMaterial({
@@ -215,8 +217,8 @@ class TestScene extends BaseScene {
         repeat: new THREE.Vector2(1,1),
         resolution: new THREE.Vector2(window.innerWidth,window.innerHeight),
         sizeAttenuation: false,
-        lineWidth: 1200,
-        length: 360,
+        lineWidth: 1000,
+        length: 20,
         // near: this.camera.near,
         // far: this.camera.far
       });
@@ -231,11 +233,12 @@ class TestScene extends BaseScene {
 
     var trailPoint = new THREE.Object3D();
     this.player.playerGroup.add(trailPoint)
-    trailPoint.translateZ(-2.5)
+    trailPoint.translateZ(5)
     trailPoint.translateY(0.1)
+    trailPoint.translateX(-0.25)
 
     var trailRenderer = new TrailRenderer( this.scene, false );
-    var trailLength = 20+Math.floor(Math.random() * 2);
+    var trailLength = 45+Math.floor(Math.random() * 2);
     var trailMaterial = trailRenderer.createTexturedMaterial();	
     trailMaterial.uniforms.textureMap.value = this.waterTrial;
     trailMaterial.uniforms.headColor.value.set(1.0, 1.0, 1.0, 0.4)
@@ -260,12 +263,11 @@ class TestScene extends BaseScene {
       trailPoint: trailPoint,
       trailPoints: points,
       trailIndex: 0,
-      trailMat: lineMaterial,
+      trailMat: lineMaterial
     }
   }
 
   initControls() {
-
     this.gamepads = new GamePads(this);
   }
 
@@ -288,8 +290,7 @@ class TestScene extends BaseScene {
   }
 
   updateTrail() {
-
-    if(this.frameCounter%3===0) {
+    if(this.frameCounter%5===0) {
       if(this.player.wake.trailRenderer) {
           this.player.wake.trailPoint.getWorldPosition(this.vector3)
           this.vector3.y = 0.1+ Math.random()*0.3
@@ -349,9 +350,6 @@ class TestScene extends BaseScene {
 
   smoothControls(delta) {
 
-    // const angleTo = this.controlGroup.quaternion.angleTo(this.gamepads.gamePad.targetObject.quaternion)
-    // const distTo = this.controlGroup.position.distanceTo(this.gamepads.gamePad.targetObject.position)
-
     if(this.player ) {
       if(this.player.ready) {
         this.lastPlayerPosition.copy(this.player.playerGroup.position)
@@ -366,29 +364,32 @@ class TestScene extends BaseScene {
         this.controls.target.copy(this.player.playerGroup.position);
 
 
-        if(this.frameCounter%5===0) {
-          this.vector3.set(0,0,0)
-          this.distance = this.vector3.distanceTo(this.currentPlayerPosition)
-          this.updateSpeedProp(this.distance, delta)
-        }
+        this.vector3.set(0,0,0)
+        this.distance = this.vector3.distanceTo(this.currentPlayerPosition)
+        this.updateSpeedProp(this.distance, delta, this.frameCounter%30===0)
       }
     }
-
-    this.controlGroup.position.lerp(this.gamepads.gamePad.targetObject.position, delta * 5)
-    this.controlGroup.quaternion.slerp(this.gamepads.gamePad.targetObject.quaternion, delta * 5)
   }
 
-  updateSpeedProp(distance, delta) {
+  updateSpeedProp(distance, delta, isFifth) {
     
-    const timeSec = delta;
-    //const mps = distance/timeSec;
-    const kph = (distance/1000.0)/(timeSec/3600.0);
-    const mph = kph / 1.609;
-		const nph = mph * 0.868976;
-     
+    this.speedCheckDistance += distance;
+    this.speedCheckDelta += delta;
 
-    this.soundManager.targetEngineVolume = (nph/250)
-    this.updateSpeed(nph.toFixed(2));
+
+    if(isFifth) {
+      const timeSec = this.speedCheckDelta;
+      const kph = (this.speedCheckDistance/1000.0)/(timeSec/3600.0);
+      const mph = kph / 1.609;
+      //Nautical speed
+      //const nph = mph * 0.868976;
+      
+      this.soundManager.targetEngineVolume = (mph/5)
+      this.updateSpeed(mph.toFixed(2));
+      this.speedStack = 0;
+      this.speedCheckDistance = 0;
+      this.speedCheckDelta = 0;
+    }
   }
 
   //are we close enough to an item to collect
@@ -430,7 +431,10 @@ class TestScene extends BaseScene {
       this.meshes[i].rotation.z = time * 0.51;
     }
 
-    if(this.water) this.water.material.uniforms["time"].value += 1.0 / 60.0;
+    if(this.water) {
+      this.water.position.y = 0.025 - Math.sin(time)*0.025
+      this.water.material.uniforms["time"].value += 1.0 / 60.0;
+    }
 
   }
 }

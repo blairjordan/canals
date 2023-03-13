@@ -61,8 +61,8 @@ class BaseScene {
     this.camera = new THREE.PerspectiveCamera(
       55,
       window.innerWidth / window.innerHeight,
-      1,
-      20000
+      0.35,
+      10000
     );
     this.camera.position.set(20, 20, 20);
 

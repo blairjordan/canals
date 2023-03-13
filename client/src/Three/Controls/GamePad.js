@@ -38,9 +38,6 @@ class GamePad {
         this.leftAxis = new Vector2()
         this.rightAxis = new Vector2()
 
-        this.targetObject = new Object3D();
-        this.targetObject.position.set(30,30,30)
-
         this.boatTargetObject = new Object3D();
 
         this.updateAxis0 = new Event("updateAxis0");
@@ -50,23 +47,20 @@ class GamePad {
 
         document.addEventListener( "updateAxis0", (e) => {
                 if(Math.abs(this.leftAxis.x) > this.deadzone) {
-                    this.targetObject.translateX(this.leftAxis.x)
-                    this.clampY()
-                    this.boatTargetObject.rotateOnWorldAxis(new Vector3(0.0, 1.0, 0.0), (-this.leftAxis.y >= 0 ? -this.leftAxis.x : this.leftAxis.x) / 60.0) 
+                    const input = (-this.leftAxis.y >= 0 ? -this.leftAxis.x : this.leftAxis.x);
+                    const turnSpeed = input * this.app.player.boatStats.turnSpeed  * this.currentDelta;
+                    this.boatTargetObject.rotateOnWorldAxis(new Vector3(0.0, 1.0, 0.0), turnSpeed) 
                 }
             }, false );
         document.addEventListener( "updateAxis1", (e) => {
                 if(Math.abs(this.leftAxis.y) > this.deadzone) {
-                    this.targetObject.translateZ(this.leftAxis.y)
-                    this.clampY()
-                    this.boatTargetObject.translateZ(this.leftAxis.y);
+                    //this.currentDelta or 60
+                    const speed = this.leftAxis.y * this.currentDelta * this.app.player.boatStats.speed
+                    this.boatTargetObject.translateZ(speed);
                 }
             }, false );
         document.addEventListener( "updateAxis2", (e) => {
                 if(Math.abs(this.rightAxis.x) > this.deadzone) {
-                    this.targetObject.rotateOnWorldAxis(new Vector3(0.0, 1.0, 0.0), -this.rightAxis.x / 60.0) 
-                    this.targetObject.translateZ(this.leftAxis.y)
-
                     if(this.app.controls) {
                         this.app.controls.update(this.rightAxis.x * this.currentDelta,0)
                         
@@ -75,8 +69,6 @@ class GamePad {
             }, false );
         document.addEventListener( "updateAxis3", (e) => {
                 if(Math.abs(this.rightAxis.y) > this.deadzone) {
-                    this.targetObject.rotateX(-this.rightAxis.y / 60.0)
-
                     if(this.app.controls) {
                         this.app.controls.update(0,-this.rightAxis.y * this.currentDelta)
                     }
@@ -245,14 +237,6 @@ class GamePad {
                 }
                 this.buttons[i].lastFrame = this.buttons[i].pressed;
             }
-        }
-    }
-
-    clampY() {
-        if(this.targetObject.position.y < 1) {
-            this.targetObject.position.y = 1;
-        } else if(this.targetObject.position.y > 1000) {
-            this.targetObject.position.y = 1000;
         }
     }
 

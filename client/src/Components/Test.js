@@ -60,7 +60,9 @@ class Test extends Component {
         <div id="canvasContainer"/>
 
         <div id="gameUI">
-          <div id="playerSpeed">{speed} nph</div>
+          <div id="playerSpeed">{speed} mph</div>
+          <div id="fishingAction" className='hidden'></div>
+          <div id="fishCaught" className='hidden'></div>
         </div>
       </div>
     );

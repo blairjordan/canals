@@ -28,6 +28,7 @@ class FishingRod {
     this.isFishing = false
     this.fishingTimer = 0;
     this.fishingMarkers = null
+    this.fishingActionBar = null;
 
     this.init = this.init.bind(this)
   }
@@ -283,13 +284,23 @@ class FishingRod {
   }
 
   fishingCheck() {
-    if(this.fishingTimer >= 10) {
+    this.fishingActionBar.style.width = (this.fishingTimer/0.1)+'%';
+    if(this.fishingTimer >= 10.0) {
       this.goFish()
       this.fishing();
     }
   }
 
   fishing() {
+    const fishingAction = document.getElementById('fishingAction');
+    fishingAction.classList.remove('hidden')
+    while (fishingAction.firstChild) {
+      fishingAction.removeChild(fishingAction.firstChild);
+    }
+    this.fishingActionBar = document.createElement('div');
+    this.fishingActionBar.classList.add('fishingActionBar')
+    fishingAction.appendChild(this.fishingActionBar);
+
     this.fishingTimer = 0;
     const initVal = {
       castBack: this.rodInfluences[0],
@@ -339,11 +350,28 @@ class FishingRod {
   async goFish() {
     const fish = await GraphQL.fishing.fish(this.app.player.playerData.id)
     if (fish) {
+      const fishCaught = document.getElementById('fishCaught');
+      fishCaught.innerHTML = 
+      '<p>' + fish.item.name + '<p/>' +
+      '<p>' + fish.item.description + '<p/>' +
+      '<p>Rarity:' + fish.item.props.rarity + '<p/>'
+      fishCaught.classList.remove('hidden')
+      fishCaught.classList.add('fade-in')
+      setTimeout(() => {
+        fishCaught.classList.remove('fade-in')
+        fishCaught.classList.add('fade-out')
+        setTimeout(() => {
+          fishCaught.classList.remove('fade-out')
+          fishCaught.classList.add('hidden')
+        }, 1000)
+      }, 6000)
       console.log(fish)
     }
   }
 
   finishFishing() {
+    const fishingAction = document.getElementById('fishingAction');
+    fishingAction.classList.add('hidden')
     this.isFishing = false
     this.hook.visible = false
     this.fishingLine.visible = false
