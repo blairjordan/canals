@@ -26,6 +26,7 @@ class FishingRod {
     this.gltfRodArm = null
 
     this.isFishing = false
+    this.fishingTimer = 0;
     this.fishingMarkers = null
 
     this.init = this.init.bind(this)
@@ -221,7 +222,11 @@ class FishingRod {
   update(delta) {
     this.time += delta
     this.rodOnStern()
-    if (this.isFishing) this.updatePhysics(delta)
+    if (this.isFishing) {
+      this.fishingTimer+=delta;
+      this.fishingCheck();
+      this.updatePhysics(delta)
+    }
   }
 
   onPressButton() {
@@ -232,24 +237,60 @@ class FishingRod {
     }
   }
 
-  onHoldButton() {}
+  onHoldButton() {
+    //
+  }
 
   onReleaseButton() {
-    if (this.isFishing) {
-      this.castLine()
-    }
+    //
+  }
+
+  getTipPositionOfRod() {
+    this.vector3.fromBufferAttribute(
+      this.rod.geometry.attributes.position,
+      100
+    )
+    this.vector3b.fromBufferAttribute(
+      this.rod.geometry.morphAttributes.position[0],
+      100
+    )
+    this.vector3c.fromBufferAttribute(
+      this.rod.geometry.morphAttributes.position[1],
+      100
+    )
+
+    this.rod.localToWorld(this.vector3)
+    this.helperObject.position.set(0, 0, 0)
+    this.helperObject.rotation.copy(this.app.player.playerGroup.rotation)
+    this.helperObject.rotateY(Math.PI)
+    this.helperObject.localToWorld(this.vector3b)
+    this.helperObject.localToWorld(this.vector3c)
+    this.vector3b.multiplyScalar(this.rodInfluences[0])
+    this.vector3c.multiplyScalar(this.rodInfluences[1])
+    this.vector3.add(this.vector3b)
+    this.vector3.add(this.vector3c)
   }
 
   beginFishing() {
     this.isFishing = true
+    this.fishingTimer = 0;
 
+    this.rodInfluences[0] = 0
+    this.rodInfluences[1] = 0
     this.hook.visible = true
     this.fishingLine.visible = true
+    this.fishing();
+  }
 
-    if (this.castForwardTween) {
-      this.castForwardTween.stop()
+  fishingCheck() {
+    if(this.fishingTimer >= 10) {
+      this.goFish()
+      this.fishing();
     }
+  }
 
+  fishing() {
+    this.fishingTimer = 0;
     const initVal = {
       castBack: this.rodInfluences[0],
       castForward: this.rodInfluences[1],
@@ -259,33 +300,43 @@ class FishingRod {
       .onUpdate(() => {
         this.rodInfluences[0] = initVal.castBack
         this.rodInfluences[1] = initVal.castForward
-      })
-      .start()
-  }
-
-  castLine() {
-    if (this.castBackTween) {
-      this.castBackTween.stop()
-    }
-
-    const initVal = {
-      castBack: this.rodInfluences[0],
-      castForward: this.rodInfluences[1],
-    }
-    this.castForwardTween = new TWEEN.Tween(initVal)
-      .to({ castBack: 0, castForward: 1 }, 250)
-      .onUpdate(() => {
-        this.rodInfluences[0] = initVal.castBack
-        this.rodInfluences[1] = initVal.castForward
+        this.getTipPositionOfRod()
+        this.hook.position.copy(this.vector3)
       })
       .onComplete(() => {
-        this.goFish()
+        this.castForwardTween = new TWEEN.Tween(initVal)
+          .to({ castBack: 0, castForward: 1 }, 250)
+          .onUpdate(() => {
+            this.rodInfluences[0] = initVal.castBack
+            this.rodInfluences[1] = initVal.castForward
+          })
+          .start()
+
+        const initHookVal = {
+          castHook: 0,
+          castDistance: 5 + (Math.random()*10),
+          castHeight: 4 + (Math.random()*3),
+        }
+        this.castHook = new TWEEN.Tween(initHookVal)
+        .to({ castHook: 1 }, 1000)
+        .easing(TWEEN.Easing.Cubic.Out)
+        .onUpdate(() => {
+          this.getTipPositionOfRod()
+          this.helperObject.position.copy(this.vector3)
+          this.helperObject.translateZ(initHookVal.castDistance);
+          this.vector3b.set(this.helperObject.position.x, 0, this.helperObject.position.z)
+
+          this.vector3b.y = (this.vector3.y * initHookVal.castHeight) * (1-initHookVal.castHook)
+
+          this.hook.position.lerpVectors(this.vector3, this.vector3b, initHookVal.castHook)
+        })
+        .start()
+
       })
       .start()
   }
 
   async goFish() {
-    console.log(this.app.player.playerData.id)
     const fish = await GraphQL.fishing.fish(this.app.player.playerData.id)
     if (fish) {
       console.log(fish)
@@ -298,6 +349,15 @@ class FishingRod {
     this.fishingLine.visible = false
     this.rodInfluences[0] = 0
     this.rodInfluences[1] = 0
+    if (this.castForwardTween) {
+      this.castForwardTween.stop()
+    }
+    if (this.castBackTween) {
+      this.castBackTween.stop()
+    }
+    if (this.castHook) {
+      this.castHook.stop()
+    }
   }
 }
 
