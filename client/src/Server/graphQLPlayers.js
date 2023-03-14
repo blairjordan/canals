@@ -87,6 +87,7 @@ class GraphQLPlayers extends GraphQLBase {
             player {
               id
               position
+              fuel
             }
           }
         }

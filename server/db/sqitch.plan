@@ -3,3 +3,4 @@
 %uri=https://github.com/peglegau/canals
 
 base_schema 2023-03-02T13:44:47Z blair <blair@optimus> # Add schema for all canals objects.
+fuel 2023-03-14T19:00:56Z blair <blair@optimus> # Add fuel consumption objects.

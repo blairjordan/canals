@@ -2,8 +2,6 @@
 
 BEGIN;
 
-DROP EXTENSION IF EXISTS postgis;
-
 DROP FUNCTION IF EXISTS nearby_players(current_player_id INTEGER, distance FLOAT);
 
 DROP TYPE IF EXISTS nearby_players;
