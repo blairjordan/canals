@@ -13,7 +13,7 @@ RETURNS FLOAT AS $$
 DECLARE
   fuel_consumed_per_unit FLOAT := 0.005;
 BEGIN
-  -- ⛽ Engines with better fuel consumption can apply modifiers here.
+  -- Engines with better fuel consumption can apply modifiers here.
   RETURN distance * fuel_consumed_per_unit;
 END;
 $$ LANGUAGE plpgsql;
@@ -53,5 +53,46 @@ BEFORE UPDATE ON players
 FOR EACH ROW
 WHEN (OLD.position IS DISTINCT FROM NEW.position)
 EXECUTE FUNCTION fuel_is_zero();
+
+-- 🏪 Refueling stations
+INSERT INTO markers (position, type)
+VALUES
+  ('{"x": 400, "y": 325, "z": 0}', 'fuel_station'),
+  ('{"x": 725, "y": 75, "z": 0}', 'fuel_station')
+ON CONFLICT DO NOTHING;
+
+-- ⛽ Refuel
+CREATE OR REPLACE FUNCTION refuel(player_id INTEGER)
+RETURNS players AS $$
+DECLARE
+  -- TODO: Adjust as per player's engine type
+  fuel_price_per_unit FLOAT := 0.15;
+  updated_player players;
+BEGIN
+
+  SELECT * INTO updated_player FROM players WHERE id = player_id;
+
+  IF updated_player.fuel >= 100 THEN
+    RAISE EXCEPTION 'Player fuel level is already at maximum capacity';
+  END IF;
+
+  -- Update player's fuel level and balance
+  UPDATE players
+  SET
+    balance = balance - fuel_price_per_unit,
+    fuel = LEAST(updated_player.fuel + 1, 100)
+  WHERE id = player_id
+  AND balance >= fuel_price_per_unit
+  RETURNING * INTO updated_player;
+
+  -- Check if player's balance is sufficient for fuel purchase
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Insufficient player balance for fuel purchase';
+  END IF;
+
+  RETURN updated_player;
+
+END;
+$$ LANGUAGE plpgsql;
 
 COMMIT;

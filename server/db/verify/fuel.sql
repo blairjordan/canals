@@ -14,4 +14,8 @@ SELECT EXISTS(SELECT 1 FROM information_schema.routines WHERE routine_name = 'fu
 
 SELECT EXISTS(SELECT 1 FROM information_schema.triggers WHERE trigger_name = 'fuel_is_zero_trigger');
 
+SELECT EXISTS(SELECT 1 FROM markers WHERE type = 'fueling_station');
+
+SELECT EXISTS(SELECT 1 FROM information_schema.routines WHERE routine_name = 'refuel');
+
 ROLLBACK;
