@@ -1,37 +1,44 @@
-import {
-    gql,
-  } from "@apollo/client/core"
-  import { GraphQLBase } from "./graphQLBase"
+import { gql } from "@apollo/client/core"
+import { GraphQLBase } from "./graphQLBase"
 class GraphQLMarkers extends GraphQLBase {
-    // constructor(client) {
-    //     super(client)
-    // }
+  // constructor(client) {
+  //     super(client)
+  // }
 
-    getGeoMarkers() {
-        return new Promise((resolve) => {
-          this.client
-            .query({
-              query: gql`
-              query MyQuery {
-                    markers(condition: {type: "geo_marker"}) {
-                      nodes {
-                        id
-                        position
-                        nodeId
-                        type
-                        toMarker {
-                          nodes {
-                            id
-                          }
-                        }
-                      }
+  // Marker types:
+  // 📍 geo_marker
+  // 🎣 fishing_spot
+  // 🧑‍🌾 vendor
+  // ⛽ fuel_station
+  getMarkers(markerType) {
+    return new Promise((resolve) => {
+      this.client
+        .query({
+          query: gql`
+            query Markers($markerType: String!) {
+              markers(condition: { type: $markerType }) {
+                nodes {
+                  id
+                  position
+                  nodeId
+                  type
+                  props
+                  toMarker {
+                    nodes {
+                      id
                     }
                   }
-              `
-            })
-            .then((result) => resolve(result?.data?.markers?.nodes))
+                }
+              }
+            }
+          `,
+          variables: {
+            markerType,
+          },
         })
-      }
+        .then((result) => resolve(result?.data?.markers?.nodes))
+    })
+  }
 }
 
-export {GraphQLMarkers}
+export { GraphQLMarkers }

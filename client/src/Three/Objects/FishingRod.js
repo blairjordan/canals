@@ -49,7 +49,7 @@ class FishingRod {
   }
 
   async getFishingSpots() {
-    this.fishingMarkers = await GraphQL.fishing.getFishingSpots()
+    this.fishingMarkers = await GraphQL.markers.getMarkers("fishing_spot")
     if (!this.fishingMarkers) return
 
     for (let j = 0; j < this.fishingMarkers.length; j++) {

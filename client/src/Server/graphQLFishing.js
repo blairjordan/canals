@@ -5,27 +5,6 @@ class GraphQLFishing extends GraphQLBase {
   //     super(client)
   // }
 
-  getFishingSpots() {
-    return new Promise((resolve) => {
-      this.client
-        .query({
-          query: gql`
-            query MyQuery {
-              markers(condition: { type: "fishing_spot" }) {
-                nodes {
-                  id
-                  position
-                  nodeId
-                  type
-                }
-              }
-            }
-          `,
-        })
-        .then((result) => resolve(result?.data?.markers?.nodes))
-    })
-  }
-
   fish(playerId) {
     return new Promise((resolve) => {
       this.client
