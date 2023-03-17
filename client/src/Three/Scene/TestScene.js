@@ -19,6 +19,7 @@ import MeshLine from "../Utils/MeshLine";
 import MeshLineMaterial from "../Utils/MeshLineMaterial";
 import TrailRenderer from "../Utils/trailRenderer";
 import { FishingRod } from "../Objects/FishingRod";
+import { Vendor } from "../Objects/Vendor"
 
 class TestScene extends BaseScene {
   constructor(playerData, updateSpeed) {
@@ -176,6 +177,9 @@ class TestScene extends BaseScene {
 
     this.fishingRod = new FishingRod(this);
     this.fishingRod.init(this.onFishingRodInit.bind(this))
+
+    this.vendor = new Vendor(this)
+    this.vendor.init()
   }
 
   onFishingRodInit() {
