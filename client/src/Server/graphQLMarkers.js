@@ -28,6 +28,15 @@ class GraphQLMarkers extends GraphQLBase {
                       id
                     }
                   }
+                  markerItems {
+                    nodes {
+                      item {
+                        id
+                        name
+                        price
+                      }
+                    }
+                  }
                 }
               }
             }
