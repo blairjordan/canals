@@ -49,21 +49,20 @@ class GamePad {
                 if(Math.abs(this.leftAxis.x) > this.deadzone) {
                     const input = (-this.leftAxis.y >= 0 ? -this.leftAxis.x : this.leftAxis.x);
                     const turnSpeed = input * this.app.player.boatStats.turnSpeed  * this.currentDelta;
-                    this.boatTargetObject.rotateOnWorldAxis(new Vector3(0.0, 1.0, 0.0), turnSpeed) 
+                    //this.boatTargetObject.rotateOnWorldAxis(new Vector3(0.0, 1.0, 0.0), turnSpeed) 
                 }
             }, false );
         document.addEventListener( "updateAxis1", (e) => {
                 if(Math.abs(this.leftAxis.y) > this.deadzone) {
                     //this.currentDelta or 60
-                    const speed = this.leftAxis.y * this.currentDelta * this.app.player.boatStats.speed
-                    this.boatTargetObject.translateZ(speed);
+                    // const speed = this.leftAxis.y * this.currentDelta * this.app.player.boatStats.speed
+                    // this.boatTargetObject.translateZ(speed);
                 }
             }, false );
         document.addEventListener( "updateAxis2", (e) => {
                 if(Math.abs(this.rightAxis.x) > this.deadzone) {
                     if(this.app.controls) {
                         this.app.controls.update(this.rightAxis.x * this.currentDelta,0)
-                        
                     }
                 }
             }, false );
@@ -209,18 +208,18 @@ class GamePad {
     update(delta) {
         this.currentDelta = delta;
 
-        if(Math.abs(this.leftAxis.x) > this.deadzone) {
+        // if(Math.abs(this.leftAxis.x) > this.deadzone) {
             document.dispatchEvent(this.updateAxis0);
-        }
-        if(Math.abs(this.leftAxis.y) > this.deadzone) {
+        // }
+        // if(Math.abs(this.leftAxis.y) > this.deadzone) {
             document.dispatchEvent(this.updateAxis1);
-        }
-        if(Math.abs(this.rightAxis.x) > this.deadzone) {
+        // }
+        // if(Math.abs(this.rightAxis.x) > this.deadzone) {
             document.dispatchEvent(this.updateAxis2);
-        }
-        if(Math.abs(this.rightAxis.y) > this.deadzone) {
+        // }
+        // if(Math.abs(this.rightAxis.y) > this.deadzone) {
             document.dispatchEvent(this.updateAxis3);
-        }
+        // }
 
         for(let i = 0; i < 16; i++) {
             if(this.buttons[i]) {

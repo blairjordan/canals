@@ -39,10 +39,19 @@ EXECUTE FUNCTION update_fuel();
 
 CREATE OR REPLACE FUNCTION fuel_is_zero()
 RETURNS TRIGGER AS $$
+DECLARE
+  drift_duration INTERVAL := INTERVAL '10 seconds';
 BEGIN
   IF OLD.fuel <= 0 THEN
-    NEW.fuel = 0;
-    RAISE EXCEPTION 'Cannot update position when fuel is 0';
+
+    IF (OLD.drifting_at IS NULL) THEN
+      -- Set drift mode 🌬
+      NEW.drifting_at = now();
+    ELSIF (OLD.drifting_at < now() - drift_duration) THEN
+      -- Out of fuel, drift mode expired 🚫
+      RAISE EXCEPTION 'Cannot update position when fuel is 0';
+    END IF;
+
   END IF;
   RETURN NEW;
 END;
@@ -80,7 +89,8 @@ BEGIN
   UPDATE players
   SET
     balance = balance - fuel_price_per_unit,
-    fuel = LEAST(updated_player.fuel + 1, 100)
+    fuel = LEAST(updated_player.fuel + 1, 100),
+    drifting_at = NULL -- Reset drift mode
   WHERE id = player_id
   AND balance >= fuel_price_per_unit
   RETURNING * INTO updated_player;

@@ -129,12 +129,12 @@ class GamePads {
             case "ArrowUp":
             case "w":
             case "W":
-              this.gamePad.updateAxis(1, -1);
+              this.gamePad.updateAxis(1, 1);
               break;
             case "ArrowDown":
             case "s":
             case "S":
-              this.gamePad.updateAxis(1, 1);
+              this.gamePad.updateAxis(1, -1);
               break;
             case "q":
             case "Q":

@@ -2,6 +2,7 @@ import { Group, Color } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import boatModelDemoUrl from "../../Assets/models/test_boat.glb";
 import boatModelsUrl from "../../Assets/models/boat_01.glb";
+import BoatEngine from "./BoatEngine";
 
 class Player {
   constructor(app, playerData) {
@@ -11,6 +12,8 @@ class Player {
     this.ready = false;
     this.playerGroup = new Group();
     this.playerGroup.rotation.order = "YXZ";
+
+    this.boatEngine = new BoatEngine(app);
 
     this.wake = null;
 

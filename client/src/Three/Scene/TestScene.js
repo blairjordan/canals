@@ -152,6 +152,7 @@ class TestScene extends BaseScene {
 
   initPlayer() {
     const transform = (typeof this.playerData.position === 'object') ? this.playerData.position : JSON.parse(this.playerData.position)
+
     this.player = new Player(this, this.playerData);
     this.player.init(this.addWake.bind(this));
 
@@ -174,6 +175,11 @@ class TestScene extends BaseScene {
     this.camera.position.add(this.currentPlayerPosition)
 
     this.controls.target.copy(this.player.playerGroup.position);
+
+    //Init engine position
+    this.player.boatEngine.x = this.player.playerGroup.position.z
+    this.player.boatEngine.y = this.player.playerGroup.position.x
+    this.player.boatEngine.angle = this.gamepads.gamePad.boatTargetObject.rotation.y - (Math.PI*0.5)
 
     this.fishingRod = new FishingRod(this);
     this.fishingRod.init(this.onFishingRodInit.bind(this))
@@ -312,17 +318,10 @@ class TestScene extends BaseScene {
   animate() {
     super.animate()
 
-    let delta = this.clock.getDelta();
-    let time = this.clock.getElapsedTime();
     this.frameCounter++;
     if(this.frameCounter>99) {
       this.frameCounter = 0;
     }
-
-    // this.update(delta);
-
-    // requestAnimationFrame(this.animate);
-    // this.render();
   }
 
   update(delta) {
@@ -332,14 +331,18 @@ class TestScene extends BaseScene {
       this.checkItems();
       this.connectivity.update();
     }
+    let time = this.clock.getElapsedTime();
 
 
     TWEEN.update();
     if(this.gamepads) {
       if(this.gamepads) this.gamepads.update(delta)
-      this.smoothControls(delta);
+      this.smoothControls(delta, time);
     }
     if(this.player?.ready) {
+      if(this.player.boatEngine) {
+        this.player.boatEngine.update(delta)
+      }
       if(this.player.wake) { 
         this.updateTrail()
       }
@@ -352,27 +355,46 @@ class TestScene extends BaseScene {
     if(this.fishingRod) this.fishingRod.update(delta);
   }
 
-  smoothControls(delta) {
+  smoothControls(delta, time) {
 
     if(this.player ) {
       if(this.player.ready) {
-        this.lastPlayerPosition.copy(this.player.playerGroup.position)
-        this.player.playerGroup.position.lerp(this.gamepads.gamePad.boatTargetObject.position, 0.2);
-        this.player.playerGroup.quaternion.slerp(this.gamepads.gamePad.boatTargetObject.quaternion, 0.2);
+        this.lastPlayerPosition.copy(this.player.playerGroup.position) 
 
+        this.player.playerGroup.position.set(this.player.boatEngine.y, 0.05 + (Math.sin(time)*0.1), this.player.boatEngine.x)
+        this.player.playerGroup.rotation.set(0, (Math.PI*0.5) + this.player.boatEngine.angle, 0)
+        
         this.currentPlayerPosition.copy(this.player.playerGroup.position)
         this.currentPlayerPosition.sub(this.lastPlayerPosition)
 
+        //Update camera controls to follow boat
         this.camera.position.add(this.currentPlayerPosition)
-
         this.controls.target.copy(this.player.playerGroup.position);
-
 
         this.vector3.set(0,0,0)
         this.distance = this.vector3.distanceTo(this.currentPlayerPosition)
         this.updateSpeedProp(this.distance, delta, this.frameCounter%30===0)
       }
     }
+    // if(this.player ) {
+    //   if(this.player.ready) {
+    //     this.lastPlayerPosition.copy(this.player.playerGroup.position)
+    //     this.player.playerGroup.position.lerp(this.gamepads.gamePad.boatTargetObject.position, 0.2);
+    //     this.player.playerGroup.quaternion.slerp(this.gamepads.gamePad.boatTargetObject.quaternion, 0.2);
+
+    //     this.currentPlayerPosition.copy(this.player.playerGroup.position)
+    //     this.currentPlayerPosition.sub(this.lastPlayerPosition)
+
+    //     this.camera.position.add(this.currentPlayerPosition)
+
+    //     this.controls.target.copy(this.player.playerGroup.position);
+
+
+    //     this.vector3.set(0,0,0)
+    //     this.distance = this.vector3.distanceTo(this.currentPlayerPosition)
+    //     this.updateSpeedProp(this.distance, delta, this.frameCounter%30===0)
+    //   }
+    // }
   }
 
   updateSpeedProp(distance, delta, isFifth) {

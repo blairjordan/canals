@@ -10,8 +10,12 @@ CREATE TABLE IF NOT EXISTS players (
   meta JSONB,
   position JSONB,
   balance NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
-  last_fished TIMESTAMP WITHOUT TIME ZONE -- The last time the player fished (used for cooldown)
+  last_fished TIMESTAMP WITHOUT TIME ZONE, -- The last time the player fished (used for cooldown)
+  drifting_at TIMESTAMP WITHOUT TIME ZONE  -- The time the player started drifting (allows movement for N seconds after fuel depletion)
 );
+
+-- Omit drifting_at from PostGraphile schema
+COMMENT ON COLUMN players.drifting_at is E'@omit';
 
 INSERT INTO players (username, position, balance)
 VALUES
