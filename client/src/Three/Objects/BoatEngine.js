@@ -15,13 +15,15 @@ export default class BoatEngine {
 
         this.drag = 0.85;
         this.angularDrag = 0.55;
-        this.turnSpeed = 0.0015
+        this.maxTurningPower = 0.0015
+        this.turningFactor = 0.00002
 
         this.x= 0;
         this.y= 0;
         this.xVelocity= 0;
         this.yVelocity= 0;
         this.power= 0;
+        this.turningPower = 0
         this.reverse= 0;
         this.angle=0;
         this.angularVelocity= 0;
@@ -29,26 +31,29 @@ export default class BoatEngine {
         this.isReversing= false;
         this.isTurningLeft= false;
         this.isTurningRight= false;
+
+        this.throttling = false
+        this.reversing = false
         
         document.addEventListener( "updateAxis0", (e) => {
-          if(Math.abs(this.app.gamepads.gamePad.leftAxis.x) > this.app.gamepads.gamePad.deadzone) {
-              this.isTurningLeft = this.app.gamepads.gamePad.leftAxis.x < 0
-              this.isTurningRight = this.app.gamepads.gamePad.leftAxis.x > 0
-          } else {
-              this.isTurningLeft = false
-              this.isTurningRight = false
-          }
-      }, false );
-    document.addEventListener( "updateAxis1", (e) => {
-            if(Math.abs(this.app.gamepads.gamePad.leftAxis.y) > this.app.gamepads.gamePad.deadzone) {
-                this.isThrottling = this.app.gamepads.gamePad.leftAxis.y > 0
-                this.isReversing = this.app.gamepads.gamePad.leftAxis.y < 0
+            if(Math.abs(this.app.gamepads.gamePad.leftAxis.x) > this.app.gamepads.gamePad.deadzone) {
+                this.isTurningLeft = this.app.gamepads.gamePad.leftAxis.x < 0
+                this.isTurningRight = this.app.gamepads.gamePad.leftAxis.x > 0
             } else {
-              this.isThrottling = false
-              this.isReversing = false
+                this.isTurningLeft = false
+                this.isTurningRight = false
             }
         }, false );
-    }
+        document.addEventListener( "updateAxis1", (e) => {
+                if(Math.abs(this.app.gamepads.gamePad.leftAxis.y) > this.app.gamepads.gamePad.deadzone) {
+                    this.isThrottling = this.app.gamepads.gamePad.leftAxis.y > 0
+                    this.isReversing = this.app.gamepads.gamePad.leftAxis.y < 0
+                } else {
+                  this.isThrottling = false
+                  this.isReversing = false
+                }
+            }, false );
+      }
 
     updatePosition(x, y) {
       this.x= x;
@@ -57,12 +62,20 @@ export default class BoatEngine {
 
     update (delta) {
         if (this.isThrottling && this.hasFuel) {
+          if(!this.throttling) {
+            this.turningPower = 0;
+            this.throttling = true
+          }
           this.power += this.powerFactor * this.isThrottling;
         } else {
           this.power -= this.powerFactor;
           if(this.power <0) this.power = 0
         }
         if (this.isReversing && this.hasFuel) {
+          if(!this.reversing) {
+            this.turningPower = 0;
+            this.reversing = true
+          }
           this.reverse += this.reverseFactor;
         } else {
           this.reverse -= this.reverseFactor;
@@ -75,11 +88,29 @@ export default class BoatEngine {
         const direction = this.power > this.reverse ? 1 : -1;
     
         if (this.isTurningLeft) {
-          this.angularVelocity += direction * this.turnSpeed * this.isTurningLeft;
+          this.turningPower += this.turningFactor
+          if(this.turningPower > this.maxTurningPower) this.turningPower = this.maxTurningPower
+        } else if (this.isTurningRight) {
+          this.turningPower -= this.turningFactor
+          if(this.turningPower < -this.maxTurningPower) this.turningPower = -this.maxTurningPower
+        } else {
+          //return to 0
+          if(this.turningPower > 0) {
+            this.turningPower -= this.turningFactor
+            if(this.turningPower < 0 ) this.turningPower = 0
+          } else {
+            this.turningPower += this.turningFactor
+            if(this.turningPower >0 ) this.turningPower = 0
+          }
         }
-        if (this.isTurningRight) {
-          this.angularVelocity -= direction * this.turnSpeed * this.isTurningRight;
-        }
+
+        this.angularVelocity += direction * this.turningPower;
+        // if (this.isTurningLeft) {
+        //   this.angularVelocity += direction * this.turnSpeed * this.isTurningLeft;
+        // }
+        // if (this.isTurningRight) {
+        //   this.angularVelocity -= direction * this.turnSpeed * this.isTurningRight;
+        // }
     
         this.xVelocity += Math.sin(this.angle) * (this.power - this.reverse);
         this.yVelocity += Math.cos(this.angle) * (this.power - this.reverse);
