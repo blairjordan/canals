@@ -1,13 +1,10 @@
 import * as THREE from "three";
-import { useMemo } from "react";
-import { useRouter } from 'next/router'
+import { forwardRef, useMemo } from "react";
 import { useGLTF } from "@react-three/drei";
 
 //import boatUrl from "../../assets/models/boat_01.glb";
 
-export function Boat(props) {
-  const router = useRouter()
-//   const mesh = useRef(null)
+const Boat = forwardRef((props, ref) => {
   const playerGroup = new THREE.Group();
   playerGroup.rotation.order = "YXZ";
   const boatItems = {};
@@ -134,8 +131,10 @@ export function Boat(props) {
 //     (state, delta) => (ref.current.material.uniforms.time.value += (delta*0.5))
 //   );
 
-  return <primitive 
+  return <primitive ref={ref}
   object={playerGroup} 
   {...props} 
   />;
-}
+})
+
+export { Boat }

@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Preload } from '@react-three/drei'
-import { Boat } from './Boat'
+import { Preload } from '@react-three/drei'
+import KeyboardInput from '../input/KeyboardInput'
+import { Controls } from './Controls'
 
 export default function Scene({ children, ...props }) {
   // Everything defined in here will persist between route changes, only children are swapped
@@ -10,8 +11,8 @@ export default function Scene({ children, ...props }) {
       <ambientLight intensity={0.75} />
       {children}
       <Preload all />
-      <Boat/>
-      <OrbitControls />
+      <Controls/>
+      <KeyboardInput />
     </Canvas>
   )
 }

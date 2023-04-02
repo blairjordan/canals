@@ -28,7 +28,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "three": "^0.149.0",
-    "three-stdlib": "^2.21.6"
+    "three-stdlib": "^2.21.6",
+    "zustand": "^4.3.7"
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^13.1.6",
@@ -37,7 +38,6 @@
     "eslint-config-next": "^13.1.6",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-tailwindcss": "^3.9.0",
-
     "file-loader": "^6.2.0",
     "glslify": "^7.1.1",
     "glslify-loader": "^2.0.0",

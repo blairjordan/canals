@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/router'
 import { useCursor, MeshDistortMaterial } from '@react-three/drei'
-import { Boat } from './Boat'
 
 export default function Blob({ route, ...props }) {
   const router = useRouter()
@@ -13,8 +12,8 @@ export default function Blob({ route, ...props }) {
       onPointerOver={() => hover(true)}
       onPointerOut={() => hover(false)}
       {...props}>
-      {/* <sphereGeometry args={[1, 64, 64]} />
-      <MeshDistortMaterial roughness={0} color={hovered ? 'hotpink' : '#1fb2f5'} /> */}
+      <sphereGeometry args={[1, 64, 64]} />
+      <MeshDistortMaterial roughness={0} color={hovered ? 'hotpink' : '#1fb2f5'} />
     </mesh>
   )
 }
