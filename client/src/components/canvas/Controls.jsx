@@ -8,7 +8,6 @@ const Controls = (props) => {
 
     useFrame(({camera}) => {
         const { controls } = useStore.getState();
-        // console.log(controls)
         if(controls.forward) {
             playerRef.current.position.z -= 0.1
             camera.position.z -= 0.1
