@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber'
 import { Preload } from '@react-three/drei'
 import KeyboardInput from '../input/KeyboardInput'
+import { CanalWater } from './CanalWater'
 import { Controls } from './Controls'
 
 export default function Scene({ children, ...props }) {
@@ -11,7 +12,6 @@ export default function Scene({ children, ...props }) {
       <ambientLight intensity={0.75} />
       {children}
       <Preload all />
-      <Controls/>
       <KeyboardInput />
     </Canvas>
   )
