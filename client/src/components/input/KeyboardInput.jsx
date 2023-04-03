@@ -50,10 +50,19 @@ const KeyboardInput = (props) => {
     setfish?.(false);
   }
   useKeyPress("w", null, movePlayerUp, movePlayerUpDone)
+  useKeyPress("W", null, movePlayerUp, movePlayerUpDone)
+  useKeyPress("ArrowUp", null, movePlayerUp, movePlayerUpDone)
   useKeyPress("s", null, movePlayerDown, movePlayerDownDone)
+  useKeyPress("S", null, movePlayerDown, movePlayerDownDone)
+  useKeyPress("ArrowDown", null, movePlayerDown, movePlayerDownDone)
   useKeyPress("a", null, movePlayerLeft, movePlayerLeftDone)
+  useKeyPress("A", null, movePlayerLeft, movePlayerLeftDone)
+  useKeyPress("ArrowLeft", null, movePlayerLeft, movePlayerLeftDone)
   useKeyPress("d", null, movePlayerRight, movePlayerRightDone)
+  useKeyPress("D", null, movePlayerRight, movePlayerRightDone)
+  useKeyPress("ArrowRight", null, movePlayerRight, movePlayerRightDone)
   useKeyPress("f", null, fish, fishDone)
+  useKeyPress("F", null, fish, fishDone)
 
   // Debug
   // if (players[0].module.getPadId()) console.log("is pressed?", pressed)

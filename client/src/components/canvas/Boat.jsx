@@ -127,6 +127,7 @@ const Boat = forwardRef((props, ref) => {
     }
   }, [nodes, materials]);
 
+  //Add boat engine
 //   useFrame(
 //     (state, delta) => (ref.current.material.uniforms.time.value += (delta*0.5))
 //   );
