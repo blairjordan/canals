@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 // And also accepts a `downMethod` and `upMethod` for a single call
 // And still returns a simple true/false for the keypress for convenience/use in React
 // Ideally all the methods should be an properties of 1 object so user doesn't have to set noop functions to get deeper params
-export default function useKeyPress(targetKey, pressMethod, downMethod, upMethod) {
+function useKeyPress(targetKey, pressMethod, downMethod, upMethod) {
   // State for keeping track of whether key is pressed
   const [keyPressed, setKeyPressed] = useState(false)
   // If pressed key is our target key then set to true
@@ -51,3 +51,7 @@ export default function useKeyPress(targetKey, pressMethod, downMethod, upMethod
 
   return keyPressed
 }
+
+useKeyPress.displayName = 'useKeyPress';
+
+export default useKeyPress;

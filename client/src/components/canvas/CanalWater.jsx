@@ -137,4 +137,6 @@ function CanalWater() {
   />
 }
 
+CanalWater.displayName = 'CanalWater';
+
 export { CanalWater };

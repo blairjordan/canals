@@ -12,4 +12,6 @@ const Dialog = ({ avatarUrl, name, children }) => {
   );
 };
 
+Dialog.displayName = 'Dialog';
+
 export default Dialog;
