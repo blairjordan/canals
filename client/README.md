@@ -1,11 +1,3 @@
-# Canals Client App
+# client
 
-## Available Scripts
-
-### `npm start`
-
-### `npm test`
-
-### `npm run build`
-
-### `npm run eject`
+This project was bootstrapped with [`create-r3f-app`](https://github.com/utsuboco/create-r3f-app)
