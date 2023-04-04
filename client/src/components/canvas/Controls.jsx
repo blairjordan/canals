@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react'
+import React, {forwardRef, useEffect, useMemo, useRef, useState} from 'react'
 import useStore from "../helpers/store"
 import { useFrame } from '@react-three/fiber';
 import * as THREE from "three";
@@ -9,26 +9,23 @@ import { OrbitControls } from '@react-three/drei'
 const Controls = (props) => {
     const playerRef = useRef(null);
     const controlsRef = useRef(null);
-    const engine = new BoatEngine()
-    const currentPlayerPosition = new THREE.Vector3()
-    const lastPlayerPosition = new THREE.Vector3()
-
-    // useEffect(() =>
-    // {
-    //     setEngine(new BoatEngine())
-    //     console.log('set engine')
-    // }, [])
+    const engineRef = useRef({
+        engine: new BoatEngine(), 
+        currentPlayerPosition: new THREE.Vector3(),
+        lastPlayerPosition: new THREE.Vector3()
+    })
 
     useFrame((state,delta) => {
         const { controls } = useStore.getState();
+        const {engine, currentPlayerPosition, lastPlayerPosition } = engineRef.current;
 
         lastPlayerPosition.copy(playerRef.current.position) 
 
+        engine.boosting = controls.boosting
         engine.isThrottling = controls.forward
         engine.isReversing = controls.backward
         engine.isTurningLeft = controls.left
         engine.isTurningRight = controls.right
-
         engine.update(delta)
 
         playerRef.current.position.set(engine.y, 0, engine.x)
@@ -39,6 +36,7 @@ const Controls = (props) => {
 
         state.camera.position.add(currentPlayerPosition)
         controlsRef.current.target.copy(playerRef.current.position);
+
     })
   return (
     <> 

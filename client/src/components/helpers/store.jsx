@@ -7,6 +7,7 @@ const controls = {
   left: false,
   right: false,
   fish: false,
+  boosting: false,
 }
 
 const useStore = create(
@@ -18,6 +19,7 @@ const useStore = create(
       setleft: (value) => set((state) => ({ controls: { ...state.controls, left: value } })),
       setright: (value) => set((state) => ({ controls: { ...state.controls, right: value } })),
       setfish: (value) => set((state) => ({ controls: { ...state.controls, fish: value } })),
+      setboosting: (value) => set((state) => ({ controls: { ...state.controls, boosting: value } })),
     }),
     {
       name: 'control-storage', // unique name

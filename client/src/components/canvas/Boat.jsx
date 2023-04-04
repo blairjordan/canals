@@ -1,12 +1,12 @@
 import * as THREE from "three";
-import { forwardRef, useMemo } from "react";
+import { forwardRef, useEffect, useMemo, useRef } from "react";
 import { useGLTF } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
 
 //import boatUrl from "../../assets/models/boat_01.glb";
 
 const Boat = forwardRef((props, ref) => {
-  const playerGroup = new THREE.Group();
-  playerGroup.rotation.order = "YXZ";
+  const playerGroup = useRef({group: new THREE.Group() })
   const boatItems = {};
   const { scene, nodes, materials } = useGLTF('/models/boat_01.glb');
 
@@ -16,7 +16,7 @@ const Boat = forwardRef((props, ref) => {
     if (boatItems[partName]) {
       for (let i = 0; i < boatItems[partName].parts.length; i++) {
         boatItems[partName].parts[i].rotateY(Math.PI);
-        playerGroup.add(boatItems[partName].parts[i]);
+        playerGroup.current.group.add(boatItems[partName].parts[i]);
       }
     }
   }
@@ -41,7 +41,12 @@ const Boat = forwardRef((props, ref) => {
     return "none";
   }
 
-  useMemo(() => {
+  useEffect(() => {
+    //Need to find a better way to handle this, without a code change will rebuild this and it gets messed up?
+    if(playerGroup.current.group.children.length>0) return;
+
+    playerGroup.current.group.name = 'Player Boat';
+    playerGroup.current.group.rotation.order = "YXZ";
     Object.values(nodes).forEach((child) => {
       if (child.isMesh) {
         let nameCheck = child.name;
@@ -125,16 +130,16 @@ const Boat = forwardRef((props, ref) => {
       addPart("house_boat_stern_semi_traditional_walls");
       addPart("house_boat_stern_semi_traditional_window_01");
     }
-  }, [nodes, materials]);
+  }, [nodes]);
+  //playerGroup changes on reload???
 
-  //Add boat engine
-//   useFrame(
-//     (state, delta) => (ref.current.material.uniforms.time.value += (delta*0.5))
-//   );
+  // useFrame(
+  //   (state, delta) => (console.log(ref.current.visible))
+  // );
 
   return <primitive ref={ref}
-  object={playerGroup} 
-  {...props} 
+    object={playerGroup.current.group} 
+    {...props} 
   />;
 })
 

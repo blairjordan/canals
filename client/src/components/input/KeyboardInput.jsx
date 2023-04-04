@@ -49,6 +49,14 @@ const KeyboardInput = (props) => {
     const { setfish } = useStore.getState()
     setfish?.(false);
   }
+  const boosting = () => {
+    const { setboosting } = useStore.getState()
+    setboosting?.(true);
+  }
+  const boostingDone = () => {
+    const { setboosting } = useStore.getState()
+    setboosting?.(false);
+  }
   useKeyPress("w", null, movePlayerUp, movePlayerUpDone)
   useKeyPress("W", null, movePlayerUp, movePlayerUpDone)
   useKeyPress("ArrowUp", null, movePlayerUp, movePlayerUpDone)
@@ -63,6 +71,7 @@ const KeyboardInput = (props) => {
   useKeyPress("ArrowRight", null, movePlayerRight, movePlayerRightDone)
   useKeyPress("f", null, fish, fishDone)
   useKeyPress("F", null, fish, fishDone)
+  useKeyPress(" ", null, boosting, boostingDone)
 
   // Debug
   // if (players[0].module.getPadId()) console.log("is pressed?", pressed)
