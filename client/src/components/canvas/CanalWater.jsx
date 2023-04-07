@@ -18,11 +18,34 @@ function CanalWater() {
     //Need to connect this to something that can pull nodes down from the serva bro
     const nodes =[
         new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(500, 0, 0),
+
+        new THREE.Vector3(0, 0, 500),
         new THREE.Vector3(500, 0, 500),
-        new THREE.Vector3(-500, 0, -500)
+        new THREE.Vector3(500, 0, 0),
+        new THREE.Vector3(500, 0, -500),
+        new THREE.Vector3(0, 0, -500),
+        new THREE.Vector3(-500, 0, -500),
+        new THREE.Vector3(-500, 0, 0),
+        new THREE.Vector3(-500, 0, 500),
     ]
-    const connections = [[0,1],[1,2],[0,3]]
+    const connections = [
+      [0,1],
+      [0,2],
+      [0,3],
+      [0,4],
+      [0,5],
+      [0,6],
+      [0,7],
+      [0,8],
+      [1,2],
+      [2,3],
+      [3,4],
+      [4,5],
+      [5,6],
+      [6,7],
+      [7,8],
+      [8,1],
+    ]
 
     const nodeGeoms = [];
     const center = new THREE.Vector2();

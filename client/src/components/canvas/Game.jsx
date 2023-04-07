@@ -5,6 +5,7 @@ import * as THREE from 'three'
 import { Line, Sky } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { AppContext } from '@/context'
+import { Terrain } from "./Terrain";
 
 export default function Game({ route, ...props }) {
   const [state, dispatch] = useContext(AppContext)
@@ -43,6 +44,7 @@ export default function Game({ route, ...props }) {
   })
   return (
     <>
+      <Terrain />
       <CanalWater />
       <Sky scale={1000} sunPosition={[500, 150, -1000]} turbidity={0.1} />
       <Player />
