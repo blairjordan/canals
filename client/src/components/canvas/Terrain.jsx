@@ -149,7 +149,7 @@ function Terrain() {
         const stepAB = 5.83 / distAB;
         const houseCountAB = Math.floor(distAB / 5.83);
         for(let i = 1; i < houseCountAB-1; i++) {
-            const house = clone(street_building_01)
+            const house = clone(Math.random() < 0.5 ? street_building_01 : street_building_01001)
             house.position.set(nodePoints[0].x, 0.5, nodePoints[0].y).lerp(vectorB, stepAB*(i))
             house.rotateY((angle+90) * THREE.MathUtils.DEG2RAD)
             housesGroupRef.current.group.add(house)

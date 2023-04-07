@@ -43,7 +43,7 @@ const Player = (props) => {
     <> 
     <Boat ref={playerRef} /> 
     <BoatWake player={playerRef}/>
-    <OrbitControls ref={controlsRef} target={[0,0,0]} maxPolarAngle={Math.PI * 0.470} minDistance={4.0} maxDistance={550.0}/>
+    <OrbitControls ref={controlsRef} target={[0,0,0]} maxPolarAngle={Math.PI * 0.470} minDistance={4.0} maxDistance={80.0}/>
     </>
   )
 }
