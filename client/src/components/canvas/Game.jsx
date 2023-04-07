@@ -2,7 +2,6 @@ import { CanalWater } from "./CanalWater";
 import { Player } from "./Player";
 import { useContext, useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
-import { CanalWater } from './CanalWater'
 import { Line, Sky } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { AppContext } from '@/context'
