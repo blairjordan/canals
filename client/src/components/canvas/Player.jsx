@@ -5,8 +5,9 @@ import * as THREE from "three";
 import { Boat } from './Boat';
 import { BoatEngine } from './BoatEngine';
 import { OrbitControls } from '@react-three/drei'
+import { BoatWake } from './Wake';
 
-const Controls = (props) => {
+const Player = (props) => {
     const playerRef = useRef(null);
     const controlsRef = useRef(null);
     const engineRef = useRef({
@@ -40,10 +41,11 @@ const Controls = (props) => {
     })
   return (
     <> 
-    <Boat ref={playerRef} />
+    <Boat ref={playerRef} /> 
+    <BoatWake player={playerRef}/>
     <OrbitControls ref={controlsRef} target={[0,0,0]} maxPolarAngle={Math.PI * 0.470} minDistance={4.0} maxDistance={80.0}/>
     </>
   )
 }
 
-export { Controls }
+export { Player }

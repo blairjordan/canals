@@ -4,7 +4,7 @@ import * as THREE from "three";
 // import { useCursor, MeshDistortMaterial } from '@react-three/drei'
 
 import { CanalWater } from "./CanalWater";
-import { Controls } from "./Controls";
+import { Player } from "./Player";
 import { Line, Sky } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber';
 
@@ -28,7 +28,7 @@ export default function Game({ route, ...props }) {
     <>
         <CanalWater />
         <Sky scale={1000} sunPosition={[500, 150, -1000]} turbidity={0.1} />
-        <Controls/>
+        <Player/>
         <Line worldUnits scale={2} points={circlePoints} color='#ff0000' lineWidth={0.15} rotation={[Math.PI*-0.5, 0, 0]} />
         <Line worldUnits scale={4} points={circlePoints} color='#ff0000' lineWidth={0.15} rotation={[Math.PI*-0.5, 0, 0]} />
         <Line worldUnits scale={8} points={circlePoints} color='#ff0000' lineWidth={0.15} rotation={[Math.PI*-0.5, 0, 0]} />
