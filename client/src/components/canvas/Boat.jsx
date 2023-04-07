@@ -1,14 +1,22 @@
 import * as THREE from "three";
 import { forwardRef, useEffect, useMemo, useRef } from "react";
 import { useGLTF } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useLoader } from "@react-three/fiber";
+import { MeshBasicMaterial, MeshStandardMaterial } from "three";
 
 //import boatUrl from "../../assets/models/boat_01.glb";
 
 const Boat = forwardRef((props, ref) => {
   const playerGroup = useRef({group: new THREE.Group() })
+  const sideWake = useRef(null)
   const boatItems = {};
   const { scene, nodes, materials } = useGLTF('/models/boat_01.glb');
+  const { scene: sideScene, nodes: sideNodes, materials: sideMaterials } = useGLTF('/models/side_wake.glb');
+
+  const wakeTexture = useLoader(
+    THREE.TextureLoader, '/textures/wakeV.png'
+  );
+  wakeTexture.wrapS = wakeTexture.wrapT = THREE.RepeatWrapping;
 
   function addPart(partName) {
     partName = partName.replace(".", "");
@@ -130,12 +138,37 @@ const Boat = forwardRef((props, ref) => {
       addPart("house_boat_stern_semi_traditional_walls");
       addPart("house_boat_stern_semi_traditional_window_01");
     }
+
+    // if(sideNodes) {
+    //   Object.values(sideNodes).forEach((child) => {
+    //     if (child.isMesh) {
+    //       child.position.y = 0.11
+    //       child.rotateY(Math.PI);
+    //       playerGroup.current.group.add(child)
+    //       sideWake.current = child;
+          
+    //       const map = sideWake.current.material.map.clone()
+    //       const alphaMap = wakeTexture ? sideWake.current.material.map.clone() : wakeTexture; 
+    //       const mat = new MeshBasicMaterial({alphaMap: alphaMap, transparent: true, map: map, opacity: 0.8})
+    //       child.material = mat;
+    //       console.log(sideWake.current.material)
+          
+    //     }
+    //   })
+    // }
   }, [nodes]);
+
+  useEffect(() => {
+    if(sideWake.current) sideWake.current.material.alphaMap = wakeTexture;
+  }, [wakeTexture])
+
   //playerGroup changes on reload???
 
-  // useFrame(
-  //   (state, delta) => (console.log(ref.current.visible))
-  // );
+  useFrame(
+    (state, delta) => {
+      //if(sideWake.current) sideWake.current.material.map.offset.y+=delta*-0.2
+    }
+  );
 
   return <primitive ref={ref}
     object={playerGroup.current.group} 

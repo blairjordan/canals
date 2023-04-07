@@ -1,7 +1,8 @@
+import { CanalWater } from "./CanalWater";
+import { Player } from "./Player";
 import { useContext, useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { CanalWater } from './CanalWater'
-import { Controls } from './Controls'
 import { Line, Sky } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { AppContext } from '@/context'
@@ -45,7 +46,7 @@ export default function Game({ route, ...props }) {
     <>
       <CanalWater />
       <Sky scale={1000} sunPosition={[500, 150, -1000]} turbidity={0.1} />
-      <Controls />
+      <Player />
       <Line
         worldUnits
         scale={2}
