@@ -176,4 +176,6 @@ const Boat = forwardRef((props, ref) => {
   />;
 })
 
+Boat.displayName = 'Boat';
+
 export { Boat }

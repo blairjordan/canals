@@ -105,4 +105,6 @@ class BoatEngine {
 
 }
 
+BoatEngine.displayName = 'BoatEngine';
+
 export {BoatEngine}

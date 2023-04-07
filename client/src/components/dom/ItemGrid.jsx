@@ -9,4 +9,6 @@ const ItemGrid = ({ numBoxes, items }) => {
   }</div>;
 };
 
+ItemGrid.displayName = 'ItemGrid';
+
 export default ItemGrid;
