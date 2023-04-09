@@ -9,7 +9,7 @@ import { PLAYER } from '@/graphql/player';
 const Game = dynamic(() => import('@/components/canvas/Game'), { ssr: false })
 
 export default function Page(props) {
-  const [showPopup, setShowPopup] = useState(false) // Add state to manage popup visibility
+  const [showLogin, setShowPopup] = useState(false) // Add state to manage popup visibility
 
   const [getPlayer, { loading: loadingPlayer, data: playerData, error: playerError }] = useLazyQuery(PLAYER);
 
@@ -17,7 +17,6 @@ export default function Page(props) {
 
   const handleLogin = (id) => {
     getPlayer({ variables: { id } });
-    setShowPopup(false); // Hide the login popup after setting the current player
   };
 
   useEffect(() => {
@@ -28,14 +27,20 @@ export default function Page(props) {
 
   return (
     <>
-      {showPopup && (
+      {
+      // state.player.id is truthy when the player is logged in
+      !(state.player && state.player.id) && (
         <Popup>
-          {/* Render the Login component and pass the handleLogin function as a prop */}
           <Login onLogin={handleLogin} />
         </Popup>
       )}
-      {/* Render the toggle button */}
-      <button onClick={() => setShowPopup(!showPopup)}>Toggle UI</button>
+      {/* Map over the popups in state and render a Popup component for each one */}
+      {state.popups.map(({ id, title, message }) => (
+        <Popup key={id}>
+          <h2>{title}</h2>
+          <p>{message}</p>
+        </Popup>
+      ))}
     </>
   )
 }

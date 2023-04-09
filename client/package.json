@@ -23,6 +23,7 @@
     "@apollo/client": "^3.7.11",
     "@react-three/drei": "^9.56.5",
     "@react-three/fiber": "^8.10.1",
+    "@tweenjs/tween.js": "^18.6.4",
     "glsl-random": "^0.0.5",
     "graphql": "^16.6.0",
     "graphql-ws": "^5.12.1",
@@ -32,8 +33,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "three": "^0.149.0",
-    "three-stdlib": "^2.21.6",
-    "zustand": "^4.3.7"
+    "three-stdlib": "^2.21.6"
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^13.1.6",

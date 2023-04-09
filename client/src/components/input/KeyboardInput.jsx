@@ -1,61 +1,52 @@
-import React, { useCallback, useEffect, useState } from "react"
+import React, { useCallback, useEffect, useState, useContext } from "react"
 import useKeyPress from "../hooks/useKeyPress" 
-import useStore from "../helpers/store"
+import { AppContext } from '@/context'
 
 // Component that checks for keyboard input and updates Zustand store
 const KeyboardInput = (props) => {
+  const [state, dispatch] = useContext(AppContext)
+
   const movePlayerUp = () => {
-    // We have to get the latest state here because if we use the React hook
-    // and try to access data here, it will be stale
-    // Makes a case for a centralized input class that can share store
-    // instead of grabbing store each key and each keypress!
-    const { controls, setforward} = useStore.getState()
-    // console.log('actions', setforward)
-    setforward?.(true);
+    dispatch({ type: 'ACTION_MOVE_FORWARD', payload: true, })
   }
   const movePlayerUpDone = () => {
-    const { setforward } = useStore.getState()
-    setforward?.(false);
+    dispatch({ type: 'ACTION_MOVE_FORWARD', payload: false, })
   }
   const movePlayerDown = () => {
-    const { setbackward } = useStore.getState()
-    setbackward?.(true);
+    dispatch({ type: 'ACTION_MOVE_BACKWARD', payload: true, })
   }
   const movePlayerDownDone = () => {
-    const { setbackward } = useStore.getState()
-    setbackward?.(false);
+    dispatch({ type: 'ACTION_MOVE_BACKWARD', payload: false, })
   }
   const movePlayerLeft = () => {
-    const { setleft } = useStore.getState()
-    setleft?.(true);
+    dispatch({ type: 'ACTION_MOVE_LEFT', payload: true, })
   }
   const movePlayerLeftDone = () => {
-    const { setleft } = useStore.getState()
-    setleft?.(false);
+    dispatch({ type: 'ACTION_MOVE_LEFT', payload: false, })
   }
   const movePlayerRight = () => {
-    const { setright } = useStore.getState()
-    setright?.(true);
+    dispatch({ type: 'ACTION_MOVE_RIGHT', payload: true, })
   }
   const movePlayerRightDone = () => {
-    const { setright } = useStore.getState()
-    setright?.(false);
+    dispatch({ type: 'ACTION_MOVE_RIGHT', payload: false, })
   }
   const fish = () => {
-    const { setfish } = useStore.getState()
-    setfish?.(true);
+    dispatch({ type: 'ACTION_FISH', payload: true, })
   }
   const fishDone = () => {
-    const { setfish } = useStore.getState()
-    setfish?.(false);
+    dispatch({ type: 'ACTION_FISH', payload: false, })
+  }
+  const interact = () => {
+    dispatch({ type: 'ACTION_INTERACT', payload: true, })
+  }
+  const interactDone = () => {
+    dispatch({ type: 'ACTION_INTERACT', payload: false, })
   }
   const boosting = () => {
-    const { setboosting } = useStore.getState()
-    setboosting?.(true);
+    dispatch({ type: 'ACTION_BOOST', payload: true, })
   }
   const boostingDone = () => {
-    const { setboosting } = useStore.getState()
-    setboosting?.(false);
+    dispatch({ type: 'ACTION_BOOST', payload: false, })
   }
   useKeyPress("w", null, movePlayerUp, movePlayerUpDone)
   useKeyPress("W", null, movePlayerUp, movePlayerUpDone)
@@ -71,6 +62,8 @@ const KeyboardInput = (props) => {
   useKeyPress("ArrowRight", null, movePlayerRight, movePlayerRightDone)
   useKeyPress("f", null, fish, fishDone)
   useKeyPress("F", null, fish, fishDone)
+  useKeyPress("e", null, interact, interactDone)
+  useKeyPress("E", null, interact, interactDone)
   useKeyPress(" ", null, boosting, boostingDone)
 
   // Debug

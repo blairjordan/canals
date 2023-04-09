@@ -3,6 +3,7 @@ import { forwardRef, useEffect, useMemo, useRef } from "react";
 import { useGLTF } from "@react-three/drei";
 import { useFrame, useLoader } from "@react-three/fiber";
 import { MeshBasicMaterial, MeshStandardMaterial } from "three";
+import { clone } from 'three/examples/jsm/utils/SkeletonUtils';
 
 //import boatUrl from "../../assets/models/boat_01.glb";
 
@@ -23,8 +24,9 @@ const Boat = forwardRef((props, ref) => {
 
     if (boatItems[partName]) {
       for (let i = 0; i < boatItems[partName].parts.length; i++) {
-        boatItems[partName].parts[i].rotateY(Math.PI);
-        playerGroup.current.group.add(boatItems[partName].parts[i]);
+        const part = clone(boatItems[partName].parts[i])
+        part.rotateY(Math.PI);
+        playerGroup.current.group.add(part);
       }
     }
   }
@@ -122,17 +124,20 @@ const Boat = forwardRef((props, ref) => {
     // house_boat_stern_traditional
     const whichOne = Math.random();
     if (whichOne < 0.34) {
+      console.log('Boat Stern: Traditional')
       addPart("house_boat_stern_traditional");
       addPart("house_boat_stern_traditional_window_01");
       addPart("house_boat_stern_traditional_window_02");
       addPart("house_boat_stern_traditional_window_03");
       addPart("house_boat_stern_traditional_window_04");
     } else if (whichOne < 0.68) {
+      console.log('Boat Stern: Semi Cruiser')
       addPart("house_boat_stern_semi_cruiser_handrail");
       addPart("house_boat_stern_semi_cruiser_wall");
       addPart("house_boat_stern_semi_cruiser_window_01");
       addPart("house_boat_main_door_02");
     } else {
+      console.log('Boat Stern: Semi Traditional')
       addPart("house_boat_stern_semi_traditional_door");
       addPart("house_boat_stern_semi_traditional_seating");
       addPart("house_boat_stern_semi_traditional_walls");

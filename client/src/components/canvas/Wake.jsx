@@ -71,15 +71,15 @@ function BoatWake(props) {
     mesh.renderOrder = -1
     scene.add(mesh)
 
-    var trailPoint = new THREE.Object3D()
+    let trailPoint = new THREE.Object3D()
     props.player.current.add(trailPoint)
     trailPoint.translateZ(5)
     trailPoint.translateY(0.1)
     trailPoint.translateX(-0.25)
 
-    var trailRenderer = new TrailRenderer(scene, true)
-    var trailLength = 60 + Math.floor(Math.random() * 2)
-    var trailMaterial = trailRenderer.createTexturedMaterial()
+    let trailRenderer = new TrailRenderer(scene, true)
+    let trailLength = 60 + Math.floor(Math.random() * 2)
+    let trailMaterial = trailRenderer.createTexturedMaterial()
     trailMaterial.uniforms.textureMap.value = wakeTex
     trailMaterial.uniforms.headColor.value.set(1.0, 1.0, 1.0, 0.4)
     trailMaterial.uniforms.tailColor.value.set(1.0, 1.0, 1.0, 0.0)
@@ -87,7 +87,7 @@ function BoatWake(props) {
 
     const width = 0.5
     trailMaterial.side = THREE.DoubleSide
-    var trailHeadGeometry = []
+    let trailHeadGeometry = []
     trailHeadGeometry.push(
       new THREE.Vector3(width, 0.0, 0.0),
       //new THREE.Vector3(0, -0.2, 0.0),
@@ -103,7 +103,6 @@ function BoatWake(props) {
     lineMaterialRef.current = lineMaterial
     trailPointsRef.current = points
     trailRendererRef.current = trailRenderer
-    console.log('created wake')
   }
 
   useFrame((state, delta) => {
