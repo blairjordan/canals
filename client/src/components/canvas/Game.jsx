@@ -39,30 +39,6 @@ export default function Game({ route, ...props }) {
     }
   }, [markerData])
 
-  // 🗨 Add a popup when the player is inside a marker zone
-  useEffect(() => {
-    const vendorGeofences = state.geofences.filter((geofence) => geofence.type === 'vendor')
-    // state.player && state.player.id is truthy when the player is logged in
-    if (state.player && state.player.id && vendorGeofences && vendorGeofences.length > 0) {
-      // Assume there is only one vendor geofence,
-      // but popup opens for the last vendor geofence in the array
-      const vendorGeofence = vendorGeofences[vendorGeofences.length - 1]
-      const popupId = `vendor-${vendorGeofence.id}`
-      const popupExists = state.popups.some((popup) => popup.id === popupId)
-      if (!popupExists) {
-        dispatch({
-          type: 'UI_POPUP_ADD',
-          payload: {
-            id: popupId,
-            message: `Press E to interact with ${vendorGeofence.props.name}`,
-          },
-        })
-      }
-    } else {
-      dispatch({ type: 'UI_POPUP_CLEAR' })
-    }
-  }, [state.player, state.geofences])
-
   // Check if player is inside marker zone
   useFrame(() => {
     TWEEN.update()
@@ -81,13 +57,35 @@ export default function Game({ route, ...props }) {
         dispatch({ type: 'GEOFENCE_REMOVE', payload: marker })
       }
     })
-  })
 
-  // useFrame((state, delta) => {
-  //   if(controls.interact && state.popups) {
-  //     console.log('Interact pressed')
-  //   }
-  // })
+    // Check if player is interacting with a marker
+    if (state.popups.length > 0) {
+
+      if(state.actions.interact) {
+        dispatch({
+          type: 'UI_POPUP_INTERACT',
+          payload: {
+            popup: state.popups[state.popups.length - 1],
+            interacted: true
+          }
+        })
+      }
+
+      // Close all popups if cancel is pressed
+      state.popups.map((popup) => {
+        if(state.actions.cancel) {
+          dispatch({
+            type: 'UI_POPUP_INTERACT',
+            payload: {
+              popup,
+              interacted: false
+            }
+          })
+        }
+      })
+    }
+  })
+  
 
   return (
     <>

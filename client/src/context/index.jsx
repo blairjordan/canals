@@ -5,6 +5,7 @@ export const AppContext = createContext()
 const initialState = {
   loggedIn: false,
   player: null,
+  remotePlayers: [],
   markers: [],
   geofences: [],
   popups: [],
@@ -16,6 +17,7 @@ const initialState = {
     fish: false,
     interact: false,
     boosting: false,
+    cancel: false
   }
 }
 
@@ -34,13 +36,39 @@ const appReducer = (state, action) => {
         loggedIn: false,
         player: null,
       }
-    case 'PLAYER_MOVE':
+    case 'PLAYER_UPDATE_POSITION':
       return {
         ...state,
         player: {
           ...state.player,
           position: action.payload,
         },
+      }
+    case 'REMOTE_PLAYERS_SET':
+      return {
+        ...state,
+        remotePlayers: action.payload,
+      }
+    case 'REMOTE_PLAYER_UPDATE_POSITION':
+      return {
+        ...state,
+        remotePlayers: state.remotePlayers.map((player) =>
+          player.id === action.payload.player.id
+          ? {
+            ...player,
+            position: action.payload.position,
+          } : player,
+        ),
+      }
+    case 'REMOTE_PLAYERS_ADD':
+      return {
+        ...state,
+        remotePlayers: [...state.remotePlayers, action.payload],
+      }
+    case 'REMOTE_PLAYERS_REMOVE':
+      return {
+        ...state,
+        remotePlayers: state.remotePlayers.filter((player) => player.id !== action.payload.id),
       }
     case 'MARKER_ADD':
       return {
@@ -67,11 +95,15 @@ const appReducer = (state, action) => {
         ...state,
         popups: [...state.popups, action.payload],
       }
-      case 'UI_POPUP_INTERACT':
+    case 'UI_POPUP_INTERACT':
       return {
         ...state,
         popups: state.popups.map((popup) =>
-          popup.id === action.payload.id ? { ...popup, interacted: true } : popup
+          popup.id === action.payload.popup.id
+          ? {
+            ...popup,
+            interacted: action.payload.interacted 
+          } : popup,
         ),
       }
     case 'UI_POPUP_REMOVE':
@@ -141,7 +173,14 @@ const appReducer = (state, action) => {
           boosting: action.payload,
         },
       }
-      
+    case 'ACTION_CANCEL':
+      return {
+        ...state,
+        actions: {
+          ...state.actions,
+          cancel: action.payload,
+        },
+      }
     default:
       return state
   }

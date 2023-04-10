@@ -48,6 +48,12 @@ const KeyboardInput = (props) => {
   const boostingDone = () => {
     dispatch({ type: 'ACTION_BOOST', payload: false, })
   }
+  const cancel = () => {
+    dispatch({ type: 'ACTION_CANCEL', payload: true, })
+  }
+  const cancelDone = () => {
+    dispatch({ type: 'ACTION_CANCEL', payload: false, })
+  }
   useKeyPress("w", null, movePlayerUp, movePlayerUpDone)
   useKeyPress("W", null, movePlayerUp, movePlayerUpDone)
   useKeyPress("ArrowUp", null, movePlayerUp, movePlayerUpDone)
@@ -65,7 +71,8 @@ const KeyboardInput = (props) => {
   useKeyPress("e", null, interact, interactDone)
   useKeyPress("E", null, interact, interactDone)
   useKeyPress(" ", null, boosting, boostingDone)
-
+  useKeyPress("Escape", null, cancel, cancelDone)
+  
   // Debug
   // if (players[0].module.getPadId()) console.log("is pressed?", pressed)
 
