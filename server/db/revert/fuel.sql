@@ -4,7 +4,7 @@ BEGIN;
 
 DROP FUNCTION IF EXISTS refuel(player_id INTEGER);
 
-DELETE FROM markers WHERE type = 'fueling_station';
+DELETE FROM markers WHERE type = 'fuel_station';
 
 DROP TRIGGER IF EXISTS fuel_is_zero_trigger ON players;
 

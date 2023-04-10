@@ -6,6 +6,9 @@ import { Boat } from './Boat'
 import { BoatEngine } from './BoatEngine'
 import { OrbitControls } from '@react-three/drei'
 import { BoatWake } from './Wake'
+import { useMutation } from '@apollo/client';
+import { PLAYER_UPDATE } from '@/graphql/player';
+
 
 const Player = () => {
   const [state, dispatch] = useContext(AppContext)
@@ -17,6 +20,10 @@ const Player = () => {
     currentPlayerPosition: new THREE.Vector3(),
     lastPlayerPosition: new THREE.Vector3(),
   })
+
+  const [frameCounter, setFrameCounter] = useState(0)
+
+  const [updatePlayer, { data: playerUpdateData, loading: playerUpdateLoading, error: playerUpdateError }] = useMutation(PLAYER_UPDATE)
 
   useFrame((threeState, delta) => {
     const { engine, currentPlayerPosition, lastPlayerPosition } = engineRef.current
@@ -40,9 +47,34 @@ const Player = () => {
     controlsRef.current.target.copy(playerRef.current.position)
 
     dispatch({
-      type: 'PLAYER_MOVE',
+      type: 'PLAYER_UPDATE_POSITION',
       payload: lastPlayerPosition,
     })
+
+    if (!(state.player && state.player.id)) {
+      return
+    }
+
+    // Avoid sending updates when the player is not moving
+    if (lastPlayerPosition.equals(playerRef.current.position)) {
+      return
+    }
+
+    // Update player position on the server every 120 frames
+    setFrameCounter(frameCounter + 1)
+    if (frameCounter >= 120) {
+      console.log('update')
+
+      updatePlayer({
+        variables: {
+          id: state.player.id,
+          position: {
+            ...lastPlayerPosition
+          }
+        }
+      })
+      setFrameCounter(0)
+    }
   })
 
   return (
