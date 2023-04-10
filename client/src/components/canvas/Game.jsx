@@ -11,6 +11,7 @@ import { useLazyQuery } from '@apollo/client'
 import { DebugMarker } from './DebugMarker'
 import { RemotePlayer } from './RemotePlayer'
 import TWEEN from '@tweenjs/tween.js'
+import { Birds } from './Birds'
 
 export default function Game({ route, ...props }) {
   const [state, dispatch] = useContext(AppContext)
