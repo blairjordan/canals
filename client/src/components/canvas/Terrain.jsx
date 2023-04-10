@@ -9,7 +9,6 @@ function Terrain() {
   const housesGroupRef = useRef({ group: new THREE.Group() })
   const { scene, nodes, materials } = useGLTF('/models/buildings.glb')
 
-
   const bakeMultimaterialModel = (meshes) => {
     const matrix4 = new THREE.Matrix4()
     // brick_wall_01
@@ -21,29 +20,29 @@ function Terrain() {
     const geometries = {}
     const mergedMeshes = []
     meshes.map((mesh) => {
-        const find = materials.find((m) => m.name === mesh.material.name)
-        if(!find) { 
-            geometries[mesh.material.name] = []
-            materials.push(mesh.material);
-        }
-        mesh.parent.updateMatrix()
-        mesh.parent.updateMatrixWorld(true)
-        mesh.updateMatrix();
-        mesh.updateMatrixWorld(true);
-        matrix4.copy(mesh.matrixWorld)
-        const geom = mesh.geometry.clone()
-        geom.applyMatrix4(matrix4)
-        geometries[mesh.material.name].push(geom);
-    })
-    
-    Object.values(geometries).forEach(function(geoms, index) {
-        const combined = mergeBufferGeometries(geoms)
-        const mergedMesh = new THREE.Mesh(combined, materials[index]);
-        mergedMeshes.push(mergedMesh)
+      const find = materials.find((m) => m.name === mesh.material.name)
+      if (!find) {
+        geometries[mesh.material.name] = []
+        materials.push(mesh.material)
+      }
+      mesh.parent.updateMatrix()
+      mesh.parent.updateMatrixWorld(true)
+      mesh.updateMatrix()
+      mesh.updateMatrixWorld(true)
+      matrix4.copy(mesh.matrixWorld)
+      const geom = mesh.geometry.clone()
+      geom.applyMatrix4(matrix4)
+      geometries[mesh.material.name].push(geom)
     })
 
-    return mergedMeshes;
-}
+    Object.values(geometries).forEach(function (geoms, index) {
+      const combined = mergeBufferGeometries(geoms)
+      const mergedMesh = new THREE.Mesh(combined, materials[index])
+      mergedMeshes.push(mergedMesh)
+    })
+
+    return mergedMeshes
+  }
 
   const geom = useMemo(() => {
     //Need to connect this to something that can pull nodes down from the serva bro
@@ -83,15 +82,15 @@ function Terrain() {
     let street_building_01001 = null
     Object.values(nodes).forEach((child) => {
       if (child.isMesh) {
-        if(street_building_01===null) {
-            if (child.parent.name === 'street_building_01') {
-                street_building_01 = child.parent
-            }
+        if (street_building_01 === null) {
+          if (child.parent.name === 'street_building_01') {
+            street_building_01 = child.parent
+          }
         }
-        if(street_building_01001===null) {
-            if (child.parent.name === 'street_building_01001') {
-                street_building_01001 = child.parent
-            }
+        if (street_building_01001 === null) {
+          if (child.parent.name === 'street_building_01001') {
+            street_building_01001 = child.parent
+          }
         }
       }
     })
@@ -158,53 +157,43 @@ function Terrain() {
       nodeShape.setFromPoints(nodePoints)
 
       //House positions
-      const vectorB = new THREE.Vector3().set(nodePoints[1].x, 0, nodePoints[1].y)
-      const distAB = nodePoints[0].distanceTo(nodePoints[1])
-      const stepAB = 5.83 / distAB
-      const houseCountAB = Math.floor(distAB / 5.83)
-      for (let i = 1; i < houseCountAB - 1; i++) {
+        const vectorB = new THREE.Vector3().set(nodePoints[1].x, 0, nodePoints[1].y)
+        const distAB = nodePoints[0].distanceTo(nodePoints[1])
+        const stepAB = 5.83 / distAB
+        const houseCountAB = Math.floor(distAB / 5.83)
+        for (let i = 1; i < houseCountAB - 1; i++) {
+          const house = clone(Math.random() < 0.5 ? street_building_01 : street_building_01001)
+          house.position.set(nodePoints[0].x, 0.5, nodePoints[0].y).lerp(vectorB, stepAB * i + stepAB * 0.3)
+          house.rotateY((angle + 90) * THREE.MathUtils.DEG2RAD)
+          house.translateX(-0.5 + (i > 1 ? -Math.random() * 2 : 0))
+
+          house.traverse((child) => {
+            if (child.isMesh) {
+              houseMeshes.push(child)
+            }
+          })
+        }
+
+      const vectorC = new THREE.Vector3(
+        nodePoints[3].x,
+        0,
+        nodePoints[3].y,
+      )
+      const distAC = nodePoints[0].distanceTo(nodePoints[3])
+      const stepAC = 5.83 / distAC
+      const houseCountAC = Math.floor(distAC / 5.83)
+      for (let i = 1; i < houseCountAC - 1; i++) {
         const house = clone(Math.random() < 0.5 ? street_building_01 : street_building_01001)
-        house.position.set(nodePoints[0].x, 0.5, nodePoints[0].y).lerp(vectorB, stepAB *i + (stepAB*0.30))
-        house.rotateY((angle + 90) * THREE.MathUtils.DEG2RAD)
-        house.translateX(-0.5 + (i>1 ? (-Math.random()*2) : 0))
-        //housesGroupRef.current.group.add(house)
+        house.position.set(nodePoints[0].x, 0.5, nodePoints[0].y).lerp(vectorC, stepAC * i + stepAC * 0.3)
+        house.rotateY((angleC + 90) * THREE.MathUtils.DEG2RAD)
+        house.translateX(-0.5 + (i > 1 ? -Math.random() * 2 : 0))
 
         house.traverse((child) => {
-            if(child.isMesh) {
-                houseMeshes.push(child)
-            }
+          if (child.isMesh) {
+            houseMeshes.push(child)
+          }
         })
-        
       }
-
-      const vectorC = new THREE.Vector3().set(!isOdd ? nodePoints[2].x : nodePoints[3].x, 0, !isOdd ? nodePoints[2].y : nodePoints[3].y)
-      const distAC = nodePoints[0].distanceTo(!isOdd ? nodePoints[2] : nodePoints[3])
-      const stepAC = 5.83 / distAC;
-      const houseCountAC = Math.floor(distAC / 5.83);
-      for(let i = 1; i < houseCountAC - 1; i++) {
-          const house = clone(Math.random() < 0.5 ? street_building_01 : street_building_01001)
-          house.position.set(nodePoints[0].x, 0.5, nodePoints[0].y).lerp(vectorC,stepAC*i + (stepAC*0.30))
-          house.rotateY((angleC+90) * THREE.MathUtils.DEG2RAD)
-          house.translateX(-0.5 + (i>1 ? (-Math.random()*2) : 0))
-          //housesGroupRef.current.group.add(house)
-
-            house.traverse((child) => {
-                if(child.isMesh) {
-                    houseMeshes.push(child)
-                }
-            })
-      }
-
-    //   for(let i = 0; i < street_building_01Merged.length; i++) {
-    //     const bufferGeometry = mergeBufferGeometries(street_building_01Merged[i]);
-    //     const resultGeometry = new THREE.Mesh(bufferGeometry, street_building_01Mat[i]);
-    //     housesGroupRef.current.group.add(resultGeometry)
-    //   }
-    //   for(let i = 0; i < street_building_01001Merged.length; i++) {
-    //     const bufferGeometry = mergeBufferGeometries(street_building_01001Merged[i]);
-    //     const resultGeometry = new THREE.Mesh(bufferGeometry, street_building_01001Mat[i]);
-    //     housesGroupRef.current.group.add(resultGeometry)
-    //   }
 
       const extrudeSettings = {
         depth: 0.5,
@@ -219,17 +208,15 @@ function Terrain() {
       nodeGeoms.push(nodeGeom)
     })
 
-    console.log('adding ', (houseMeshes.length/3), ' houses')
+    console.log('adding ', houseMeshes.length / 3, ' houses')
     const resultMeshes = bakeMultimaterialModel(houseMeshes)
     resultMeshes.map((mesh) => {
-        housesGroupRef.current.group.add(mesh)
+      housesGroupRef.current.group.add(mesh)
     })
-  
 
     return mergeBufferGeometries(nodeGeoms)
   }, [nodes])
 
-      
   return (
     <group>
       <primitive object={housesGroupRef.current.group} />
