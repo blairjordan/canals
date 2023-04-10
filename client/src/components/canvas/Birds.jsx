@@ -25,12 +25,12 @@ const Birds = forwardRef((props, ref) => {
   }, [])
 
   const fillPositionTexture = (texture) => {
-    var theArray = texture.image.data
+    let theArray = texture.image.data
 
-    for (var k = 0, kl = theArray.length; k < kl; k += 4) {
-      var x = Math.random() * 100
-      var y = Math.random() * 100
-      var z = Math.random() * 100
+    for (let k = 0, kl = theArray.length; k < kl; k += 4) {
+      let x = Math.random() * 100
+      let y = Math.random() * 100
+      let z = Math.random() * 100
 
       theArray[k + 0] = x
       theArray[k + 1] = y
@@ -40,12 +40,12 @@ const Birds = forwardRef((props, ref) => {
   }
 
   const fillVelocityTexture = (texture) => {
-    var theArray = texture.image.data
+    let theArray = texture.image.data
 
-    for (var k = 0, kl = theArray.length; k < kl; k += 4) {
-      var x = Math.random() - 0.5
-      var y = Math.random() - 0.5
-      var z = Math.random() - 0.5
+    for (let k = 0, kl = theArray.length; k < kl; k += 4) {
+      let x = Math.random() - 0.5
+      let y = Math.random() - 0.5
+      let z = Math.random() - 0.5
 
       theArray[k + 0] = x * 10
       theArray[k + 1] = y * 10
@@ -115,24 +115,24 @@ const Birds = forwardRef((props, ref) => {
     geometry.setAttribute('reference', references)
     geometry.setAttribute('birdVertex', birdVertex)
 
-    var v = 0
+    let v = 0
     function vertex_append() {
-      for (var i = 0; i < arguments.length; i++) {
+      for (let i = 0; i < arguments.length; i++) {
         vertices.array[v++] = arguments[i]
       }
     }
-    for (var f = 0; f < birds; f++) {
+    for (let f = 0; f < birds; f++) {
       vertex_append(0, -0, -6, 0, 1, -15, 0, 0, 8)
       vertex_append(0, 0, -4, -6, 0, 0, 0, 0, 4)
       vertex_append(0, 0, 4, 6, 0, 0, 0, 0, -4)
     }
 
-    for (var v = 0; v < triangles * 3; v++) {
-      var i = ~~(v / 3)
-      var x = (i % argumentHash) / argumentHash
-      var y = ~~(i / argumentHash) / argumentHash
+    for (let v = 0; v < triangles * 3; v++) {
+      let i = ~~(v / 3)
+      let x = (i % argumentHash) / argumentHash
+      let y = ~~(i / argumentHash) / argumentHash
 
-      var c = new THREE.Color(0xdddddd)
+      let c = new THREE.Color(0xdddddd)
 
       birdColors.array[v * 3 + 0] = c.r
       birdColors.array[v * 3 + 1] = c.g
@@ -159,7 +159,7 @@ const Birds = forwardRef((props, ref) => {
       side: THREE.DoubleSide,
     })
 
-    var birdMesh = new THREE.Mesh(geometry, material)
+    let birdMesh = new THREE.Mesh(geometry, material)
     birdMesh.frustumCulled = false
     birdMesh.rotation.y = Math.PI / 2
     birdMesh.matrixAutoUpdate = false
@@ -169,7 +169,7 @@ const Birds = forwardRef((props, ref) => {
 
     groupRef.current.add(birdMesh)
 
-    var error = gpu_allocation.current.init()
+    let error = gpu_allocation.current.init()
     if (error !== null) {
       console.error(error)
     }
