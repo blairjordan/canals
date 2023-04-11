@@ -1,11 +1,12 @@
-import { useGLTF } from '@react-three/drei'
-import { useLoader } from '@react-three/fiber'
+import { Environment, useGLTF } from '@react-three/drei'
+import { useLoader, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils'
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils'
 
 function Terrain() {
+  const {gl} = useThree()
   const housesGroupRef = useRef({ group: new THREE.Group() })
   const { scene, nodes, materials } = useGLTF('/models/buildings.glb')
   const baseRef = useRef(null)
@@ -411,10 +412,16 @@ function Terrain() {
   }, [nodes])
 
   useEffect(() => {
+
     if (edgeRef.current) {
       edgeTex.repeat.x = 25
       edgeTex.repeat.y = 25
       edgeRef.current.material.map = edgeTex
+      
+      materials.windows_01.envMap = edgeRef.current.parent.parent.background
+      materials.windows_02.envMap = edgeRef.current.parent.parent.background
+      materials.windows_01.envMapIntensity = 2
+      materials.windows_02.envMapIntensity = 2
     }
     if (baseRef.current) {
       edgeTex.repeat.x = 50
@@ -432,6 +439,7 @@ function Terrain() {
 
   return (
     <group>
+     <Environment preset="forest" background />
       <primitive position={[0,2.2,0]}  object={housesGroupRef.current.group} />
       <mesh ref={baseRef}  position={[0, -0.05, 0]} geometry={geom} rotation-x={-Math.PI / 2}>
         <meshLambertMaterial attach='material' color='grey' />
