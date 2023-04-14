@@ -22,6 +22,19 @@ export const PLAYER = gql`
       username
       meta
       position
+      playerItems {
+        nodes {
+          id
+          item {
+            id
+            itemKey
+            name
+            type
+            description
+            props
+          }
+        }
+      }
     }
   }
 `

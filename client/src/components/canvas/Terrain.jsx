@@ -178,7 +178,6 @@ function Terrain() {
       }
 
 
-
       const extrudeSettingsStraight = {
         depth: 2.0,
         bevelEnabled: true,

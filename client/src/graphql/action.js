@@ -21,3 +21,19 @@ export const FISH = gql`
     }
   }
 `
+
+export const PURCHASE = gql`
+  mutation Purchase($playerId: Int!, $itemId: Int!) {
+    purchaseItem(input: { playerId: $playerId, itemId: $itemId }) {
+      playerItem {
+        id
+        item {
+          description
+          type
+          props
+          name
+        }
+      }
+    }
+  }
+`

@@ -1,12 +1,5 @@
 import { gql } from '@apollo/client'
 
-// TODO: Use this query somewhere and delete this usage comment
-// variables: {
-//   markerType,
-// },
-// })
-// .then((result) => resolve(result?.data?.markers?.nodes))
-
 // Marker types:
 // 📍 geo_marker
 // 🎣 fishing_spot
@@ -30,6 +23,8 @@ export const MARKERS = gql`
           nodes {
             item {
               id
+              itemKey
+              type
               name
               price
             }
