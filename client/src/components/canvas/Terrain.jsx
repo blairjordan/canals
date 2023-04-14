@@ -4,10 +4,12 @@ import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils'
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils'
+import NodeGenerator from '../utils/NodeGenerator'
 
 function Terrain() {
   const {gl} = useThree()
   const housesGroupRef = useRef({ group: new THREE.Group() })
+  const nodeGenRef = useRef({ generator: NodeGenerator })
   const { scene, nodes, materials } = useGLTF('/models/buildings.glb')
   const baseRef = useRef(null)
   const grassRef = useRef(null)
@@ -52,27 +54,14 @@ function Terrain() {
 
   const {geom, geom2, grassGeom } = useMemo(() => {
     //Need to connect this to something that can pull nodes down from the serva bro
-    const nodeVectors = [
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(0, 0, 500),
-      new THREE.Vector3(500, 0, 500),
-      new THREE.Vector3(500, 0, 0),
-      new THREE.Vector3(500, 0, -500),
-      new THREE.Vector3(0, 0, -500),
-      new THREE.Vector3(-500, 0, -500),
-      new THREE.Vector3(-500, 0, 0),
-      new THREE.Vector3(-500, 0, 500),
-    ]
-    const sections = [
-      [0, 1, 2],
-      [0, 2, 3],
-      [0, 3, 4],
-      [0, 4, 5],
-      [0, 5, 6],
-      [0, 6, 7],
-      [0, 7, 8],
-      [0, 8, 1],
-    ]
+   
+    if(housesGroupRef.current.group.length >0) return
+    console.log('Terrain geom,geom2,grassGeom useMemo')
+
+    nodeGenRef.current.generator.init()
+    const nodeRows = nodeGenRef.current.generator.nodeVectors
+    const connections = nodeGenRef.current.generator.nodeConnections
+    const sectionPointsList = nodeGenRef.current.generator.nodeSectionPoints
 
     const nodeGeoms = []
     const nodeGeoms2 = []
@@ -103,103 +92,19 @@ function Terrain() {
       }
     })
 
+    //Clear previous houses
     for (let i = housesGroupRef.current.group.children.length - 1; i >= 0; i--) {
       housesGroupRef.current.group.remove(housesGroupRef.current.group.children[i])
     }
 
     const houseMeshes = []
 
-    sections.map((section) => {
-      const a = nodeVectors[section[0]]
-      const b = nodeVectors[section[1]]
-      const c = nodeVectors[section[2]]
-      const nodeShape = new THREE.Shape()
-      const nodePoints = []
-
-      const isOdd = section[1] % 2 === 1
-
-      center.set(a.x, a.z)
-      vector2.set(a.x + width, a.z)
-      vector2b.set(b.x, b.z)
-      const posA = vector2a.set(b.x, b.z).sub(center)
-      const angle = posA.angle() * THREE.MathUtils.RAD2DEG
-      vector2.rotateAround(center, (angle - 22.5) * THREE.MathUtils.DEG2RAD)
-      nodePoints.push(new THREE.Vector2(vector2.x, -vector2.y))
-
-      if (isOdd) {
-        center.set(b.x, b.z)
-        vector2.set(b.x + width, b.z)
-        vector2b.set(c.x, c.z)
-        const posB = vector2a.set(c.x, c.z).sub(center)
-        const angleB = posB.angle() * THREE.MathUtils.RAD2DEG
-        vector2.rotateAround(center, (angleB - 67.5) * THREE.MathUtils.DEG2RAD)
-        nodePoints.push(new THREE.Vector2(vector2.x, -vector2.y))
-      }
-
-      center.set(b.x, b.z)
-      vector2.set(b.x + width, b.z)
-      vector2b.set(c.x, c.z)
-      const posB = vector2a.set(c.x, c.z).sub(center)
-      const angleB = posB.angle() * THREE.MathUtils.RAD2DEG
-      vector2.rotateAround(center, (angleB - 22.5) * THREE.MathUtils.DEG2RAD)
-      nodePoints.push(new THREE.Vector2(vector2.x, -vector2.y))
-
-      if (!isOdd) {
-        center.set(c.x, c.z)
-        vector2.set(c.x + width, c.z)
-        vector2b.set(a.x, a.z)
-        const posC = vector2a.set(a.x, a.z).sub(center)
-        const angleC = posC.angle() * THREE.MathUtils.RAD2DEG
-        vector2.rotateAround(center, (angleC - 67.5) * THREE.MathUtils.DEG2RAD)
-        nodePoints.push(new THREE.Vector2(vector2.x, -vector2.y))
-      }
-
-      center.set(c.x, c.z)
-      vector2.set(c.x + width, c.z)
-      vector2b.set(a.x, a.z)
-      const posC = vector2a.set(a.x, a.z).sub(center)
-      const angleC = posC.angle() * THREE.MathUtils.RAD2DEG
-      vector2.rotateAround(center, (angleC - 22.5) * THREE.MathUtils.DEG2RAD)
-      nodePoints.push(new THREE.Vector2(vector2.x, -vector2.y))
-
-      nodeShape.setFromPoints(nodePoints)
-
-      //House positions
-      const vectorB = new THREE.Vector3().set(nodePoints[1].x, 0, nodePoints[1].y)
-      const distAB = nodePoints[0].distanceTo(nodePoints[1])
-      const stepAB = 5.83 / distAB
-      const houseCountAB = Math.floor(distAB / 5.83)
-      for (let i = 1; i < houseCountAB - 1; i++) {
-        const house = clone(Math.random() < 0.5 ? street_building_01 : street_building_01001)
-        house.position.set(nodePoints[0].x, 0.5, nodePoints[0].y).lerp(vectorB, stepAB * i + stepAB * 0.3)
-        house.rotateY((angle + 90) * THREE.MathUtils.DEG2RAD)
-        house.translateX(-0.5 + (i > 1 ? -Math.random() * 2 : 0))
-
-        house.traverse((child) => {
-          if (child.isMesh) {
-            houseMeshes.push(child)
-          }
-        })
-      }
-
-      const vectorC = new THREE.Vector3(nodePoints[3].x, 0, nodePoints[3].y)
-      const distAC = nodePoints[0].distanceTo(nodePoints[3])
-      const stepAC = 5.83 / distAC
-      const houseCountAC = Math.floor(distAC / 5.83)
-      for (let i = 1; i < houseCountAC - 1; i++) {
-        const house = clone(Math.random() < 0.5 ? street_building_01 : street_building_01001)
-        house.position.set(nodePoints[0].x, 0.0, nodePoints[0].y).lerp(vectorC, stepAC * i + stepAC * 0.3)
-        house.rotateY((angleC + 90) * THREE.MathUtils.DEG2RAD)
-        house.translateX(-0.5 + (i > 1 ? -Math.random() * 2 : 0))
-
-        house.traverse((child) => {
-          if (child.isMesh) {
-            houseMeshes.push(child)
-          }
-        })
-      }
+    sectionPointsList.map((sectionPoints, i) => {
+      //sectionPoints
+      const nodeShape = new THREE.Shape(sectionPoints)
 
       const centroid = new THREE.Vector2()
+      const centroid3 = new THREE.Vector3()
       const points = nodeShape.getPoints()
       points.forEach((p) => centroid.add(p))
       centroid.divideScalar(points.length)
@@ -209,6 +114,69 @@ function Terrain() {
       const holePath = new THREE.Shape(points.reverse())
       nodeShape.holes.push(holePath)
       const grassPath = new THREE.Shape(points)
+      centroid3.set(centroid.x, 0, -centroid.y)
+
+      let doHouses = true
+      if(i !== (sectionPointsList.length/2) - 7 
+      && i !== (sectionPointsList.length/2) - 8 
+      && i !== (sectionPointsList.length/2) - 9
+      && i !== (sectionPointsList.length/2) - 10
+      && i !== (sectionPointsList.length/2) + 9
+      && i !== (sectionPointsList.length/2) + 8
+      && i !== (sectionPointsList.length/2) + 7
+      && i !== (sectionPointsList.length/2) + 6) {
+        doHouses = false
+      }
+
+      //House positions
+      if(doHouses) {
+        const reverse = sectionPoints[0].y < 0
+        sectionPoints.map((p1, k) => {
+          const p2 = sectionPoints[(k+1) % sectionPoints.length]
+
+          const xDist = p1.x - p2.x;
+          const zDist = p1.y - p2.y;
+          const angle = Math.atan2(zDist, xDist) * 180 / Math.PI;
+
+          vector2.set(p1.x, -p1.y)
+          vector2a.set(p2.x, -p2.y)
+          vector2b.set(p2.x, -p2.y)
+          const posA = vector2a.sub(vector2)
+          //const angle = (posA.angle() * THREE.MathUtils.RAD2DEG)
+          const distAB = p1.distanceTo(p2)
+          if(distAB > 5.83) {
+            const stepAB = 5.83 / distAB
+            const houseCountAB = Math.floor(distAB / 5.83)
+            for (let j = 1; j < houseCountAB; j++) {
+              vector3.set(p2.x, 0, -p2.y)
+
+              const house = clone(Math.random() < 0.5 ? street_building_01 : street_building_01001)
+              house.position.set(p1.x, 0, -p1.y).lerp(vector3, stepAB * j + stepAB * 0.3)
+              house.rotateY((angle - 90) * THREE.MathUtils.DEG2RAD)
+
+              vector3.copy(house.position)
+              const distToCentroid = house.position.distanceTo(centroid3)
+              const move = -0.5 + (j > 1 ? -Math.random() * 2 : 0);
+              house.translateX(move)
+
+              vector3.copy(house.position)
+              const distToCentroid2 = house.position.distanceTo(centroid3)
+              
+              if(distToCentroid2 > distToCentroid) {
+                house.translateX(-move * 2.0)
+                house.rotateY(Math.PI)
+              }
+      
+              house.traverse((child) => {
+                if (child.isMesh) {
+                  houseMeshes.push(child)
+                }
+              })
+            }
+          }
+        })
+      }
+
 
       const extrudeSettingsStraight = {
         depth: 2.0,
@@ -401,7 +369,7 @@ function Terrain() {
       nodeGeoms2.push(nodeGeomEdge)
     })
 
-    console.log('adding ', houseMeshes.length / 3, ' houses')
+    //console.log('adding ', houseMeshes.length / 3, ' houses')
     const resultMeshes = bakeMultimaterialModel(houseMeshes)
     resultMeshes.map((mesh) => {
       housesGroupRef.current.group.add(mesh)
@@ -439,7 +407,7 @@ function Terrain() {
 
   return (
     <group>
-     <Environment preset="forest" background />
+     <Environment files='/textures/env.hdr' background />
       <primitive position={[0,2.2,0]}  object={housesGroupRef.current.group} />
       <mesh ref={baseRef}  position={[0, -0.05, 0]} geometry={geom} rotation-x={-Math.PI / 2}>
         <meshLambertMaterial attach='material' color='grey' />

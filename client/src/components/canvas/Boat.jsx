@@ -13,11 +13,11 @@ const Boat = forwardRef((props, ref) => {
   const boatItems = {};
   const { scene, nodes, materials } = useGLTF('/models/boat_01.glb');
   const { scene: sideScene, nodes: sideNodes, materials: sideMaterials } = useGLTF('/models/side_wake.glb');
-
-  const wakeTexture = useLoader(
-    THREE.TextureLoader, '/textures/wakeV.png'
+  const [wakeTexture, gradTex] = useLoader(
+    THREE.TextureLoader, ['/textures/wakeV.png', '/textures/threeTone.jpg']
   );
   wakeTexture.wrapS = wakeTexture.wrapT = THREE.RepeatWrapping;
+  gradTex.wrapS = gradTex.wrapT = THREE.RepeatWrapping
 
   function addPart(partName) {
     partName = partName.replace(".", "");
@@ -143,6 +143,18 @@ const Boat = forwardRef((props, ref) => {
       addPart("house_boat_stern_semi_traditional_walls");
       addPart("house_boat_stern_semi_traditional_window_01");
     }
+
+    playerGroup.current.group.traverse((item) => {
+      if(item.isMesh) {
+        if(item.material) {
+          
+          const toonMat = new THREE.MeshToonMaterial()
+          toonMat.copy(item.material)
+          toonMat.gradientMap = gradTex
+          item.material = toonMat;
+        }
+      }
+    })
 
     // if(sideNodes) {
     //   Object.values(sideNodes).forEach((child) => {

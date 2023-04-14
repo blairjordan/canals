@@ -56,14 +56,14 @@ const Player = () => {
     }
 
     // Avoid sending updates when the player is not moving
-    if (lastPlayerPosition.equals(playerRef.current.position)) {
+    if (lastPlayerPosition.distanceTo(playerRef.current.position) < 0.5) {
       return
     }
 
     // Update player position on the server every 120 frames
     setFrameCounter(frameCounter + 1)
     if (frameCounter >= 120) {
-      console.log('update')
+      
 
       updatePlayer({
         variables: {
@@ -86,7 +86,7 @@ const Player = () => {
         target={[0, 0, 0]}
         maxPolarAngle={Math.PI * 0.47}
         minDistance={4.0}
-        maxDistance={80.0}
+        maxDistance={2980.0}
       />
     </>
   )
