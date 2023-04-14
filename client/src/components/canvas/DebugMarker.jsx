@@ -3,7 +3,12 @@ import * as THREE from 'three'
 import { Line } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 
-const DebugMarker = ({ isDebugMode = true, scale = 2, position, radius = 5, hovered = false }) => {
+const DebugMarker = ({
+  isDebugMode = true,
+  scale = 2, position,
+  radius = 5,
+  color = "#ff0000"
+}) => {
   const [pulse, setPulse] = useState(1)
   const circlePoints = useMemo(
     () =>
@@ -25,7 +30,7 @@ const DebugMarker = ({ isDebugMode = true, scale = 2, position, radius = 5, hove
       position={[position.x, 0, position.y]}
       scale={scale}
       points={circlePoints}
-      color="#ff0000"
+      color={color}
       lineWidth={0.15}
       rotation={[Math.PI * -0.5, 0, 0]}
     />
@@ -35,7 +40,7 @@ const DebugMarker = ({ isDebugMode = true, scale = 2, position, radius = 5, hove
       scale={scale*pulse}
       points={circlePoints}
       opacity={0.2}
-      color="#ff0000"
+      color={color}
       lineWidth={0.15}
       rotation={[Math.PI * -0.5, 0, 0]}
     />

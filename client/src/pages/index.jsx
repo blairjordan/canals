@@ -5,7 +5,7 @@ import Login from '@/components/dom/Login'
 import { useAppContext } from '@/context'
 import { useLazyQuery, useSubscription, useMutation } from '@apollo/client'
 import { PLAYER, PLAYERS_ALL, PLAYERS_NEARBY } from '@/graphql/player'
-import { PURCHASE } from '@/graphql/action'
+import { PURCHASE, FISH } from '@/graphql/action'
 import ItemGrid from '@/components/dom/ItemGrid'
 
 const Game = dynamic(() => import('@/components/canvas/Game'), { ssr: false })
@@ -16,6 +16,20 @@ export default function Page(props) {
   const [getPlayer, { loading: loadingPlayer, data: playerData, error: playerError }] = useLazyQuery(PLAYER, { fetchPolicy: 'no-cache' })
   const [getRemotePlayers, { loading: loadingRemotePlayers, data: remotePlayersData, error: remotePlayersError }] =
     useLazyQuery(PLAYERS_ALL)
+
+  // 🎣 Fish mutation
+  const [fish] = useMutation(FISH, {
+    onCompleted: (data) => {
+      console.log('Fishing successful:', data)
+      // Refresh player's items
+      getPlayer({ variables: { id: state.player.id } })
+    },
+    onError: (error) => {
+      console.log('Error fishing:', error)
+    },
+  })
+
+  // 🪙 Purchase item mutation
   const [purchaseItem] = useMutation(PURCHASE, {
     onCompleted: (data) => {
       console.log('Item purchased successfully:', data)
@@ -106,6 +120,7 @@ export default function Page(props) {
             id: popupId,
             title: vendor.props.name,
             message: `Press E to interact with ${vendor.props.name}`,
+            type: 'vendor',
             vendor,
           },
         })
@@ -123,12 +138,14 @@ export default function Page(props) {
           </Popup>
         )
       }
-      {/* Map over the popups in state and render a Popup component for each one */}
-      {state.popups.map(({ id, title, message, vendor, interacted }) => (
+      {/* Map over the vendors in state and render a Popup component for each one */}
+      {state.popups
+        .filter(({type}) => type === 'vendor')
+        .map(({ id, title, message, vendor, interacted }) => (
         <Popup key={id}>
           <h2>{title}</h2>
           {/* TODO: Move this to a separate Vendor component along with related gql */}
-          {interacted && vendor ? (
+          {interacted ? (
             <>
               <ItemGrid
                 numBoxes={16}

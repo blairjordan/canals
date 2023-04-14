@@ -1,6 +1,6 @@
 import { CanalWater } from './CanalWater'
 import { Player } from './Player'
-import { useContext, useEffect, useMemo, useRef } from 'react'
+import { useContext, useEffect, useCallback } from 'react'
 import * as THREE from 'three'
 import { Line, Sky } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
@@ -23,10 +23,10 @@ export default function Game({ route, ...props }) {
 
   const [getMarkers, { loading: loadingMarkers, data: markerData, error: markerError }] = useLazyQuery(MARKERS)
 
-  // 📡 Fetch markers when loading is complete
+  // 📡 Fetch all markers when loading is complete
   useEffect(() => {
     if (!loadingMarkers && !markerData && !markerError) {
-      getMarkers({ variables: { markerType: 'vendor' } })
+      getMarkers({ variables: { markerType: '%' } })
     }
   }, [loadingMarkers, markerData, markerError])
 
@@ -50,19 +50,24 @@ export default function Game({ route, ...props }) {
       const distance = Math.sqrt(Math.pow(playerX - markerX, 2) + Math.pow(playerZ - markerY, 2)) * 0.5
 
       const isInRadius = distance < marker.radius
-      const isAlreadyInGeofences = state.geofences.includes(marker)
+      const isAlreadyInGeofences = state.geofences.some((g) => g.id === marker.id)
 
       if (isInRadius && !isAlreadyInGeofences) {
+        // FIXME: If player starts in marker zone, it gets added twice
         dispatch({ type: 'GEOFENCE_ADD', payload: marker })
       } else if (!isInRadius && isAlreadyInGeofences) {
         dispatch({ type: 'GEOFENCE_REMOVE', payload: marker })
       }
     })
 
-    // Check if player is interacting with a marker
+    // 📍 Check if player is interacting with a marker
     if (state.popups.length > 0) {
 
       if(state.actions.interact) {
+
+        // 🛑 Cancel any fishing activity
+        dispatch({ type: 'PLAYER_SET_FISHING', payload: false })
+
         dispatch({
           type: 'UI_POPUP_INTERACT',
           payload: {
@@ -85,6 +90,30 @@ export default function Game({ route, ...props }) {
         }
       })
     }
+    
+    // If cancel key pressed ...
+    if(state.actions.cancel) {
+      
+      // Close all popups
+      state.popups.map((popup) => {
+        dispatch({
+          type: 'UI_POPUP_INTERACT',
+          payload: {
+            popup,
+            interacted: false
+          }
+        })
+      })
+
+      // 🐡 Stop fishing
+      dispatch({ type: 'PLAYER_SET_FISHING', payload: false })
+    }
+
+    // 🎣 If player hits fishing key, set fishing state
+    if(state.actions.fish) {
+      dispatch({ type: 'PLAYER_SET_FISHING', payload: true })
+    }
+    
   })
   
   return (
@@ -94,9 +123,22 @@ export default function Game({ route, ...props }) {
       <Sky scale={5000} sunPosition={[0, 750, -4500]} turbidity={0.1} />
       <Player />
       <RemotePlayer id={0} />
-      {state.markers.map(({ id, position: { x, y }, radius }) => {
+      {state.markers.map(({ id, position: { x, y }, radius, type }) => {
         // 🚩 Add DebugMarker for each marker
-        return <DebugMarker key={id} isDebugMode={true} scale={2} position={{ x, y }} radius={radius} />
+        return <DebugMarker
+          key={id}
+          isDebugMode={true}
+          scale={2}
+          position={{ x, y }}
+          radius={radius}
+          color={
+            type === 'vendor'
+              ? '#ff0000'
+              : type === 'fishing_spot'
+                ? '#00ff00'
+                : '#0000ff'
+          }
+        />
       })}
     </>
   )
