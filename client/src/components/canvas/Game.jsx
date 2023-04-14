@@ -87,12 +87,11 @@ export default function Game({ route, ...props }) {
     }
   })
   
-
   return (
     <>
       <Terrain />
       <CanalWater />
-      <Sky scale={1000} sunPosition={[0, 150, -1500]} turbidity={0.1} />
+      <Sky scale={5000} sunPosition={[0, 750, -4500]} turbidity={0.1} />
       <Player />
       <RemotePlayer id={0} />
       {state.markers.map(({ id, position: { x, y }, radius }) => {
