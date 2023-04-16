@@ -6,22 +6,46 @@ import { useFrame } from '@react-three/fiber'
 import { AppContext } from '@/context'
 import { Terrain } from './Terrain'
 import { MARKERS } from '@/graphql/marker'
-import { useLazyQuery } from '@apollo/client'
+import { useLazyQuery, useMutation } from '@apollo/client'
 import { DebugMarker } from './DebugMarker'
 import { RemotePlayer } from './RemotePlayer'
 import TWEEN from '@tweenjs/tween.js'
 import { Seagull } from './Seagulls'
+import { FISH } from '@/graphql/action'
 
 export default function Game({ route, ...props }) {
   const [state, dispatch] = useContext(AppContext)
+  const [getMarkers, { loading: loadingMarkers, data: markerData, error: markerError }] = useLazyQuery(MARKERS)
+
+// 🎣 Fish mutation
+const [fish] = useMutation(FISH)
 
   // 👀 Watch for changes in state.player.id
   useEffect(() => {
     console.log('Current player:', state.player)
   }, [state.player?.id])
 
-  const [getMarkers, { loading: loadingMarkers, data: markerData, error: markerError }] = useLazyQuery(MARKERS)
+  // 🎣 Start fishing when player is in fishing state
+  useEffect(() => {
+    if (!(state.player && state.player.id)) {
+      return
+    }
 
+    const doFishing = () => {
+      fish({ variables: { playerId:  parseInt(state.player.id) } })
+    }
+
+    if (state.player.isFishing) {
+      doFishing()
+      const intervalId = setInterval(() => {
+        doFishing()
+      }, 5_000)
+  
+      return () => clearInterval(intervalId)
+    }
+  }, [state.player?.isFishing])
+
+  
   // 📡 Fetch all markers when loading is complete
   useEffect(() => {
     if (!loadingMarkers && !markerData && !markerError) {

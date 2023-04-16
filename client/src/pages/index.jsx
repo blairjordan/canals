@@ -2,10 +2,11 @@ import dynamic from 'next/dynamic'
 import { useState, useEffect, useCallback } from 'react'
 import Popup from '@/components/dom/Popup'
 import Login from '@/components/dom/Login'
+import PopupStack from '@/components/dom/PopupStack'
 import { useAppContext } from '@/context'
 import { useLazyQuery, useSubscription, useMutation } from '@apollo/client'
 import { PLAYER, PLAYERS_ALL, PLAYERS_NEARBY } from '@/graphql/player'
-import { PURCHASE, FISH } from '@/graphql/action'
+import { PURCHASE } from '@/graphql/action'
 import ItemGrid from '@/components/dom/ItemGrid'
 
 const Game = dynamic(() => import('@/components/canvas/Game'), { ssr: false })
@@ -16,18 +17,6 @@ export default function Page(props) {
   const [getPlayer, { loading: loadingPlayer, data: playerData, error: playerError }] = useLazyQuery(PLAYER, { fetchPolicy: 'no-cache' })
   const [getRemotePlayers, { loading: loadingRemotePlayers, data: remotePlayersData, error: remotePlayersError }] =
     useLazyQuery(PLAYERS_ALL)
-
-  // 🎣 Fish mutation
-  const [fish] = useMutation(FISH, {
-    onCompleted: (data) => {
-      console.log('Fishing successful:', data)
-      // Refresh player's items
-      getPlayer({ variables: { id: state.player.id } })
-    },
-    onError: (error) => {
-      console.log('Error fishing:', error)
-    },
-  })
 
   // 🪙 Purchase item mutation
   const [purchaseItem] = useMutation(PURCHASE, {
@@ -130,6 +119,7 @@ export default function Page(props) {
 
   return (
     <>
+    <PopupStack>
       {
         // state.player.id is truthy when the player is logged in
         !(state.player && state.player.id) && (
@@ -168,6 +158,7 @@ export default function Page(props) {
           )}
         </Popup>
       ))}
+      </PopupStack>
     </>
   )
 }
