@@ -36,6 +36,14 @@ const appReducer = (state, action) => {
         loggedIn: false,
         player: null,
       }
+    case 'PLAYER_SET_FISHING':
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          isFishing: action.payload,
+        },
+      }
     case 'PLAYER_UPDATE_POSITION':
       return {
         ...state,
@@ -179,7 +187,7 @@ const appReducer = (state, action) => {
         actions: {
           ...state.actions,
           cancel: action.payload,
-        },
+        }
       }
     default:
       return state

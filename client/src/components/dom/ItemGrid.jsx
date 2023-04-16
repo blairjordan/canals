@@ -1,7 +1,12 @@
 import React from 'react';
 
 const ItemGrid = ({ numBoxes, items, onItemClick }) => {
-  const handleClick = (item) => {
+
+  const handleClick = (selectedItem) => {
+    if (!selectedItem) {
+      return
+    }
+    const { item } = selectedItem;
     if (onItemClick && item) {
       onItemClick(item);
     }
@@ -10,7 +15,7 @@ const ItemGrid = ({ numBoxes, items, onItemClick }) => {
   return (
     <div className="flex flex-wrap gap-4">
       {Array.from({ length: numBoxes }, (_, index) => (
-        <div className="relative bg-gray-200 rounded-lg h-32 w-32" key={index} onClick={() => handleClick(items[index].item)} style={{ cursor: 'pointer' }}>
+        <div className="relative bg-gray-200 rounded-lg h-32 w-32" key={index} onClick={() => handleClick(items[index])} style={{ cursor: 'pointer' }}>
           {items[index] && (
             <div className="h-full w-full relative">
               <img 
