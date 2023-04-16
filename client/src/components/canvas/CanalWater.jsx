@@ -5,6 +5,7 @@ import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUt
 
 import { Water } from 'three-stdlib'
 import NodeGenerator from '../utils/NodeGenerator'
+// import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
 
 extend({ Water })
 
@@ -12,6 +13,8 @@ function CanalWater() {
   const ref = useRef()
   const geomRef = useRef(null)
   const nodeGenRef = useRef({ generator: NodeGenerator })
+  const raycaster = useRef(new THREE.Raycaster())
+  raycaster.current.firstHitOnly = true;
 
   const gl = useThree((state) => state.gl)
   const waterNormals = useLoader(THREE.TextureLoader, '/textures/waternormals.jpg')
@@ -131,6 +134,8 @@ function CanalWater() {
     nodeGeoms.push(oceanShapeGeom)
 
     geomRef.current = mergeBufferGeometries(nodeGeoms)
+    // geomRef.current.computeBoundsTree();
+
     return geomRef.current
   }, [])
 
@@ -153,7 +158,9 @@ function CanalWater() {
   )
   
   useFrame((state, delta) => {
-    if (ref) ref.current.material.uniforms.time.value += delta * 0.5
+    if (ref) {
+      ref.current.material.uniforms.time.value += delta * 0.5
+    }
   })
   return <water ref={ref} args={[geom, config]} rotation-x={-Math.PI / 2} />
 }

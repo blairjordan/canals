@@ -1,4 +1,9 @@
 import * as THREE from 'three'
+// import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
+
+// THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
+// THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
+// THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 class NodeGenerator {
   constructor() {
@@ -20,6 +25,7 @@ class NodeGenerator {
 
   init() {
     if(!this.initiated) {
+      
       this.initiated = true
       this.initNodes()
     }

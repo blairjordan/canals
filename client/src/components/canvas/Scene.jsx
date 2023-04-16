@@ -1,8 +1,6 @@
 import { Canvas } from '@react-three/fiber'
 import { Preload } from '@react-three/drei'
 import KeyboardInput from '../input/KeyboardInput'
-import { CanalWater } from './CanalWater'
-import { Controls } from './Player'
 
 export default function Scene({ children, ...props }) {
   // Everything defined in here will persist between route changes, only children are swapped
