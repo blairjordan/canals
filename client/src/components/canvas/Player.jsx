@@ -55,16 +55,10 @@ const Player = () => {
       return
     }
 
-    // Avoid sending updates when the player is not moving
-    if (lastPlayerPosition.distanceTo(playerRef.current.position) < 0.5) {
-      return
-    }
-
     // Update player position on the server every 120 frames
     setFrameCounter(frameCounter + 1)
-    if (frameCounter >= 120) {
-      
 
+    if (frameCounter >= 120) {
       updatePlayer({
         variables: {
           id: state.player.id,
@@ -73,6 +67,7 @@ const Player = () => {
           }
         }
       })
+
       setFrameCounter(0)
     }
   })

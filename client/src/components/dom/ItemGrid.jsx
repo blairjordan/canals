@@ -19,7 +19,7 @@ const ItemGrid = ({ numBoxes, items, onItemClick }) => {
           {items[index] && (
             <div className="h-full w-full relative">
               <img 
-                src={`img/items/${items[index].item.itemKey}.png`} 
+                src={`img/items/${items[index].item.type}/${items[index].item.itemKey}.png`} 
                 alt={items[index].item.name} 
                 className="h-full w-full object-cover rounded-lg"
               />
