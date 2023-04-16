@@ -123,7 +123,7 @@ export default function Game({ route, ...props }) {
       <Player />
       <RemotePlayer id={0} />
       <Seagull />
-      {state.markers.map(({ id, position: { x, y }, radius }) => {
+      {state.markers.map(({ id, position: { x, y }, radius, type }) => {
         // 🚩 Add DebugMarker for each marker
         return <DebugMarker
           key={id}

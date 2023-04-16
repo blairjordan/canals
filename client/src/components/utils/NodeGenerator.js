@@ -24,8 +24,7 @@ class NodeGenerator {
   }
 
   init() {
-    if(!this.initiated) {
-      
+    if (!this.initiated) {
       this.initiated = true
       this.initNodes()
     }
@@ -42,7 +41,7 @@ class NodeGenerator {
       for (let x = -XCount; x <= XCount; x++) {
         const chance = this.rand() * 100
         const iscentre = x === 0 && z === 0
-        const varianceDistance = (Math.abs(x)+Math.abs(z)) / 30
+        const varianceDistance = (Math.abs(x) + Math.abs(z)) / 30
         const rx = iscentre ? 0 : this.rand() * areaRandom - areaRandom * 0.5 * varianceDistance
         const rz = iscentre ? 0 : this.rand() * areaRandom - areaRandom * 0.5 * varianceDistance
         const n = new THREE.Vector3(x * areaSize + rx, 0, z * areaSize + rz)
@@ -83,11 +82,9 @@ class NodeGenerator {
     this.nodeSections.forEach((section) => {
       this.nodeSectionPoints.push(this.createNodeSectionPoints(section))
     })
-
   }
 
   createNodeSectionPoints(section) {
-
     const nodeA = this.nodeVectors[section[0][0]][section[0][1]]
     const nodeB = this.nodeVectors[section[1][0]][section[1][1]]
     const nodeC = this.nodeVectors[section[2][0]][section[2][1]]
@@ -112,35 +109,35 @@ class NodeGenerator {
     this.vector2a.copy(points[0]).lerp(points[1], 0.05)
     path.moveTo(this.vector2a.x, this.vector2a.y)
 
-    this.vector2.copy(points[0]).lerp(points[1], 0.90)
+    this.vector2.copy(points[0]).lerp(points[1], 0.9)
     path.lineTo(this.vector2.x, this.vector2.y)
     this.vector2a.copy(points[1]).lerp(points[2], 0.05)
     path.bezierCurveTo(this.vector2.x, this.vector2.y, points[1].x, points[1].y, this.vector2a.x, this.vector2a.y)
-    
-    this.vector2.copy(points[1]).lerp(points[2], 0.90)
-    path.lineTo(this.vector2.x, this.vector2.y);
+
+    this.vector2.copy(points[1]).lerp(points[2], 0.9)
+    path.lineTo(this.vector2.x, this.vector2.y)
     this.vector2a.copy(points[2]).lerp(points[3], 0.05)
     path.bezierCurveTo(this.vector2.x, this.vector2.y, points[2].x, points[2].y, this.vector2a.x, this.vector2a.y)
-    
-    this.vector2.copy(points[2]).lerp(points[3], 0.90)
-    path.lineTo(this.vector2.x, this.vector2.y);
+
+    this.vector2.copy(points[2]).lerp(points[3], 0.9)
+    path.lineTo(this.vector2.x, this.vector2.y)
     this.vector2a.copy(points[3]).lerp(points[0], 0.05)
     path.bezierCurveTo(this.vector2.x, this.vector2.y, points[3].x, points[3].y, this.vector2a.x, this.vector2a.y)
 
-    this.vector2.copy(points[3]).lerp(points[0], 0.90)
-    path.lineTo(this.vector2.x, this.vector2.y);
+    this.vector2.copy(points[3]).lerp(points[0], 0.9)
+    path.lineTo(this.vector2.x, this.vector2.y)
 
     return path.getPoints()
   }
 
   sort(vertices) {
-    for (var i = 1; i < vertices.length; i++) {
-      var a = vertices[i - 1]
-      var b = vertices[i]
-      var j = i
+    for (let i = 1; i < vertices.length; i++) {
+      let a = vertices[i - 1]
+      let b = vertices[i]
+      let j = i
 
       do {
-        var distanceAngle = Math.abs(Math.atan2(a.z - b.z, a.x - b.x))
+        let distanceAngle = Math.abs(Math.atan2(a.z - b.z, a.x - b.x))
         if (
           distanceAngle == Math.PI / 2 ||
           distanceAngle == Math.PI ||
@@ -148,7 +145,7 @@ class NodeGenerator {
           distanceAngle == 2 * Math.PI ||
           distanceAngle == 0
         ) {
-          var tmp = vertices[i]
+          let tmp = vertices[i]
           vertices[i] = vertices[j]
           vertices[j] = tmp
           break
@@ -184,7 +181,7 @@ class NodeGenerator {
       b >>>= 0
       c >>>= 0
       d >>>= 0
-      var t = (a + b) | 0
+      let t = (a + b) | 0
       a = b ^ (b >>> 9)
       b = (c + (c << 3)) | 0
       c = (c << 21) | (c >>> 11)

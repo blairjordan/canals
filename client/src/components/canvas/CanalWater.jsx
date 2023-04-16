@@ -105,7 +105,7 @@ function CanalWater() {
     // })
     
     sectionPoints.map((sectionPoint) => {
-      var section = sectionPoint.slice().reverse();
+      let section = sectionPoint.slice().reverse();
       //Holes need reverse winding.
       const holePath = new THREE.Shape(section)
       oceanShape.holes.push(holePath)
