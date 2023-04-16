@@ -1,8 +1,7 @@
 import { CanalWater } from './CanalWater'
 import { Player } from './Player'
-import { useContext, useEffect, useMemo, useRef } from 'react'
-import * as THREE from 'three'
-import { Line, Sky } from '@react-three/drei'
+import { useContext, useEffect } from 'react'
+import {Sky } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { AppContext } from '@/context'
 import { Terrain } from './Terrain'
@@ -11,7 +10,7 @@ import { useLazyQuery } from '@apollo/client'
 import { DebugMarker } from './DebugMarker'
 import { RemotePlayer } from './RemotePlayer'
 import TWEEN from '@tweenjs/tween.js'
-import { Birds } from './Birds'
+import { Seagull } from './Seagulls'
 
 export default function Game({ route, ...props }) {
   const [state, dispatch] = useContext(AppContext)
@@ -94,6 +93,7 @@ export default function Game({ route, ...props }) {
       <Sky scale={5000} sunPosition={[0, 750, -4500]} turbidity={0.1} />
       <Player />
       <RemotePlayer id={0} />
+      <Seagull />
       {state.markers.map(({ id, position: { x, y }, radius }) => {
         // 🚩 Add DebugMarker for each marker
         return <DebugMarker key={id} isDebugMode={true} scale={2} position={{ x, y }} radius={radius} />

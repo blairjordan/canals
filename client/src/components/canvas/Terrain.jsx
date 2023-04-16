@@ -113,6 +113,10 @@ function Terrain() {
       points.forEach((p) => p.add(centroid))
       const holePath = new THREE.Shape(points.reverse())
       nodeShape.holes.push(holePath)
+
+      // points.forEach((p) => p.sub(centroid))
+      // points.forEach((p) => p.multiplyScalar(0.95))
+      // points.forEach((p) => p.add(centroid))
       const grassPath = new THREE.Shape(points)
       centroid3.set(centroid.x, 0, -centroid.y)
 
@@ -176,7 +180,6 @@ function Terrain() {
           }
         })
       }
-
 
       const extrudeSettingsStraight = {
         depth: 2.0,
@@ -357,9 +360,23 @@ function Terrain() {
         _applyBoxUV(bufferGeometry, transformMatrix, uvBbox, boxSize)
       }
 
+      const extrudePath = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, 1, 0),
+        new THREE.Vector3(0, 2, 0)
+      ]);
+      const extrudeSettings = {
+        steps: 100,
+        bevelEnabled: false,
+        extrudePath: extrudePath
+      };
+
+      const grassGeom = new THREE.ShapeGeometry(grassPath);
+      //const grassGeom = new THREE.ExtrudeGeometry(grassPath, extrudeSettings)
+
       const nodeGeom = new THREE.ExtrudeGeometry(nodeShape, extrudeSettingsStraight)
       const nodeGeomEdge = new THREE.ExtrudeGeometry(nodeShape, extrudeSettingsBevel)
-      const grassGeom = new THREE.ShapeGeometry(grassPath);
+
       applyBoxUV(nodeGeom, new THREE.Matrix4(), 100)
       applyBoxUV(nodeGeomEdge, new THREE.Matrix4(), 100)
       applyBoxUV(grassGeom, new THREE.Matrix4(), 100)
