@@ -1,6 +1,6 @@
 import { CanalWater } from './CanalWater'
 import { Player } from './Player'
-import { useContext, useEffect } from 'react'
+import { useCallback, useContext, useEffect } from 'react'
 import {Sky } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { AppContext } from '@/context'
@@ -17,8 +17,8 @@ export default function Game({ route, ...props }) {
   const [state, dispatch] = useContext(AppContext)
   const [getMarkers, { loading: loadingMarkers, data: markerData, error: markerError }] = useLazyQuery(MARKERS)
 
-// 🎣 Fish mutation
-const [fish] = useMutation(FISH)
+  // 🎣 Fish mutation
+  const [fish] = useMutation(FISH)
 
   // 👀 Watch for changes in state.player.id
   useEffect(() => {
@@ -32,7 +32,7 @@ const [fish] = useMutation(FISH)
     }
 
     const doFishing = () => {
-      fish({ variables: { playerId:  parseInt(state.player.id) } })
+      fish({ variables: { playerId: parseInt(state.player.id) } })
     }
 
     if (state.player.isFishing) {
@@ -63,25 +63,24 @@ const [fish] = useMutation(FISH)
     }
   }, [markerData])
 
-  // Check if player is inside marker zone
-  useFrame(() => {
-    TWEEN.update()
-    state.markers.forEach((marker) => {
-      if (!state.player) return
-      const { x: playerX, z: playerZ } = state.player.position
-      const { x: markerX, y: markerY } = marker.position
+  useEffect(() => {
+    if (!(state.player && state.player.id)) return
+    const { x: playerX, z: playerZ } = state.player.position
+    
+    state.markers.map((marker) => {
+      const { position: { x: markerX, y: markerY }, radius } = marker
       const distance = Math.sqrt(Math.pow(playerX - markerX, 2) + Math.pow(playerZ - markerY, 2)) * 0.5
-
-      const isInRadius = distance < marker.radius
-      const isAlreadyInGeofences = state.geofences.some((g) => g.id === marker.id)
-
-      if (isInRadius && !isAlreadyInGeofences) {
-        // FIXME: If player starts in marker zone, it gets added twice
+      if (distance < radius) {
         dispatch({ type: 'GEOFENCE_ADD', payload: marker })
-      } else if (!isInRadius && isAlreadyInGeofences) {
+      } else {
         dispatch({ type: 'GEOFENCE_REMOVE', payload: marker })
       }
     })
+  }, [state.markers, state.player, state.player.position, state.geofences])
+
+  // Check if player is inside marker zone
+  useFrame(() => {
+    TWEEN.update()
 
     // 📍 Check if player is interacting with a marker
     if (state.popups.length > 0) {
