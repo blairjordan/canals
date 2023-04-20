@@ -8,6 +8,7 @@ import { useLazyQuery, useSubscription, useMutation } from '@apollo/client'
 import { PLAYER, PLAYERS_ALL, PLAYERS_NEARBY } from '@/graphql/player'
 import { PURCHASE } from '@/graphql/action'
 import ItemGrid from '@/components/dom/ItemGrid'
+import ItemDisplay from '@/components/dom/ItemDisplay'
 
 const Game = dynamic(() => import('@/components/canvas/Game'), { ssr: false })
 
@@ -56,7 +57,7 @@ export default function Page(props) {
         }
       })
     },
-    [dispatch, state.player],
+    [dispatch, state.player]
   )
 
   useEffect(() => {
@@ -139,18 +140,17 @@ export default function Page(props) {
       return
     }
 
-    console.log(state.player.isFishing)
     if (state.player.isFishing) {
       addPopup({
         id: state.player.id,
-        type: 'fishing',
+        type: 'fishing_status',
         payload: {
           title: 'Fishing 🎣',
           message: `Press E to stop fishing`,
         }
       })
     } else {
-      dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'fishing' } })
+      dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'fishing_status' } })
     }
 
   }, [state.player.isFishing])
@@ -161,11 +161,32 @@ export default function Page(props) {
       {
         // state.player.id is truthy when the player is logged in
         !(state.player && state.player.id) && (
-          <Popup>
+          <Popup key='login'>
             <Login onLogin={handleLogin} />
           </Popup>
         )
       }
+      {/* 🎣 Fishing status popup */}
+      {state.popups.some(({type}) => type === 'fishing_status') && (
+        <Popup key='fishing-status-popup'>
+          <h2>Fishing 🎣</h2>
+          <p>Press Esc to stop fishing</p>
+        </Popup>
+      )}
+      {/* 🐟 Caugh fish popup */}
+      {state.popups
+        .filter(({type}) => type === 'fish_caught')
+        .map(({ id, item }) => (
+        <Popup
+          key={id}
+          timeoutDuration={5_000}
+          onClose={() => dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'fish_caught' } })}
+        >
+          <h2>You caught a <strong>{item.name}</strong> !</h2> <br />
+          <ItemDisplay item={item} />
+        </Popup>
+        )
+      )}
       {/* 🏪 Vendor popups */}
       {state.popups
         .filter(({type}) => type === 'vendor')
@@ -174,21 +195,19 @@ export default function Page(props) {
           <h2>{title}</h2>
           {/* TODO: Move this to a separate Vendor component along with related gql */}
           {interacted ? (
-            <>
-              <ItemGrid
-                numBoxes={16}
-                items={vendor.markerItems.nodes}
-                onItemClick={(item) => {
-                  dispatch({ type: 'UI_POPUP_REMOVE', payload: { id } })
-                  purchaseItem({
-                    variables: {
-                      playerId: parseInt(state.player.id),
-                      itemId: parseInt(item.id),
-                    },
-                  })
-                }}
-              />
-            </>
+            <ItemGrid
+              numBoxes={16}
+              items={vendor.markerItems.nodes}
+              onItemClick={(item) => {
+                dispatch({ type: 'UI_POPUP_REMOVE', payload: { id } })
+                purchaseItem({
+                  variables: {
+                    playerId: parseInt(state.player.id),
+                    itemId: parseInt(item.id),
+                  },
+                })
+              }}
+            />
           ) : (
             <>
               <p>{message}</p>
@@ -196,13 +215,6 @@ export default function Page(props) {
           )}
         </Popup>
       ))}
-      {/* 🎣 Fishing popup */}
-      {state.popups.some(({type}) => type === 'fishing') && (
-        <Popup>
-          <h2>Fishing 🎣</h2>
-          <p>Press Esc to stop fishing</p>
-        </Popup>
-      )}
       </PopupStack>
     </>
   )

@@ -18,7 +18,7 @@ export default function Game({ route, ...props }) {
   const [getMarkers, { loading: loadingMarkers, data: markerData, error: markerError }] = useLazyQuery(MARKERS)
 
   // 🎣 Fish mutation
-  const [fish] = useMutation(FISH)
+  const [fish, { data: fishData, loading: fishLoading }] = useMutation(FISH)
 
   // 👀 Watch for changes in state.player.id
   useEffect(() => {
@@ -31,20 +31,31 @@ export default function Game({ route, ...props }) {
       return
     }
 
-    const doFishing = () => {
-      fish({ variables: { playerId: parseInt(state.player.id) } })
-    }
-
     if (state.player.isFishing) {
-      doFishing()
       const intervalId = setInterval(() => {
-        doFishing()
+        fish({ variables: { playerId: parseInt(state.player.id) } })
       }, 5_000)
   
       return () => clearInterval(intervalId)
     }
   }, [state.player?.isFishing])
 
+  // 🐟 Add popup when fish is caught
+  useEffect(() => {
+    if (fishLoading) return
+
+    if (fishData && fishData.fish && fishData.fish.playerItem) {
+      const { playerItem: { id, item } } = fishData.fish
+      dispatch({
+        type: 'UI_POPUP_ADD',
+        payload: {
+          id: `player-item-${id}`,
+          item,
+          type: 'fish_caught'
+        }
+      })
+    }
+  }, [fishLoading, fishData])
   
   // 📡 Fetch all markers when loading is complete
   useEffect(() => {

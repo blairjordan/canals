@@ -59,14 +59,18 @@ const Player = () => {
     setFrameCounter(frameCounter + 1)
 
     if (frameCounter >= 120) {
-      updatePlayer({
-        variables: {
-          id: state.player.id,
-          position: {
-            ...lastPlayerPosition
+      try {
+        updatePlayer({
+          variables: {
+            id: state.player.id,
+            position: {
+              ...lastPlayerPosition
+            }
           }
-        }
-      })
+        })
+      } catch (error) {
+        console.error(error)
+      }
 
       setFrameCounter(0)
     }
