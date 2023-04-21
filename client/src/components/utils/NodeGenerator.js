@@ -7,7 +7,10 @@ import * as THREE from 'three'
 
 class NodeGenerator {
   constructor() {
-    this.seed = this.cyrb128('node generator')
+    const initialIsland = 'node generator'
+    const altIsland = 'alt Island'
+
+    this.seed = this.cyrb128(initialIsland)
     this.rand = this.sfc32(this.seed[0], this.seed[1], this.seed[2], this.seed[3])
 
     this.nodeVectors = []
@@ -27,7 +30,32 @@ class NodeGenerator {
     if (!this.initiated) {
       this.initiated = true
       this.initNodes()
+
+      // const json = {
+      //   nodeVectors: this.nodeVectors,
+      //   nodeConnections: this.nodeConnections,
+      //   nodeSections: this.nodeSections,
+      //   nodeSectionPoints: this.nodeSectionPoints,
+      //   nodeDeadends: this.nodeDeadends,
+      // }
+      // this.export(json)
     }
+  }
+
+  export(JsonExport) {
+    const filename = 'data.json';
+    const jsonStr = JSON.stringify(JsonExport);
+
+    let element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(jsonStr));
+    element.setAttribute('download', filename);
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
   }
 
   initNodes() {
@@ -35,6 +63,7 @@ class NodeGenerator {
     const ZCount = 8
     const areaSize = 500
     const areaRandom = 350
+    const zero = new THREE.Vector3()
 
     for (let z = -XCount; z <= XCount; z++) {
       this.nodeVectors[z + ZCount] = []
@@ -45,6 +74,7 @@ class NodeGenerator {
         const rx = iscentre ? 0 : this.rand() * areaRandom - areaRandom * 0.5 * varianceDistance
         const rz = iscentre ? 0 : this.rand() * areaRandom - areaRandom * 0.5 * varianceDistance
         const n = new THREE.Vector3(x * areaSize + rx, 0, z * areaSize + rz)
+        //const an = new THREE.Vector3().copy(n).multiply(new THREE.Vector3(0.5,1,1))
         this.nodeVectors[z + ZCount][x + XCount] = n
         if (x < ZCount) {
           this.nodeConnections.push([z + ZCount, x + XCount, z + ZCount + 1, x + XCount])
@@ -55,11 +85,13 @@ class NodeGenerator {
 
         if (z < ZCount && x < XCount) {
           const section = []
-          section.push([z + ZCount, x + XCount])
-          section.push([z + ZCount + 1, x + XCount])
-          section.push([z + ZCount + 1, x + XCount + 1])
-          section.push([z + ZCount, x + XCount + 1])
-          this.nodeSections.push(section)
+          if(n.distanceTo(zero) < 2000) {
+            section.push([z + ZCount, x + XCount])
+            section.push([z + ZCount + 1, x + XCount])
+            section.push([z + ZCount + 1, x + XCount + 1])
+            section.push([z + ZCount, x + XCount + 1])
+            this.nodeSections.push(section)
+          }
 
           if (!iscentre) {
             if (chance > 90.0) {
