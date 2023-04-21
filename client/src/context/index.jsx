@@ -4,7 +4,14 @@ export const AppContext = createContext()
 
 const initialState = {
   loggedIn: false,
-  player: null,
+  player: {
+    position: {
+      x: undefined,
+      y: undefined,
+      z: undefined
+    },
+    isFishing: false
+  },
   remotePlayers: [],
   markers: [],
   geofences: [],
@@ -91,7 +98,9 @@ const appReducer = (state, action) => {
     case 'GEOFENCE_ADD':
       return {
         ...state,
-        geofences: [...state.geofences, action.payload],
+        geofences: state.geofences.some(g => g.id === action.payload.id)
+          ? [...state.geofences]
+          : [...state.geofences, action.payload],
       }
     case 'GEOFENCE_REMOVE':
       return {
@@ -120,10 +129,14 @@ const appReducer = (state, action) => {
         popups: state.popups.filter((popup) => popup.id !== action.payload.id),
       }
     case 'UI_POPUP_CLEAR':
+      const { type } = action.payload;
+      const popups = state.popups.filter(popup => (
+        !!type && popup.type !== type
+      ));
       return {
         ...state,
-        popups: [],
-      }
+        popups,
+      };
     // ⌨ Actions
     case 'ACTION_MOVE_FORWARD':
       return {

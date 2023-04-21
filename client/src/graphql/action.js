@@ -12,10 +12,11 @@ export const FISH = gql`
       playerItem {
         id
         item {
+          itemKey
+          name
           description
           type
           props
-          name
         }
       }
     }
