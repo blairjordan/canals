@@ -5,17 +5,19 @@ import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUt
 
 import { Water } from 'three-stdlib'
 import NodeGenerator from '../utils/NodeGenerator'
+import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter';
 // import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
 
 extend({ Water })
 
 function CanalWater() {
   const ref = useRef()
+  const geomExport = useRef(0)
   const geomRef = useRef(null)
   const nodeGenRef = useRef({ generator: NodeGenerator })
   const raycaster = useRef(new THREE.Raycaster())
   raycaster.current.firstHitOnly = true;
-
+  
   const gl = useThree((state) => state.gl)
   const waterNormals = useLoader(THREE.TextureLoader, '/textures/waternormals.jpg')
   waterNormals.wrapS = waterNormals.wrapT = THREE.RepeatWrapping
@@ -134,6 +136,7 @@ function CanalWater() {
     nodeGeoms.push(oceanShapeGeom)
 
     geomRef.current = mergeBufferGeometries(nodeGeoms)
+
     // geomRef.current.computeBoundsTree();
 
     return geomRef.current
@@ -146,13 +149,12 @@ function CanalWater() {
       waterNormals,
       sunDirection: new THREE.Vector3(0, 150, -1500),
       sunColor: 0x041e25,
-      waterColor: 0x000b0e,
-      distortionScale: 8.0,
+      waterColor: 0x275980, //000b0e,
+      distortionScale: 1.0,
       fog: false,
       format: gl.encoding,
-      alpha: 0.8,
-      size: 6,
-      wireframe: true,
+      alpha: 1.0,
+      size: 12,
     }),
     [waterNormals],
   )
@@ -160,6 +162,67 @@ function CanalWater() {
   useFrame((state, delta) => {
     if (ref) {
       ref.current.material.uniforms.time.value += delta * 0.5
+
+      if(geomRef.current) {
+        //geomExport.current += 1
+        if(geomExport.current === 400) {
+          
+
+    function save( link, blob, filename ) {
+
+      link.href = URL.createObjectURL( blob );
+      link.download = filename;
+      link.click();
+  }
+
+  function saveArrayBuffer( link, buffer, filename ) {
+
+      save( link, new Blob( [ buffer ], { type: 'application/octet-stream' } ), filename );
+
+  }
+  const scene = ref.current
+    const gltfExporter = new GLTFExporter();
+    const options = {
+        trs: true,
+        onlyVisible: true,
+        truncateDrawRange: false,
+        binary: true,
+        embedImages: false,
+        includeCustomExtensions: true,
+        maxTextureSize: Number( 64 ) || Infinity // To prevent NaN value
+    };
+    gltfExporter.parse(
+        scene,
+        function ( result ) {
+
+            const link = document.createElement( 'a' );
+            if ( result instanceof ArrayBuffer ) {
+
+                saveArrayBuffer(link, result, 'scene.glb' );
+
+            } else {
+
+                const output = JSON.stringify( result, null, 2 );
+                link.style.display = 'none';
+                document.body.appendChild( link ); // Firefox workaround, see #6594
+                var blob = new Blob( [ output ], {type:'text/plain'} );
+                link.href = URL.createObjectURL( blob );
+                link.download = 'scene.gltf';
+                link.click();
+
+            }
+
+        },
+        function ( error ) {
+
+            console.log( 'An error happened during parsing', error );
+
+        },
+        options
+    );
+        }
+        
+      }
     }
   })
   return <water ref={ref} args={[geom, config]} rotation-x={-Math.PI / 2} />
