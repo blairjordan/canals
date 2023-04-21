@@ -205,7 +205,7 @@ function CanalWater() {
                 const output = JSON.stringify( result, null, 2 );
                 link.style.display = 'none';
                 document.body.appendChild( link ); // Firefox workaround, see #6594
-                var blob = new Blob( [ output ], {type:'text/plain'} );
+                const blob = new Blob( [ output ], {type:'text/plain'} );
                 link.href = URL.createObjectURL( blob );
                 link.download = 'scene.gltf';
                 link.click();

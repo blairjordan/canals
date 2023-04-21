@@ -22,6 +22,7 @@ export const PLAYER = gql`
       username
       meta
       position
+      balance
       playerItems {
         nodes {
           id
@@ -32,29 +33,9 @@ export const PLAYER = gql`
             type
             description
             props
+            price
           }
         }
-      }
-    }
-  }
-`
-
-// TODO: use this mutation somewhere and delete this usage comment
-// variables: {
-//   username: "guest",
-// },
-// })
-// .then((result) => resolve(result?.data?.createPlayer?.player))
-export const PLAYER_CREATE = gql`
-  mutation CreatePlayer($username: String!) {
-    createPlayer(input: { player: { username: $username } }) {
-      player {
-        username
-        position
-        nodeId
-        meta
-        id
-        balance
       }
     }
   }

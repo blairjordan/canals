@@ -1,35 +1,19 @@
 import dynamic from 'next/dynamic'
-import { useState, useEffect, useCallback } from 'react'
-import Popup from '@/components/dom/Popup'
-import Login from '@/components/dom/Login'
-import PopupStack from '@/components/dom/PopupStack'
+import PopupManager from '@/components/dom/PopupManager'
+import PlayerInfo from '@/components/dom/PlayerInfo'
 import { useAppContext } from '@/context'
 import { useLazyQuery, useSubscription, useMutation } from '@apollo/client'
-import { PLAYER, PLAYERS_ALL, PLAYERS_NEARBY } from '@/graphql/player'
-import { PURCHASE } from '@/graphql/action'
-import ItemGrid from '@/components/dom/ItemGrid'
-import ItemDisplay from '@/components/dom/ItemDisplay'
+import {  PLAYERS_ALL, PLAYERS_NEARBY } from '@/graphql/player'
+import { MARKERS } from '@/graphql/marker'
+import { useCallback, useEffect } from 'react'
 
 const Game = dynamic(() => import('@/components/canvas/Game'), { ssr: false })
 
 export default function Page(props) {
   const [state, dispatch] = useAppContext()
 
-  const [getPlayer, { loading: loadingPlayer, data: playerData, error: playerError }] = useLazyQuery(PLAYER, { fetchPolicy: 'no-cache' })
-  const [getRemotePlayers, { loading: loadingRemotePlayers, data: remotePlayersData, error: remotePlayersError }] =
-    useLazyQuery(PLAYERS_ALL)
-
-  // 🪙 Purchase item mutation
-  const [purchaseItem] = useMutation(PURCHASE, {
-    onCompleted: (data) => {
-      console.log('Item purchased successfully:', data)
-      // Refresh player's items
-      getPlayer({ variables: { id: state.player.id } })
-    },
-    onError: (error) => {
-      console.log('Error purchasing item:', error)
-    },
-  })
+  const [getRemotePlayers, { loading: loadingRemotePlayers, data: remotePlayersData, error: remotePlayersError }] = useLazyQuery(PLAYERS_ALL)
+  const [getMarkers, { loading: loadingMarkers, data: markerData, error: markerError }] = useLazyQuery(MARKERS)
 
   useSubscription(PLAYERS_NEARBY, {
     onData: (payload) => {
@@ -40,11 +24,6 @@ export default function Page(props) {
       handlePlayerUpdate(playerNodes)
     },
   })
-
-  const handleLogin = (id) => {
-    getPlayer({ variables: { id } })
-    getRemotePlayers()
-  }
 
   const handlePlayerUpdate = useCallback(
     (updatedPlayers) => {
@@ -60,15 +39,33 @@ export default function Page(props) {
     [dispatch, state.player]
   )
 
+  // Fetch remote players on login
   useEffect(() => {
-    if (!loadingPlayer && playerData && playerData.player) {
-      if (!state.player.id) {
-        dispatch({ type: 'LOGIN', payload: playerData.player })
-      }
-      console.log(playerData)
+    if (!(state.player && state.player.id)) {
+      return
     }
-  }, [loadingPlayer, playerData])
+    getRemotePlayers()
+  }, [state.player?.id])
 
+
+  // 🗺 Fetch all markers
+  useEffect(() => {
+    if (!loadingMarkers && !markerData && !markerError) {
+      getMarkers({ variables: { markerType: '%' } })
+    }
+  }, [loadingMarkers, markerData, markerError])
+
+  // 🗺️ Add markers to the state when the data is fetched
+  useEffect(() => {
+    if (markerData && markerData.markers && markerData.markers.nodes) {
+      markerData.markers.nodes.forEach((marker) => {
+        // TODO: put radius into the database
+        dispatch({ type: 'MARKER_ADD', payload: { ...marker, radius: 10 } })
+      })
+    }
+  }, [markerData])
+
+  // 📡 Update remote players
   useEffect(() => {
     if (!(state.player && state.player.id)) {
       return
@@ -82,140 +79,10 @@ export default function Page(props) {
     }
   }, [loadingRemotePlayers, remotePlayersData, state.player, dispatch])
 
-  const addPopup = useCallback(({ id, type, payload }) => {
-    const popupId = `${type}-${id}`
-    const popupExists = state.popups.some((popup) => popup.id === popupId)
-    if (!popupExists) {
-      // 🗨 Add a popup when the player is inside a marker zone
-      dispatch({
-        type: 'UI_POPUP_ADD',
-        payload: {
-          id: popupId,
-          type,
-          ...payload
-        },
-      })
-    }
-  }, [state.popups, dispatch])
-
-  useEffect(() => {
-    // state.player && state.player.id is truthy when the player is logged in
-    if (!(state.player && state.player.id)) {
-      return
-    }
-
-    const vendorGeofenceMarkers = state.geofences.filter((geofence) => geofence.type === 'vendor')
-
-    // Remove the first popup in the stack if there are more than one
-    if (vendorGeofenceMarkers.length > 1) {
-      dispatch({ type: 'UI_POPUP_REMOVE', payload: { id: `vendor-${vendorGeofenceMarkers[0].id}` } })
-    }
-
-    if (vendorGeofenceMarkers.length > 0) {
-      const vendor = vendorGeofenceMarkers[vendorGeofenceMarkers.length - 1]
-
-      addPopup({
-        id: vendor.id,
-        type: 'vendor',
-        payload: {
-          title: vendor.props.name,
-          message: `Press E to interact with ${vendor.props.name}`,
-          vendor,
-        }
-      })
-    }
-    
-
-    // Remove popups if the player is no longer inside a geofence
-    if (vendorGeofenceMarkers.length === 0) {
-      dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'vendor' } })
-    }
-
-  }, [state.player, state.markers, state.geofences])
-
-
-  useEffect(() => {
-    // state.player && state.player.id is truthy when the player is logged in
-    if (!(state.player && state.player.id)) {
-      return
-    }
-
-    if (state.player.isFishing) {
-      addPopup({
-        id: state.player.id,
-        type: 'fishing_status',
-        payload: {
-          title: 'Fishing 🎣',
-          message: `Press E to stop fishing`,
-        }
-      })
-    } else {
-      dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'fishing_status' } })
-    }
-
-  }, [state.player.isFishing])
-
   return (
     <>
-    <PopupStack>
-      {
-        // state.player.id is truthy when the player is logged in
-        !(state.player && state.player.id) && (
-          <Popup key='login'>
-            <Login onLogin={handleLogin} />
-          </Popup>
-        )
-      }
-      {/* 🎣 Fishing status popup */}
-      {state.popups.some(({type}) => type === 'fishing_status') && (
-        <Popup key='fishing-status-popup'>
-          <h2>Fishing 🎣</h2>
-          <p>Press Esc to stop fishing</p>
-        </Popup>
-      )}
-      {/* 🐟 Caugh fish popup */}
-      {state.popups
-        .filter(({type}) => type === 'fish_caught')
-        .map(({ id, item }) => (
-        <Popup
-          key={id}
-          timeoutDuration={5_000}
-          onClose={() => dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'fish_caught' } })}
-        >
-          <h2>You caught a <strong>{item.name}</strong> !</h2> <br />
-          <ItemDisplay item={item} />
-        </Popup>
-        )
-      )}
-      {/* 🏪 Vendor popups */}
-      {state.popups
-        .filter(({type}) => type === 'vendor')
-        .map(({ id, title, message, vendor, interacted }) => (
-        <Popup key={id}>
-          <h2>{title}</h2>
-          {/* TODO: Move this to a separate Vendor component along with related gql */}
-          {interacted ? (
-            <ItemGrid
-              numBoxes={16}
-              items={vendor.markerItems.nodes}
-              onItemClick={(item) => {
-                dispatch({ type: 'UI_POPUP_REMOVE', payload: { id } })
-                purchaseItem({
-                  variables: {
-                    playerId: parseInt(state.player.id),
-                    itemId: parseInt(item.id),
-                  },
-                })
-              }}
-            />
-          ) : (
-            <>
-              <p>{message}</p>
-            </>
-          )}
-        </Popup>
-      ))}
-      </PopupStack>
+      <PopupManager />
+      <PlayerInfo />
     </>
   )
 }

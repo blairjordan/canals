@@ -1,11 +1,5 @@
 import { gql } from '@apollo/client'
 
-// TODO: use this mutation somewhere and delete this usage comment
-// variables: {
-// playerId: Number(playerId),
-// },
-// })
-// .then((result) => resolve(result?.data?.fish?.playerItem))
 export const FISH = gql`
   mutation Fish($playerId: Int!) {
     fish(input: { playerId: $playerId }) {
@@ -29,10 +23,28 @@ export const PURCHASE = gql`
       playerItem {
         id
         item {
+          id
           description
           type
           props
           name
+        }
+      }
+    }
+  }
+`
+
+export const SELL = gql`
+  mutation Sell($markerId: Int!, $playerItemId: Int!) {
+    sellItem(input: { markerId: $markerId, playerItemId: $playerItemId }) {
+      player {
+        id
+        playerItems {
+          edges {
+            node {
+              id
+            }
+          }
         }
       }
     }

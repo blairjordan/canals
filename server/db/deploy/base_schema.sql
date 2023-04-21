@@ -19,8 +19,8 @@ COMMENT ON COLUMN players.drifting_at is E'@omit';
 
 INSERT INTO players (username, position, balance)
 VALUES
-  ('blair', '{"x": 0, "y": 0, "z": 0}', 1000000.00),
-  ('matt', '{"x": 10, "y": 0, "z": 0}', 25.00);
+  ('blair', '{ "x": 0, "y": 0, "z": 0, "r": 0 }', 1000000.00),
+  ('matt', '{ "x": 0, "y": 0, "z": 0, "r": 0 }', 25.00);
 
 CREATE TABLE IF NOT EXISTS markers (
   id BIGSERIAL PRIMARY KEY,
@@ -347,9 +347,9 @@ BEGIN
 
   -- Find closest marker within the given distance of the current player's position
   WITH current_player AS (
-    SELECT position
+    SELECT position AS position
     FROM players
-    WHERE id = 1
+    WHERE id = player_id
   ),
   player_distances AS (
     SELECT

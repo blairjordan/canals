@@ -6,9 +6,9 @@ const ItemGrid = ({ numBoxes, items, onItemClick }) => {
     if (!selectedItem) {
       return
     }
-    const { item } = selectedItem;
+    const { item, ...itemContainer } = selectedItem;
     if (onItemClick && item) {
-      onItemClick(item);
+      onItemClick({ item, itemContainer });
     }
   };
 

@@ -51,12 +51,12 @@ const appReducer = (state, action) => {
           isFishing: action.payload,
         },
       }
-    case 'PLAYER_UPDATE_POSITION':
+    case 'PLAYER_UPDATE':
       return {
         ...state,
         player: {
           ...state.player,
-          position: action.payload,
+          ...action.payload,
         },
       }
     case 'REMOTE_PLAYERS_SET':

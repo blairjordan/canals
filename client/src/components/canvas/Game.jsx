@@ -3,27 +3,22 @@ import { Player } from './Player'
 import { useCallback, useContext, useEffect } from 'react'
 import {Sky } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { AppContext } from '@/context'
+import { useAppContext } from '@/context'
 import { Terrain } from './Terrain'
-import { MARKERS } from '@/graphql/marker'
-import { useLazyQuery, useMutation } from '@apollo/client'
+import { useMutation } from '@apollo/client'
 import { DebugMarker } from './DebugMarker'
 import { RemotePlayer } from './RemotePlayer'
 import TWEEN from '@tweenjs/tween.js'
 import { Seagull } from './Seagulls'
 import { FISH } from '@/graphql/action'
+import usePlayer from '../hooks/usePlayer';
 
 export default function Game({ route, ...props }) {
-  const [state, dispatch] = useContext(AppContext)
-  const [getMarkers, { loading: loadingMarkers, data: markerData, error: markerError }] = useLazyQuery(MARKERS)
+  const [state, dispatch] = useAppContext()
+  const [getPlayer, { loading: loadingPlayer, data: playerData, error: playerError }] = usePlayer();
 
   // 🎣 Fish mutation
   const [fish, { data: fishData, loading: fishLoading }] = useMutation(FISH)
-
-  // 👀 Watch for changes in state.player.id
-  useEffect(() => {
-    console.log('Current player:', state.player)
-  }, [state.player?.id])
 
   // 🎣 Start fishing when player is in fishing state
   useEffect(() => {
@@ -34,18 +29,19 @@ export default function Game({ route, ...props }) {
     if (state.player.isFishing) {
       const intervalId = setInterval(() => {
         fish({ variables: { playerId: parseInt(state.player.id) } })
-      }, 5_000)
+      }, 500)
   
       return () => clearInterval(intervalId)
     }
   }, [state.player?.isFishing])
 
-  // 🐟 Add popup when fish is caught
+  // 🐟 Add popup when fish is caught and update player
   useEffect(() => {
     if (fishLoading) return
 
     if (fishData && fishData.fish && fishData.fish.playerItem) {
       const { playerItem: { id, item } } = fishData.fish
+      getPlayer({ variables: { id: state.player.id } })
       dispatch({
         type: 'UI_POPUP_ADD',
         payload: {
@@ -56,23 +52,6 @@ export default function Game({ route, ...props }) {
       })
     }
   }, [fishLoading, fishData])
-  
-  // 📡 Fetch all markers when loading is complete
-  useEffect(() => {
-    if (!loadingMarkers && !markerData && !markerError) {
-      getMarkers({ variables: { markerType: '%' } })
-    }
-  }, [loadingMarkers, markerData, markerError])
-
-  // 🗺️ Add markers to the state when the data is fetched
-  useEffect(() => {
-    if (markerData && markerData.markers && markerData.markers.nodes) {
-      markerData.markers.nodes.forEach((marker) => {
-        // TODO: put radius into the database
-        dispatch({ type: 'MARKER_ADD', payload: { ...marker, radius: 10 } })
-      })
-    }
-  }, [markerData])
 
   useEffect(() => {
     if (!(state.player && state.player.id)) return
@@ -155,7 +134,9 @@ export default function Game({ route, ...props }) {
       <CanalWater />
       <Sky scale={5000} sunPosition={[0, 750, -4500]} turbidity={0.1} />
       <Player />
-      <RemotePlayer id={0} />
+      {state.remotePlayers.map(({ id }) => (
+        <RemotePlayer key={`player-${id}`} id={id} />
+      ))}
       <Seagull />
       {state.markers.map(({ id, position: { x, y }, radius, type }) => {
         // 🚩 Add DebugMarker for each marker

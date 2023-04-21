@@ -1,7 +1,6 @@
 import React from 'react';
 
 const ImageItem = ({ item }) => {
-
   return (
     <div className="flex gap-4">
       {item && (

@@ -47,8 +47,13 @@ const Player = () => {
     controlsRef.current.target.copy(playerRef.current.position)
 
     dispatch({
-      type: 'PLAYER_UPDATE_POSITION',
-      payload: lastPlayerPosition,
+      type: 'PLAYER_UPDATE',
+      payload: {
+        position: {
+          ...lastPlayerPosition,
+          r: playerRef.current.rotation.y
+        }
+      }
     })
 
     if (!(state.player && state.player.id)) {
@@ -64,7 +69,8 @@ const Player = () => {
           variables: {
             id: state.player.id,
             position: {
-              ...lastPlayerPosition
+              ...lastPlayerPosition,
+              r: playerRef.current.rotation.y
             }
           }
         })
