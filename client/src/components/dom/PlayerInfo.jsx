@@ -7,7 +7,7 @@ function PlayerInfo() {
     return null;
   }
 
-  const formattedBalance = state.player.balance.toLocaleString();
+  const formattedBalance = Math.floor(state.player.balance).toLocaleString();
 
   return (
     <div
