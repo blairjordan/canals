@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import { AppContext } from '@/context'
 import { Boat } from './Boat'
 import { BoatWake } from './Wake'
-//import TWEEN from "@tweenjs/tween.js";
+import TWEEN from "@tweenjs/tween.js";
 
 const RemotePlayer = ({ id = 0 }) => {
   const [state, dispatch] = useContext(AppContext)
@@ -12,6 +12,7 @@ const RemotePlayer = ({ id = 0 }) => {
   const remotePlayerRef = useRef(null)
   const helperRef = useRef({ 
     firstSet: false,
+    updateTween: null,
     speed: 2,
     rotSpeed: 0.5,
     target: new THREE.Vector3(20,0,0),
@@ -24,8 +25,6 @@ const RemotePlayer = ({ id = 0 }) => {
   })
 
   useEffect(() => {
-    console.log(state.remotePlayers)
-    console.log(id)
     const remotePlayer = state.remotePlayers.find(player => player.id === id)
 
     if (!remotePlayer) {
@@ -51,11 +50,28 @@ const RemotePlayer = ({ id = 0 }) => {
         helperRef.current.target.set(transform.x, transform.y, transform.z)
         remotePlayerRef.current.position.copy(helperRef.current.target)
     } else {
-        //Move towards
-        remotePlayerRef.current.position.lerp( helperRef.current.target, delta)
-
-        //Set rotation
-        remotePlayerRef.current.rotation.y = transform.r
+      const initVal = { 
+        x:remotePlayerRef.current.position.x,
+        y:remotePlayerRef.current.position.y,
+        z:remotePlayerRef.current.position.z,
+        r:remotePlayerRef.current.rotation.y  };
+      if(helperRef.current.updateTween) {
+        helperRef.current.updateTween.stop()
+      }
+      helperRef.current.updateTween = new TWEEN.Tween(initVal)
+        .to({ 
+          x: transform.x, 
+          y: transform.y, 
+          z: transform.z, 
+          r: transform.r ? transform.r : remotePlayerRef.current.rotation.y }
+          , 1000)
+        .onUpdate(() => {
+          remotePlayerRef.current.position.x = initVal.x
+          remotePlayerRef.current.position.y = initVal.y
+          remotePlayerRef.current.position.z = initVal.z
+          remotePlayerRef.current.rotation.y = initVal.r
+        })
+        .start();
     }
 
   }

@@ -6,9 +6,8 @@ import { Boat } from './Boat'
 import { BoatEngine } from './BoatEngine'
 import { OrbitControls } from '@react-three/drei'
 import { BoatWake } from './Wake'
-import { useMutation } from '@apollo/client';
-import { PLAYER_UPDATE } from '@/graphql/player';
-
+import { useMutation } from '@apollo/client'
+import { PLAYER_UPDATE } from '@/graphql/player'
 
 const Player = () => {
   const [state, dispatch] = useContext(AppContext)
@@ -19,17 +18,21 @@ const Player = () => {
     engine: new BoatEngine(),
     currentPlayerPosition: new THREE.Vector3(),
     lastPlayerPosition: new THREE.Vector3(),
+    lastUpdatedPlayerPosition: new THREE.Vector3(),
+    lastUpdatedPlayerRotation: new THREE.Vector3(),
   })
 
   const [frameCounter, setFrameCounter] = useState(0)
 
-  const [updatePlayer, { data: playerUpdateData, loading: playerUpdateLoading, error: playerUpdateError }] = useMutation(PLAYER_UPDATE)
+  const [updatePlayer, { data: playerUpdateData, loading: playerUpdateLoading, error: playerUpdateError }] =
+    useMutation(PLAYER_UPDATE)
 
   useFrame((threeState, delta) => {
-    const { engine, currentPlayerPosition, lastPlayerPosition } = engineRef.current
+    const { engine, currentPlayerPosition, lastPlayerPosition, lastUpdatedPlayerPosition, lastUpdatedPlayerRotation } =
+      engineRef.current
 
     lastPlayerPosition.copy(playerRef.current.position)
-  
+
     engine.boosting = state.actions.boosting
     engine.isThrottling = state.actions.forward
     engine.isReversing = state.actions.backward
@@ -46,14 +49,16 @@ const Player = () => {
     threeState.camera.position.add(currentPlayerPosition)
     controlsRef.current.target.copy(playerRef.current.position)
 
+    currentPlayerPosition.copy(playerRef.current.position)
+
     dispatch({
       type: 'PLAYER_UPDATE',
       payload: {
         position: {
-          ...lastPlayerPosition,
-          r: playerRef.current.rotation.y
-        }
-      }
+          ...currentPlayerPosition,
+          r: playerRef.current.rotation.y,
+        },
+      },
     })
 
     if (!(state.player && state.player.id)) {
@@ -62,17 +67,23 @@ const Player = () => {
 
     // Update player position on the server every 120 frames
     setFrameCounter(frameCounter + 1)
-
-    if (frameCounter >= 120) {
+    
+    if (
+      frameCounter >= 120 ||
+      lastUpdatedPlayerPosition.distanceTo(currentPlayerPosition) > 1 ||
+      Math.abs(lastUpdatedPlayerRotation.y - playerRef.current.rotation.y) > 0.1
+    ) {
       try {
+        lastUpdatedPlayerPosition.copy(currentPlayerPosition)
+        lastUpdatedPlayerRotation.y = playerRef.current.rotation.y
         updatePlayer({
           variables: {
             id: state.player.id,
             position: {
-              ...lastPlayerPosition,
-              r: playerRef.current.rotation.y
-            }
-          }
+              ...currentPlayerPosition,
+              r: playerRef.current.rotation.y,
+            },
+          },
         })
       } catch (error) {
         console.error(error)
