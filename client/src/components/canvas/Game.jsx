@@ -15,7 +15,7 @@ import usePlayer from '../hooks/usePlayer';
 
 export default function Game({ route, ...props }) {
   const [state, dispatch] = useAppContext()
-  const [getPlayer, { loading: loadingPlayer, data: playerData, error: playerError }] = usePlayer();
+  const [getPlayer] = usePlayer();
 
   // 🎣 Fish mutation
   const [fish, { data: fishData, loading: fishLoading }] = useMutation(FISH)
