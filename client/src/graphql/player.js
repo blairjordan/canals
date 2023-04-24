@@ -23,6 +23,7 @@ export const PLAYER = gql`
       meta
       position
       balance
+      fuel
       playerItems {
         nodes {
           id
