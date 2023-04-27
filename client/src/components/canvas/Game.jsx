@@ -130,7 +130,7 @@ export default function Game({ route, ...props }) {
   
   return (
     <>
-      <Terrain />
+      {/* <Terrain /> */}
       <CanalWater />
       <Sky scale={5000} sunPosition={[0, 750, -4500]} turbidity={0.1} />
       <Player />
