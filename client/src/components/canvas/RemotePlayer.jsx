@@ -5,11 +5,12 @@ import { AppContext } from '@/context'
 import { Boat } from './Boat'
 import { BoatWake } from './Wake'
 import TWEEN from "@tweenjs/tween.js";
+import { PlayerName } from './PlayerName'
 
 const RemotePlayer = ({ id = 0 }) => {
   const [state, dispatch] = useContext(AppContext)
     
-  const remotePlayerRef = useRef(null)
+  const remotePlayerRef = useRef({})
   const helperRef = useRef({ 
     firstSet: false,
     updateTween: null,
@@ -27,9 +28,11 @@ const RemotePlayer = ({ id = 0 }) => {
   useEffect(() => {
     const remotePlayer = state.remotePlayers.find(player => player.id === id)
 
-    if (!remotePlayer) {
+    if (!(remotePlayer && remotePlayer.position && remotePlayer.username)) {
       return
     }
+
+    remotePlayerRef.username = remotePlayer.username
 
     const { position } = remotePlayer;
 
@@ -80,11 +83,16 @@ const RemotePlayer = ({ id = 0 }) => {
     updateRemotePlayerPosition({x: helperRef.current.target.x, y: helperRef.current.target.y, z: helperRef.current.target.z, r: helperRef.current.rotation}, delta)
   })
 
-  return (
+  return (remotePlayerRef && remotePlayerRef.current && (
     <>
       <Boat ref={remotePlayerRef} />
+      <PlayerName
+        position={remotePlayerRef.current.position}
+        username={remotePlayerRef.username}
+      />
       <BoatWake player={remotePlayerRef} />
     </>
+    )
   )
 }
 
