@@ -1,5 +1,5 @@
 import { extend, useThree, useLoader, useFrame } from '@react-three/fiber'
-import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
+import { forwardRef, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { AppContext } from '@/context'
 import { useGLTF } from '@react-three/drei'
