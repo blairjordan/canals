@@ -17,6 +17,7 @@ import { Locks } from './Locks'
 export default function Game({ route, ...props }) {
   const [state, dispatch] = useAppContext()
   const [getPlayer] = usePlayer();
+  const canalRef = useRef(null)
 
   // 🎣 Fish mutation
   const [fish, { data: fishData, loading: fishLoading }] = useMutation(FISH)
