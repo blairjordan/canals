@@ -16,6 +16,7 @@ const initialState = {
   markers: [],
   geofences: [],
   popups: [],
+  locks: [],
   actions: {
     forward: false,
     backward: false,

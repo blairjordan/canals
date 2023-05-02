@@ -1,5 +1,5 @@
 import { extend, useThree, useLoader, useFrame } from '@react-three/fiber'
-import { useEffect, useMemo, useRef } from 'react'
+import { forwardRef, useContext, useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils'
 
@@ -11,9 +11,8 @@ import { useGLTF } from '@react-three/drei'
 
 extend({ Water })
 
-function CanalWater() {
-  const ref = useRef(null)
-  const geomExport = useRef(0)
+const CanalWater = forwardRef((props, ref) => {
+
   const geomRef = useRef(null)
   const geom2Ref = useRef(null)
   const nodeGenRef = useRef({ generator: NodeGenerator })
@@ -203,7 +202,7 @@ function CanalWater() {
         <meshLambertMaterial attach='material' color='grey' />
       </mesh>
     </>
-}
+})
 
 CanalWater.displayName = 'CanalWater'
 
