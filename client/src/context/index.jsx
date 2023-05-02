@@ -16,6 +16,7 @@ const initialState = {
   markers: [],
   geofences: [],
   popups: [],
+  locks: [],
   actions: {
     forward: false,
     backward: false,
@@ -51,12 +52,12 @@ const appReducer = (state, action) => {
           isFishing: action.payload,
         },
       }
-    case 'PLAYER_UPDATE':
+    case 'PLAYER_UPDATE_POSITION':
       return {
         ...state,
         player: {
           ...state.player,
-          ...action.payload,
+          position: action.payload,
         },
       }
     case 'REMOTE_PLAYERS_SET':
