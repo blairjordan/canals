@@ -10,9 +10,11 @@ import ItemGrid from '@/components/dom/ItemGrid'
 import ItemDisplay from '@/components/dom/ItemDisplay'
 import usePlayer from '../hooks/usePlayer';
 
+const PLAYER_POLL_INTERVAL=5_000
+
 function PopupManager(props) {
   const [state, dispatch] = useAppContext()
-  const [getPlayer, { loading: loadingPlayer, data: playerData, error: playerError }] = usePlayer();
+  const [getPlayer, playerStartPolling, { loading: loadingPlayer, data: playerData, error: playerError }] = usePlayer();
 
   // 💸 Purchase item mutation
   const [purchaseItem] = useMutation(PURCHASE, {
@@ -38,6 +40,7 @@ function PopupManager(props) {
 
   const handleLogin = (id) => {
     getPlayer({ variables: { id } })
+    playerStartPolling(PLAYER_POLL_INTERVAL)
   }
 
   const addPopup = useCallback(({ id, type, payload }) => {

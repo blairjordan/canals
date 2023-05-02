@@ -5,11 +5,16 @@ import { useAppContext } from '@/context'
 
 function usePlayer() {
   const [state, dispatch] = useAppContext()
+
   const [getPlayer, {
     loading: loadingPlayer,
     data: playerData,
-    error: playerError
-  }] = useLazyQuery(PLAYER, { fetchPolicy: 'no-cache' });
+    error: playerError,
+    startPolling: playerStartPolling,
+    stopPolling: playerStopPolling
+  }] = useLazyQuery(PLAYER, {
+    fetchPolicy: 'no-cache'
+  });
 
   // 👀 Watch for changes in state.player.id
   useEffect(() => {
@@ -31,10 +36,9 @@ function usePlayer() {
     }
   }, [loadingPlayer, playerData])
 
-  return [getPlayer, { loadingPlayer, playerData, playerError }];
+  return [getPlayer, playerStartPolling, { loadingPlayer, playerData, playerError }];
 }
 
 usePlayer.displayName = 'usePlayer';
-
 
 export default usePlayer;

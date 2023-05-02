@@ -19,8 +19,10 @@ COMMENT ON COLUMN players.drifting_at is E'@omit';
 
 INSERT INTO players (username, position, balance)
 VALUES
-  ('blair', '{ "x": 0, "y": 0, "z": 0, "r": 0 }', 1000000.00),
-  ('matt', '{ "x": 0, "y": 0, "z": 0, "r": 0 }', 25.00);
+  ('blair', '{ "x": 0, "y": 0, "z": 0, "r": 0 }', 1000.00),
+  ('matt', '{ "x": 0, "y": 0, "z": 0, "r": 0 }', 250.00),
+  ('zara', '{ "x": 0, "y": 0, "z": 0, "r": 0 }', 500.00),
+  ('finn', '{ "x": 0, "y": 0, "z": 0, "r": 0 }', 50.00);
 
 CREATE TABLE IF NOT EXISTS markers (
   id BIGSERIAL PRIMARY KEY,
