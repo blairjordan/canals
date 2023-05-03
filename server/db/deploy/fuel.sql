@@ -64,20 +64,22 @@ WHEN (OLD.position IS DISTINCT FROM NEW.position)
 EXECUTE FUNCTION fuel_is_zero();
 
 -- 🏪 Refueling stations
-INSERT INTO markers (position, type)
+INSERT INTO markers (position, type, props)
 VALUES
-  ('{"x": 400, "y": 325, "z": 0}', 'fuel_station'),
-  ('{"x": 725, "y": 75, "z": 0}', 'fuel_station')
+  ('{"x": -30, "y": 0, "z": 50}', 'fuel_station', '{ "name": "Bridge 61 Marina Fueling Station" }'),
+  ('{"x": 10, "y": 0, "z": 90}', 'fuel_station', ' {"name": "Sawley Marina Fueling Station" }')
 ON CONFLICT DO NOTHING;
 
 -- ⛽ Refuel
 CREATE OR REPLACE FUNCTION refuel(player_id INTEGER)
 RETURNS players AS $$
 DECLARE
-  -- TODO: Adjust as per player's engine type
-  fuel_price_per_unit FLOAT := 0.15;
+  -- TODO: Adjust as per station / player's engine type
+  fuel_price_per_unit FLOAT := 0.25;
   updated_player players;
 BEGIN
+
+  -- TODO: Check if player is at a refueling station
 
   SELECT * INTO updated_player FROM players WHERE id = player_id;
 

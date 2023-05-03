@@ -137,7 +137,7 @@ ON CONFLICT DO NOTHING;
 -- 🎣 Fishing vendor
 WITH vendor_insert AS (
   INSERT INTO markers (position, type, props)
-  VALUES ('{"x": -20, "y": 20, "z": 0}', 'vendor', '{"name": "Bob''s Bait''n''Tackle"}')
+  VALUES ('{"x": -20, "y": 0, "z": 20}', 'vendor', '{"name": "Bob''s Bait''n''Tackle"}')
   RETURNING id
 ),
 item_insert AS (
@@ -154,7 +154,7 @@ SELECT vendor_insert.id, item_insert.id FROM vendor_insert, item_insert;
 
 -- 🦐 Fishmonger (purchaser of fish items)
 INSERT INTO markers (position, type, props)
-VALUES ('{"x": 75, "y": -40, "z": 15}', 'vendor', '{"name": "The Salmon Slinger", "purchase_item_types": ["fish"]}');
+VALUES ('{"x": 75, "y": 0, "z": 15}', 'vendor', '{"name": "The Salmon Slinger", "purchase_item_types": ["fish"]}');
 
 -- 👬 Give demo players a rod
 WITH fishing_rod AS (
@@ -180,7 +180,7 @@ WHERE players.username = 'matt';
 -- 🪴 Florist vendor
 WITH vendor_insert AS (
   INSERT INTO markers (position, type, props)
-  VALUES ('{"x": 100, "y": 100, "z": 0}', 'vendor', '{"name": "Mary''s Florist"}')
+  VALUES ('{"x": 100, "y": 0, "z": 100}', 'vendor', '{"name": "Mary''s Florist"}')
   RETURNING id
 ),
 item_insert AS (

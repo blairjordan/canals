@@ -48,7 +48,6 @@ export const PLAYER_UPDATE = gql`
       player {
         id
         position
-        fuel
       }
     }
   }

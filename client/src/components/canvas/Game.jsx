@@ -1,10 +1,9 @@
 import { CanalWater } from './CanalWater'
 import { Player } from './Player'
-import { useCallback, useContext, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { Sky } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useAppContext } from '@/context'
-import { Terrain } from './Terrain'
 import { useMutation } from '@apollo/client'
 import { DebugMarker } from './DebugMarker'
 import { RemotePlayer } from './RemotePlayer'
@@ -31,7 +30,7 @@ export default function Game({ route, ...props }) {
     if (state.player.isFishing) {
       const intervalId = setInterval(() => {
         fish({ variables: { playerId: parseInt(state.player.id) } })
-      }, 500)
+      }, 5000)
 
       return () => clearInterval(intervalId)
     }
@@ -61,12 +60,11 @@ export default function Game({ route, ...props }) {
     if (!(state.player && state.player.id)) return
     const { x: playerX, z: playerZ } = state.player.position
 
-    state.markers.map((marker) => {
-      const {
-        position: { x: markerX, y: markerY },
-        radius,
-      } = marker
-      const distance = Math.sqrt(Math.pow(playerX - markerX, 2) + Math.pow(playerZ - markerY, 2)) * 0.5
+    state.markers
+    .filter((marker) => marker.type !== 'geo_marker')
+    .map((marker) => {
+      const { position: { x: markerX, z: markerZ }, radius } = marker
+      const distance = Math.sqrt(Math.pow(playerX - markerX, 2) + Math.pow(playerZ - markerZ, 2)) * 0.5
       if (distance < radius) {
         dispatch({ type: 'GEOFENCE_ADD', payload: marker })
       } else {
@@ -86,7 +84,7 @@ export default function Game({ route, ...props }) {
         dispatch({ type: 'PLAYER_SET_FISHING', payload: false })
 
         dispatch({
-          type: 'UI_POPUP_INTERACT',
+          type: 'SET_UI_POPUP_INTERACT',
           payload: {
             popup: state.popups[state.popups.length - 1],
             interacted: true,
@@ -98,7 +96,7 @@ export default function Game({ route, ...props }) {
       state.popups.map((popup) => {
         if (state.actions.cancel) {
           dispatch({
-            type: 'UI_POPUP_INTERACT',
+            type: 'SET_UI_POPUP_INTERACT',
             payload: {
               popup,
               interacted: false,
@@ -113,7 +111,7 @@ export default function Game({ route, ...props }) {
       // Close all popups
       state.popups.map((popup) => {
         dispatch({
-          type: 'UI_POPUP_INTERACT',
+          type: 'SET_UI_POPUP_INTERACT',
           payload: {
             popup,
             interacted: false,
@@ -143,18 +141,24 @@ export default function Game({ route, ...props }) {
         <RemotePlayer key={`player-${id}`} id={id} />
       ))}
       <Seagull />
-      {state.markers.map(({ id, position: { x, y }, radius, type }) => {
+      {state.markers.map(({ id, position: { x, z }, radius, type }) => {
         // 🚩 Add DebugMarker for each marker
-        return (
-          <DebugMarker
-            key={id}
-            isDebugMode={true}
-            scale={2}
-            position={{ x, y }}
-            radius={radius}
-            color={type === 'vendor' ? '#ff0000' : type === 'fishing_spot' ? '#00ff00' : '#0000ff'}
-          />
-        )
+        return <DebugMarker
+          key={id}
+          isDebugMode={true}
+          scale={2}
+          position={{ x, z }}
+          radius={radius}
+          color={
+            type === 'vendor'
+              ? '#B60019'
+            : type === 'fishing_spot'
+              ? '#33B600'
+            : type === 'fuel_station'
+              ? '#F18118'
+                : '#0000ff'
+          }
+        />
       })}
     </>
   )

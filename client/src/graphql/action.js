@@ -50,3 +50,15 @@ export const SELL = gql`
     }
   }
 `
+
+export const REFUEL = gql`
+  mutation Refuel($playerId: Int!) {
+    refuel(input: { playerId: $playerId }) {
+      player {
+        id
+        fuel
+        balance
+      }
+    }
+  }
+`

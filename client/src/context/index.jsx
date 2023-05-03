@@ -52,6 +52,22 @@ const appReducer = (state, action) => {
           isFishing: action.payload,
         },
       }
+    case 'PLAYER_UPDATE':
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          ...action.payload,
+        },
+      }
+    case 'PLAYER_UPDATE_POSITION':
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          position: action.payload,
+        },
+      }
     case 'PLAYER_UPDATE_POSITION':
       return {
         ...state,
@@ -113,7 +129,7 @@ const appReducer = (state, action) => {
         ...state,
         popups: [...state.popups, action.payload],
       }
-    case 'UI_POPUP_INTERACT':
+    case 'SET_UI_POPUP_INTERACT':
       return {
         ...state,
         popups: state.popups.map((popup) =>

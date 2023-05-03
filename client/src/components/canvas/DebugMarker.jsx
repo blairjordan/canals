@@ -5,7 +5,8 @@ import { useFrame } from '@react-three/fiber'
 
 const DebugMarker = ({
   isDebugMode = true,
-  scale = 2, position,
+  scale = 2,
+  position,
   radius = 5,
   color = "#ff0000"
 }) => {
@@ -27,7 +28,7 @@ const DebugMarker = ({
     <>
     <Line
       worldUnits
-      position={[position.x, 0, position.y]}
+      position={[position.x, 0, position.z]}
       scale={scale}
       points={circlePoints}
       color={color}
@@ -36,7 +37,7 @@ const DebugMarker = ({
     />
     <Line
       worldUnits
-      position={[position.x, 10-(pulse*10), position.y]}
+      position={[position.x, 10-(pulse*10), position.z]}
       scale={scale*pulse}
       points={circlePoints}
       opacity={0.2}
