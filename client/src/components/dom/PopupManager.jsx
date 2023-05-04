@@ -5,7 +5,7 @@ import Login from '@/components/dom/Login'
 import PopupStack from '@/components/dom/PopupStack'
 import { useAppContext } from '@/context'
 import { useMutation } from '@apollo/client'
-import { PURCHASE, SELL, REFUEL } from '@/graphql/action'
+import { PURCHASE, SELL, REFUEL, USE_LOCK } from '@/graphql/action'
 import ItemGrid from '@/components/dom/ItemGrid'
 import ItemDisplay from '@/components/dom/ItemDisplay'
 import usePlayer from '../hooks/usePlayer';
@@ -50,6 +50,18 @@ function PopupManager(props) {
     },
   })
 
+  // 🚪 Use lock
+  const [useLock] = useMutation(USE_LOCK, {
+    // TODO: debounce lock usage
+    onCompleted: (data) => {
+      console.log('Used lock successfully:', data)
+      getPlayer({ variables: { id: state.player.id } })
+    },
+    onError: (error) => {
+      console.log('Error using lock:', error)
+    },
+  })
+
   const handleLogin = (id) => {
     getPlayer({ variables: { id } })
     playerStartPolling(PLAYER_POLL_INTERVAL)
@@ -77,11 +89,11 @@ function PopupManager(props) {
     }
 
     const geofenceMarkers = state.geofences.filter((geofence) =>
-      ['vendor', 'fuel_station'].includes(geofence.type)
+      ['vendor', 'fuel_station', 'lock'].includes(geofence.type)
     )
 
     const popups = state.popups.filter((popups) =>
-      ['vendor', 'fuel_station'].includes(popups.type)
+      ['vendor', 'fuel_station', 'lock'].includes(popups.type)
     )
 
     // Remove the first popup in the stack if there are more than one
@@ -100,6 +112,8 @@ function PopupManager(props) {
             return `(Press E to interact)`
           case 'fuel_station':
             return `(Press E to refuel)`
+          case 'lock':
+            return `(Press E to use lock)`
         }
       })()
 
@@ -151,13 +165,28 @@ function PopupManager(props) {
       return
     }
     
-    let refuelInteracted = false
-      
     state.popups.filter(({ type, interacted }) =>
-      type === 'fuel_station'
+      ['lock', 'fuel_station'].includes(type)
       && interacted
     ).map((popup) => {
-      refuelInteracted = true
+
+      if (popup.type === 'fuel_station') {
+        refuel({
+          variables: {
+            playerId: parseInt(state.player.id),
+          },
+        })
+      }
+
+      if (popup.type === 'lock') {
+        useLock({
+          variables: {
+            playerId: parseInt(state.player.id),
+            markerId: parseInt(popup.marker.id),
+          },
+        })
+      }
+
       dispatch({
         type: 'SET_UI_POPUP_INTERACT',
         payload: {
@@ -166,14 +195,6 @@ function PopupManager(props) {
         }
       })
     })
-
-    if (refuelInteracted) {
-      refuel({
-        variables: {
-          playerId: parseInt(state.player.id),
-        },
-      })
-    }
 
   }, [state.popups])
 
@@ -211,7 +232,7 @@ function PopupManager(props) {
       )}
       {/* ⛽ Refuel popup */}
       {state.popups
-        .filter(({type}) => type === 'fuel_station')
+        .filter(({type}) => ['fuel_station', 'lock'].includes(type))
         .map(({ id, title, message }) => (
         <Popup
           key={id}

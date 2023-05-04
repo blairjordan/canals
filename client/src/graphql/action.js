@@ -62,3 +62,14 @@ export const REFUEL = gql`
     }
   }
 `
+
+export const USE_LOCK = gql`
+  mutation ($playerId: Int!, $markerId: Int) {
+    useLock(input: { markerId: $markerId, playerId: $playerId }) {
+      clientMutationId
+      player {
+        balance
+      }
+    }
+  }
+`

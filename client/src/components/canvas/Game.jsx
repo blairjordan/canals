@@ -150,13 +150,20 @@ export default function Game({ route, ...props }) {
           position={{ x, z }}
           radius={radius}
           color={
-            type === 'vendor'
-              ? '#B60019'
-            : type === 'fishing_spot'
-              ? '#33B600'
-            : type === 'fuel_station'
-              ? '#F18118'
-                : '#0000ff'
+            (() => {
+              switch (type) {
+                case 'vendor':
+                  return '#B60019'
+                case 'fishing_spot':
+                  return '#33B600'
+                case 'fuel_station':
+                  return '#F18118'
+                case 'lock':
+                  return '#0000ff'
+                default:
+                  return '#999999'
+              }
+            })()
           }
         />
       })}

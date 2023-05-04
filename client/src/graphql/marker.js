@@ -5,6 +5,7 @@ import { gql } from '@apollo/client'
 // 🎣 fishing_spot
 // 🧑‍🌾 vendor
 // ⛽ fuel_station
+// 🚪 lock
 export const MARKERS = gql`
   query Markers($markerType: String = "%") {
     markers(filter: { type: { like: $markerType } }) {
