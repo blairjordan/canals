@@ -3,8 +3,8 @@ import PopupManager from '@/components/dom/PopupManager'
 import PlayerInfo from '@/components/dom/PlayerInfo'
 import { useAppContext } from '@/context'
 import { useLazyQuery, useSubscription, useMutation } from '@apollo/client'
-import {  PLAYERS_ALL, PLAYERS_NEARBY } from '@/graphql/player'
-import { MARKERS } from '@/graphql/marker'
+import { PLAYERS_ALL, PLAYER_UPDATES } from '@/graphql/player'
+import { MARKERS, MARKER_UPDATED } from '@/graphql/marker'
 import { useCallback, useEffect } from 'react'
 
 const Game = dynamic(() => import('@/components/canvas/Game'), { ssr: false })
@@ -14,29 +14,44 @@ export default function Page(props) {
 
   const [getRemotePlayers, { loading: loadingRemotePlayers, data: remotePlayersData, error: remotePlayersError }] = useLazyQuery(PLAYERS_ALL)
   const [getMarkers, { loading: loadingMarkers, data: markerData, error: markerError }] = useLazyQuery(MARKERS)
-
-  useSubscription(PLAYERS_NEARBY, {
+  
+  useSubscription(MARKER_UPDATED, {
     onData: (payload) => {
-      if (!(payload.data && payload.data.listen && payload.data.listen.query)) {
+      if (!(payload.data)) {
         return
       }
-      const { data: { listen: { query: { players: { nodes: playerNodes } } } } } = payload
-      handlePlayerUpdate(playerNodes)
+      const { data: { data: { listen: { relatedNode: markerNode } } } } = payload
+      handleMarkerUpdate(markerNode)
+    },
+  })
+  
+  useSubscription(PLAYER_UPDATES, {
+    onData: (payload) => {
+      if (!(payload.data)) {
+        return
+      }
+      const { data: { data: { listen: { relatedNode: playerNode } } } } = payload
+      handlePlayerUpdate(playerNode)
     },
   })
 
   const handlePlayerUpdate = useCallback(
-    (updatedPlayers) => {
+    (updatedPlayer) => {
       if (!(state.player && state.player.id)) {
         return
       }
-      updatedPlayers.map((updatedPlayer) => {
-        if (updatedPlayer.id !== state.player.id) {
-          dispatch({ type: 'REMOTE_PLAYER_UPDATE_POSITION', payload: updatedPlayer })
-        }
-      })
+      if (updatedPlayer.id !== state.player.id) {
+        dispatch({ type: 'REMOTE_PLAYER_UPDATE_POSITION', payload: updatedPlayer })
+      }
     },
     [dispatch, state.player]
+  )
+
+  const handleMarkerUpdate = useCallback(
+    (updatedMarker) => {
+      dispatch({ type: 'MARKER_UPDATE', payload: updatedMarker })
+    },
+    [dispatch, state.markers]
   )
 
   // Fetch remote players on login
@@ -45,22 +60,16 @@ export default function Page(props) {
       return
     }
     getRemotePlayers()
+    getMarkers({ variables: { markerType: '%' } })
   }, [state.player?.id])
-
-
-  // 🗺 Fetch all markers
-  useEffect(() => {
-    if (!loadingMarkers && !markerData && !markerError) {
-      getMarkers({ variables: { markerType: '%' } })
-    }
-  }, [loadingMarkers, markerData, markerError])
 
   // 🗺️ Add markers to the state when the data is fetched
   useEffect(() => {
     if (markerData && markerData.markers && markerData.markers.nodes) {
       markerData.markers.nodes.forEach((marker) => {
-        // TODO: put radius into the database
-        dispatch({ type: 'MARKER_ADD', payload: { ...marker, radius: 10 } })
+        if (!state.markers.some((existingMarker) => existingMarker.id === marker.id)) {
+          dispatch({ type: 'MARKER_ADD', payload: marker })
+        }
       })
     }
   }, [markerData])

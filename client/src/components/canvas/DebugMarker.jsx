@@ -7,7 +7,7 @@ const DebugMarker = ({
   isDebugMode = true,
   scale = 2,
   position,
-  radius = 5,
+  radius = 10,
   color = "#ff0000"
 }) => {
   const [pulse, setPulse] = useState(1)
@@ -32,7 +32,7 @@ const DebugMarker = ({
       scale={scale}
       points={circlePoints}
       color={color}
-      lineWidth={0.15}
+      lineWidth={0.2}
       rotation={[Math.PI * -0.5, 0, 0]}
     />
     <Line
@@ -42,7 +42,7 @@ const DebugMarker = ({
       points={circlePoints}
       opacity={0.2}
       color={color}
-      lineWidth={0.15}
+      lineWidth={0.2}
       rotation={[Math.PI * -0.5, 0, 0]}
     />
     </>

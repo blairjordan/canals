@@ -63,9 +63,9 @@ export const REFUEL = gql`
   }
 `
 
-export const USE_LOCK = gql`
+export const OPERATE_LOCK = gql`
   mutation ($playerId: Int!, $markerId: Int) {
-    useLock(input: { markerId: $markerId, playerId: $playerId }) {
+    operateLock(input: { markerId: $markerId, playerId: $playerId }) {
       clientMutationId
       player {
         balance

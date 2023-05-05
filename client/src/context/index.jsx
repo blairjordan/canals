@@ -68,14 +68,6 @@ const appReducer = (state, action) => {
           position: action.payload,
         },
       }
-    case 'PLAYER_UPDATE_POSITION':
-      return {
-        ...state,
-        player: {
-          ...state.player,
-          position: action.payload,
-        },
-      }
     case 'REMOTE_PLAYERS_SET':
       return {
         ...state,
@@ -85,7 +77,7 @@ const appReducer = (state, action) => {
       return {
         ...state,
         remotePlayers: state.remotePlayers.map((player) =>
-          player.id === action.payload.player.id
+          player.id === action.payload.id
           ? {
             ...player,
             position: action.payload.position,
@@ -118,6 +110,17 @@ const appReducer = (state, action) => {
         geofences: state.geofences.some(g => g.id === action.payload.id)
           ? [...state.geofences]
           : [...state.geofences, action.payload],
+      }
+    case 'MARKER_UPDATE':
+      return {
+        ...state,
+        markers: state.markers.map((marker) =>
+          marker.id === action.payload.id
+          ? {
+            ...marker,
+            ...action.payload
+          } : marker,
+        ),
       }
     case 'GEOFENCE_REMOVE':
       return {

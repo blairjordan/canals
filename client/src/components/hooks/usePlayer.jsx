@@ -35,8 +35,6 @@ function usePlayer() {
         fuel: player.fuel,
         playerItems: player.playerItems
       }})
-      
-      console.log(playerData)
     }
   }, [loadingPlayer, playerData])
 

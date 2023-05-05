@@ -30,4 +30,8 @@ SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'go_fish');
 
 SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'sell_item');
 
+SELECT EXISTS(SELECT FROM pg_trigger WHERE tgname = 'marker_changes_trigger');
+
+SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'notify_marker_changes');
+
 ROLLBACK;

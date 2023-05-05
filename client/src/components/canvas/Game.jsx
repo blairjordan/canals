@@ -141,7 +141,7 @@ export default function Game({ route, ...props }) {
         <RemotePlayer key={`player-${id}`} id={id} />
       ))}
       <Seagull />
-      {state.markers.map(({ id, position: { x, z }, radius, type }) => {
+      {state.markers.map(({ id, position: { x, z }, radius, type, props }) => {
         // 🚩 Add DebugMarker for each marker
         return <DebugMarker
           key={id}
@@ -159,7 +159,11 @@ export default function Game({ route, ...props }) {
                 case 'fuel_station':
                   return '#F18118'
                 case 'lock':
-                  return '#0000ff'
+                  if (props.state.openGate === 'upper') {
+                    return '#0000ff'
+                  } else {
+                    return '#E500DF'
+                  }
                 default:
                   return '#999999'
               }

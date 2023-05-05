@@ -16,6 +16,4 @@ DROP FUNCTION IF EXISTS calculate_fuel_consumed(distance FLOAT);
 
 DROP FUNCTION IF EXISTS update_fuel();
 
-ALTER TABLE players DROP COLUMN IF EXISTS fuel;
-
 COMMIT;

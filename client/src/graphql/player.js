@@ -42,7 +42,7 @@ export const PLAYER = gql`
   }
 `
 
-export const PLAYER_UPDATE = gql`
+export const PLAYER_UPDATED = gql`
   mutation UpdatePlayer($id: BigInt!, $position: JSON!) {
     updatePlayer(input: { patch: { position: $position }, id: $id }) {
       player {
@@ -53,15 +53,13 @@ export const PLAYER_UPDATE = gql`
   }
 `
 
-export const PLAYERS_NEARBY = gql`
+export const PLAYER_UPDATES = gql`
   subscription {
     listen(topic: "player_updated") {
-      query {
-        players {
-          nodes {
-            position
-            id
-          }
+      relatedNode {
+        ... on Player {
+          position
+          id
         }
       }
     }

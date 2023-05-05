@@ -2,12 +2,6 @@
 
 BEGIN;
 
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='players' AND column_name='fuel') THEN
-    ALTER TABLE players ADD COLUMN fuel FLOAT NOT NULL DEFAULT 100;
-  END IF;
-END $$;
-
 CREATE OR REPLACE FUNCTION calculate_fuel_consumed(distance FLOAT)
 RETURNS FLOAT AS $$
 DECLARE

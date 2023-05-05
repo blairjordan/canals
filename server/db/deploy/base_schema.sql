@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS players (
   username TEXT NOT NULL,
   meta JSONB,
   position JSONB,
+  fuel FLOAT NOT NULL DEFAULT 100,
   balance NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
   last_fished TIMESTAMP WITHOUT TIME ZONE, -- The last time the player fished (used for cooldown)
   drifting_at TIMESTAMP WITHOUT TIME ZONE  -- The time the player started drifting (allows movement for N seconds after fuel depletion)
@@ -27,6 +28,7 @@ VALUES
 CREATE TABLE IF NOT EXISTS markers (
   id BIGSERIAL PRIMARY KEY,
   position JSONB NOT NULL,
+  radius NUMERIC(10, 2) NOT NULL DEFAULT 10.00,
   type VARCHAR(55),
   props JSONB
 );
@@ -259,7 +261,7 @@ CREATE OR REPLACE TRIGGER player_changes_trigger
   FOR EACH ROW
   EXECUTE FUNCTION notify_player_changes();
 
--- A nice view to return the grid node links recursively 👀
+-- A nice view to return the marker links recursively 👀
 CREATE OR REPLACE VIEW links_recursive AS
 WITH RECURSIVE links_recursive AS (
     -- 🛑 Non-recursive term
@@ -518,6 +520,36 @@ RETURNS SETOF nearby_players AS $$
   FROM player_distances pd
   WHERE pd.player_distance <= distance;
 $$ LANGUAGE sql STABLE;
+
+-- 📰 PostGraphile GQL subscription for marker updates
+CREATE OR REPLACE FUNCTION notify_marker_changes()
+  RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+  IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') THEN
+    PERFORM pg_notify(
+      'postgraphile:marker_updated',
+      json_build_object(
+        '__node__', json_build_array(
+          'markers',
+          (SELECT NEW.id)
+        )
+      )::text
+    );
+    RETURN NULL;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION notify_marker_changes() IS '@omit';
+
+-- 🔫 Trigger for marker updates
+CREATE OR REPLACE TRIGGER marker_changes_trigger
+  AFTER INSERT OR UPDATE
+  ON markers
+  FOR EACH ROW
+  EXECUTE FUNCTION notify_marker_changes();
 
 COMMIT;
 

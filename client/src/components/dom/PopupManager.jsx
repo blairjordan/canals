@@ -5,7 +5,7 @@ import Login from '@/components/dom/Login'
 import PopupStack from '@/components/dom/PopupStack'
 import { useAppContext } from '@/context'
 import { useMutation } from '@apollo/client'
-import { PURCHASE, SELL, REFUEL, USE_LOCK } from '@/graphql/action'
+import { PURCHASE, SELL, REFUEL, OPERATE_LOCK } from '@/graphql/action'
 import ItemGrid from '@/components/dom/ItemGrid'
 import ItemDisplay from '@/components/dom/ItemDisplay'
 import usePlayer from '../hooks/usePlayer';
@@ -51,7 +51,7 @@ function PopupManager(props) {
   })
 
   // 🚪 Use lock
-  const [useLock] = useMutation(USE_LOCK, {
+  const [operateLock] = useMutation(OPERATE_LOCK, {
     // TODO: debounce lock usage
     onCompleted: (data) => {
       console.log('Used lock successfully:', data)
@@ -179,7 +179,7 @@ function PopupManager(props) {
       }
 
       if (popup.type === 'lock') {
-        useLock({
+        operateLock({
           variables: {
             playerId: parseInt(state.player.id),
             markerId: parseInt(popup.marker.id),

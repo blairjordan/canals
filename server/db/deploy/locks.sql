@@ -3,13 +3,13 @@
 BEGIN;
 
 -- 🔒 Locks
-INSERT INTO markers (position, type, props)
+INSERT INTO markers (position, type, radius, props)
 VALUES
-  ('{"x": -10, "y": 0, "z": 5}', 'lock', FORMAT('{ "name": "Foxton Locks", "price": 50, "lockType": "single", "cooldown_seconds": 20, "state": { "openGate": "upper" }, "last_used": "%s" }', TO_CHAR(clock_timestamp(), 'YYYY-MM-DD HH24:MI:SS'))::JSONB),
-  ('{"x": 15, "y": 0, "z": 25}', 'lock', FORMAT('{ "name": "Caen Hill Locks", "price": 200, "lockType": "single", "cooldown_seconds": 20, "state": { "openGate": "lower" }, "last_used": "%s" }', TO_CHAR(clock_timestamp(), 'YYYY-MM-DD HH24:MI:SS'))::JSONB)
+  ('{"x": 775, "y": 0, "z": 445}', 'lock', 30, FORMAT('{ "name": "Foxton Locks", "price": 50, "lockType": "single", "cooldown_seconds": 20, "state": { "openGate": "upper" }, "last_used": "%s" }', TO_CHAR(clock_timestamp(), 'YYYY-MM-DD HH24:MI:SS'))::JSONB),
+  ('{"x": 762, "y": 0, "z": 105}', 'lock', 30, FORMAT('{ "name": "Caen Hill Locks", "price": 200, "lockType": "single", "cooldown_seconds": 20, "state": { "openGate": "lower" }, "last_used": "%s" }', TO_CHAR(clock_timestamp(), 'YYYY-MM-DD HH24:MI:SS'))::JSONB)
 ON CONFLICT DO NOTHING;
 
-CREATE OR REPLACE FUNCTION use_lock(player_id INTEGER, marker_id INTEGER)
+CREATE OR REPLACE FUNCTION operate_lock(player_id INTEGER, marker_id INTEGER)
 RETURNS players AS $$
 DECLARE
   lock_row markers%ROWTYPE;
