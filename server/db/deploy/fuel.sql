@@ -39,10 +39,10 @@ BEGIN
   IF OLD.fuel <= 0 THEN
 
     IF (OLD.drifting_at IS NULL) THEN
-      -- Set drift mode 🌬
+      -- 🌬 Set drift mode
       NEW.drifting_at = now();
     ELSIF (OLD.drifting_at < now() - drift_duration) THEN
-      -- Out of fuel, drift mode expired 🚫
+      -- 🚫 Out of fuel, drift mode expired
       RAISE EXCEPTION 'Cannot update position when fuel is 0';
     END IF;
 

@@ -294,6 +294,40 @@ FROM links_recursive;
 
 COMMENT ON VIEW links_recursive IS E'@foreignKey (to_marker_id) references markers (id)|@foreignFieldName toMarker\n@foreignKey (from_marker_id) references markers (id)|@foreignFieldName fromMarker';
 
+-- 📍 Get a list of markers within given distance to player
+CREATE OR REPLACE FUNCTION player_markers(player_id INTEGER, marker_type TEXT, marker_distance_limit FLOAT)
+RETURNS TABLE (marker_id INTEGER, marker_distance DOUBLE PRECISION) AS $$
+
+  -- TODO: Validate player session. Source player_id from session.
+
+  WITH current_player AS (
+    SELECT position AS position
+    FROM players
+    WHERE id = player_id
+  ),
+  player_distances AS (
+    SELECT
+      m.id,
+        ST_Distance(
+        ST_MakePoint(
+          (cp.position->>'x')::double precision,
+          (cp.position->>'z')::double precision
+        ),
+        ST_MakePoint(
+          (m.position->>'x')::double precision,
+          (m.position->>'z')::double precision
+        )
+    ) AS marker_distance
+    FROM markers m
+    CROSS JOIN current_player cp
+    WHERE m.type = marker_type
+  )
+  SELECT pd.*
+  FROM player_distances pd
+  WHERE pd.marker_distance <= marker_distance_limit
+  ORDER BY pd.marker_distance ASC;
+$$ LANGUAGE sql;
+
 -- 🏪 Purchase item function
 CREATE OR REPLACE FUNCTION purchase_item(player_id INTEGER, item_id INTEGER)
 RETURNS player_items AS $$
@@ -335,9 +369,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- 🎣 Fishin' function
-CREATE OR REPLACE FUNCTION fish(
-  player_id INTEGER
-  )
+CREATE OR REPLACE FUNCTION fish(player_id INTEGER)
 RETURNS player_items AS $$
   #variable_conflict use_variable
 DECLARE
@@ -350,33 +382,10 @@ BEGIN
   -- TODO: Validate player session
 
   -- Find closest marker within the given distance of the current player's position
-  WITH current_player AS (
-    SELECT position AS position
-    FROM players
-    WHERE id = player_id
-  ),
-  player_distances AS (
-    SELECT
-      m.id,
-        ST_Distance(
-        ST_MakePoint(
-          (cp.position->>'x')::double precision,
-          (cp.position->>'z')::double precision
-        ),
-        ST_MakePoint(
-          (m.position->>'x')::double precision,
-          (m.position->>'z')::double precision
-        )
-    ) AS marker_distance
-    FROM markers m
-    CROSS JOIN current_player cp
-    WHERE m.type = 'fishing_spot'
-  )
-  SELECT pd.id
+  SELECT gm.marker_id
   INTO marker_id_found
-  FROM player_distances pd
-  WHERE pd.marker_distance <= marker_distance_limit
-  ORDER BY pd.marker_distance ASC
+  FROM player_markers(player_id, 'fishing_spot', marker_distance_limit) gm
+  ORDER BY gm.marker_distance ASC
   LIMIT 1;
 
   IF NOT FOUND THEN

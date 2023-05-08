@@ -73,3 +73,42 @@ export const OPERATE_LOCK = gql`
     }
   }
 `
+
+export const PICKUP_PACKAGE = gql`
+  mutation ($playerId: Int!) {
+    pickupPackage(input: { playerId: $playerId }) {
+      player {
+        playerItems {
+          nodes {
+            id
+            props
+            item {
+              name
+              type
+            }
+          }
+        }
+      }
+    }
+  }
+`
+
+export const DELIVER_PACKAGE = gql`
+  mutation ($playerId: Int!) {
+    deliverPackage(input: { playerId: $playerId }) {
+      player {
+        balance
+        playerItems {
+          nodes {
+            id
+            props
+            item {
+              name
+              type
+            }
+          }
+        }
+      }
+    }
+  }
+`

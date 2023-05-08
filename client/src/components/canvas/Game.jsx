@@ -159,11 +159,13 @@ export default function Game({ route, ...props }) {
                 case 'fuel_station':
                   return '#F18118'
                 case 'lock':
-                  if (props.state.openGate === 'upper') {
+                  if (props.state.openGate === 'lower') {
                     return '#0000ff'
                   } else {
                     return '#E500DF'
                   }
+                case 'marina':
+                  return '#48CFE2'
                 default:
                   return '#999999'
               }
