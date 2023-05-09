@@ -2,8 +2,6 @@
 
 BEGIN;
 
-SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name = 'players' AND column_name = 'fuel');
-
 SELECT EXISTS(SELECT 1 FROM information_schema.routines WHERE routine_name = 'calculate_fuel_consumed');
 
 SELECT EXISTS(SELECT 1 FROM information_schema.routines WHERE routine_name = 'update_fuel');

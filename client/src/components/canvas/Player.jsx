@@ -7,7 +7,7 @@ import { BoatEngine } from './BoatEngine'
 import { OrbitControls } from '@react-three/drei'
 import { BoatWake } from './Wake'
 import { useMutation } from '@apollo/client'
-import { PLAYER_UPDATE } from '@/graphql/player'
+import { PLAYER_UPDATED } from '@/graphql/player'
 
 const Player = () => {
   const [state, dispatch] = useContext(AppContext)
@@ -25,7 +25,7 @@ const Player = () => {
   const [frameCounter, setFrameCounter] = useState(0)
 
   const [updatePlayer, { data: playerUpdateData, loading: playerUpdateLoading, error: playerUpdateError }] =
-    useMutation(PLAYER_UPDATE)
+    useMutation(PLAYER_UPDATED)
 
   useFrame((threeState, delta) => {
     const { engine, currentPlayerPosition, lastPlayerPosition, lastUpdatedPlayerPosition, lastUpdatedPlayerRotation } =

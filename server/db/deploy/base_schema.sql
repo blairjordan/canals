@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS players (
   username TEXT NOT NULL,
   meta JSONB,
   position JSONB,
+  fuel FLOAT NOT NULL DEFAULT 100,
   balance NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
   last_fished TIMESTAMP WITHOUT TIME ZONE, -- The last time the player fished (used for cooldown)
   drifting_at TIMESTAMP WITHOUT TIME ZONE  -- The time the player started drifting (allows movement for N seconds after fuel depletion)
@@ -27,6 +28,7 @@ VALUES
 CREATE TABLE IF NOT EXISTS markers (
   id BIGSERIAL PRIMARY KEY,
   position JSONB NOT NULL,
+  radius NUMERIC(10, 2) NOT NULL DEFAULT 10.00,
   type VARCHAR(55),
   props JSONB
 );
@@ -137,7 +139,7 @@ ON CONFLICT DO NOTHING;
 -- 🎣 Fishing vendor
 WITH vendor_insert AS (
   INSERT INTO markers (position, type, props)
-  VALUES ('{"x": -20, "y": 20, "z": 0}', 'vendor', '{"name": "Bob''s Bait''n''Tackle"}')
+  VALUES ('{"x": -20, "y": 0, "z": 20}', 'vendor', '{"name": "Bob''s Bait''n''Tackle"}')
   RETURNING id
 ),
 item_insert AS (
@@ -154,7 +156,7 @@ SELECT vendor_insert.id, item_insert.id FROM vendor_insert, item_insert;
 
 -- 🦐 Fishmonger (purchaser of fish items)
 INSERT INTO markers (position, type, props)
-VALUES ('{"x": 75, "y": -40, "z": 15}', 'vendor', '{"name": "The Salmon Slinger", "purchase_item_types": ["fish"]}');
+VALUES ('{"x": 75, "y": 0, "z": 15}', 'vendor', '{"name": "The Salmon Slinger", "purchase_item_types": ["fish"]}');
 
 -- 👬 Give demo players a rod
 WITH fishing_rod AS (
@@ -180,7 +182,7 @@ WHERE players.username = 'matt';
 -- 🪴 Florist vendor
 WITH vendor_insert AS (
   INSERT INTO markers (position, type, props)
-  VALUES ('{"x": 100, "y": 100, "z": 0}', 'vendor', '{"name": "Mary''s Florist"}')
+  VALUES ('{"x": 100, "y": 0, "z": 100}', 'vendor', '{"name": "Mary''s Florist"}')
   RETURNING id
 ),
 item_insert AS (
@@ -259,7 +261,7 @@ CREATE OR REPLACE TRIGGER player_changes_trigger
   FOR EACH ROW
   EXECUTE FUNCTION notify_player_changes();
 
--- A nice view to return the grid node links recursively 👀
+-- A nice view to return the marker links recursively 👀
 CREATE OR REPLACE VIEW links_recursive AS
 WITH RECURSIVE links_recursive AS (
     -- 🛑 Non-recursive term
@@ -291,6 +293,40 @@ SELECT
 FROM links_recursive;
 
 COMMENT ON VIEW links_recursive IS E'@foreignKey (to_marker_id) references markers (id)|@foreignFieldName toMarker\n@foreignKey (from_marker_id) references markers (id)|@foreignFieldName fromMarker';
+
+-- 📍 Get a list of markers within given distance to player
+CREATE OR REPLACE FUNCTION player_markers(player_id INTEGER, marker_type TEXT, marker_distance_limit FLOAT)
+RETURNS TABLE (marker_id INTEGER, marker_distance DOUBLE PRECISION) AS $$
+
+  -- TODO: Validate player session. Source player_id from session.
+
+  WITH current_player AS (
+    SELECT position AS position
+    FROM players
+    WHERE id = player_id
+  ),
+  player_distances AS (
+    SELECT
+      m.id,
+        ST_Distance(
+        ST_MakePoint(
+          (cp.position->>'x')::double precision,
+          (cp.position->>'z')::double precision
+        ),
+        ST_MakePoint(
+          (m.position->>'x')::double precision,
+          (m.position->>'z')::double precision
+        )
+    ) AS marker_distance
+    FROM markers m
+    CROSS JOIN current_player cp
+    WHERE m.type = marker_type
+  )
+  SELECT pd.*
+  FROM player_distances pd
+  WHERE pd.marker_distance <= marker_distance_limit
+  ORDER BY pd.marker_distance ASC;
+$$ LANGUAGE sql;
 
 -- 🏪 Purchase item function
 CREATE OR REPLACE FUNCTION purchase_item(player_id INTEGER, item_id INTEGER)
@@ -333,9 +369,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- 🎣 Fishin' function
-CREATE OR REPLACE FUNCTION fish(
-  player_id INTEGER
-  )
+CREATE OR REPLACE FUNCTION fish(player_id INTEGER)
 RETURNS player_items AS $$
   #variable_conflict use_variable
 DECLARE
@@ -348,33 +382,10 @@ BEGIN
   -- TODO: Validate player session
 
   -- Find closest marker within the given distance of the current player's position
-  WITH current_player AS (
-    SELECT position AS position
-    FROM players
-    WHERE id = player_id
-  ),
-  player_distances AS (
-    SELECT
-      m.id,
-        ST_Distance(
-        ST_MakePoint(
-          (cp.position->>'x')::double precision,
-          (cp.position->>'z')::double precision
-        ),
-        ST_MakePoint(
-          (m.position->>'x')::double precision,
-          (m.position->>'z')::double precision
-        )
-    ) AS marker_distance
-    FROM markers m
-    CROSS JOIN current_player cp
-    WHERE m.type = 'fishing_spot'
-  )
-  SELECT pd.id
+  SELECT gm.marker_id
   INTO marker_id_found
-  FROM player_distances pd
-  WHERE pd.marker_distance <= marker_distance_limit
-  ORDER BY pd.marker_distance ASC
+  FROM player_markers(player_id, 'fishing_spot', marker_distance_limit) gm
+  ORDER BY gm.marker_distance ASC
   LIMIT 1;
 
   IF NOT FOUND THEN
@@ -518,6 +529,36 @@ RETURNS SETOF nearby_players AS $$
   FROM player_distances pd
   WHERE pd.player_distance <= distance;
 $$ LANGUAGE sql STABLE;
+
+-- 📰 PostGraphile GQL subscription for marker updates
+CREATE OR REPLACE FUNCTION notify_marker_changes()
+  RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+  IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') THEN
+    PERFORM pg_notify(
+      'postgraphile:marker_updated',
+      json_build_object(
+        '__node__', json_build_array(
+          'markers',
+          (SELECT NEW.id)
+        )
+      )::text
+    );
+    RETURN NULL;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION notify_marker_changes() IS '@omit';
+
+-- 🔫 Trigger for marker updates
+CREATE OR REPLACE TRIGGER marker_changes_trigger
+  AFTER INSERT OR UPDATE
+  ON markers
+  FOR EACH ROW
+  EXECUTE FUNCTION notify_marker_changes();
 
 COMMIT;
 

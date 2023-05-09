@@ -2,12 +2,6 @@
 
 BEGIN;
 
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='players' AND column_name='fuel') THEN
-    ALTER TABLE players ADD COLUMN fuel FLOAT NOT NULL DEFAULT 100;
-  END IF;
-END $$;
-
 CREATE OR REPLACE FUNCTION calculate_fuel_consumed(distance FLOAT)
 RETURNS FLOAT AS $$
 DECLARE
@@ -45,10 +39,10 @@ BEGIN
   IF OLD.fuel <= 0 THEN
 
     IF (OLD.drifting_at IS NULL) THEN
-      -- Set drift mode 🌬
+      -- 🌬 Set drift mode
       NEW.drifting_at = now();
     ELSIF (OLD.drifting_at < now() - drift_duration) THEN
-      -- Out of fuel, drift mode expired 🚫
+      -- 🚫 Out of fuel, drift mode expired
       RAISE EXCEPTION 'Cannot update position when fuel is 0';
     END IF;
 
@@ -64,20 +58,22 @@ WHEN (OLD.position IS DISTINCT FROM NEW.position)
 EXECUTE FUNCTION fuel_is_zero();
 
 -- 🏪 Refueling stations
-INSERT INTO markers (position, type)
+INSERT INTO markers (position, type, props)
 VALUES
-  ('{"x": 400, "y": 325, "z": 0}', 'fuel_station'),
-  ('{"x": 725, "y": 75, "z": 0}', 'fuel_station')
+  ('{"x": -30, "y": 0, "z": 50}', 'fuel_station', '{ "name": "Bridge 61 Marina Fueling Station" }'),
+  ('{"x": 10, "y": 0, "z": 90}', 'fuel_station', ' {"name": "Sawley Marina Fueling Station" }')
 ON CONFLICT DO NOTHING;
 
 -- ⛽ Refuel
 CREATE OR REPLACE FUNCTION refuel(player_id INTEGER)
 RETURNS players AS $$
 DECLARE
-  -- TODO: Adjust as per player's engine type
-  fuel_price_per_unit FLOAT := 0.15;
+  -- TODO: Adjust as per station / player's engine type
+  fuel_price_per_unit FLOAT := 0.25;
   updated_player players;
 BEGIN
+
+  -- TODO: Check if player is at a refueling station
 
   SELECT * INTO updated_player FROM players WHERE id = player_id;
 

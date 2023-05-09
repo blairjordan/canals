@@ -50,3 +50,65 @@ export const SELL = gql`
     }
   }
 `
+
+export const REFUEL = gql`
+  mutation Refuel($playerId: Int!) {
+    refuel(input: { playerId: $playerId }) {
+      player {
+        id
+        fuel
+        balance
+      }
+    }
+  }
+`
+
+export const OPERATE_LOCK = gql`
+  mutation ($playerId: Int!, $markerId: Int) {
+    operateLock(input: { markerId: $markerId, playerId: $playerId }) {
+      clientMutationId
+      player {
+        balance
+      }
+    }
+  }
+`
+
+export const PICKUP_PACKAGE = gql`
+  mutation ($playerId: Int!) {
+    pickupPackage(input: { playerId: $playerId }) {
+      player {
+        playerItems {
+          nodes {
+            id
+            props
+            item {
+              name
+              type
+            }
+          }
+        }
+      }
+    }
+  }
+`
+
+export const DELIVER_PACKAGE = gql`
+  mutation ($playerId: Int!) {
+    deliverPackage(input: { playerId: $playerId }) {
+      player {
+        balance
+        playerItems {
+          nodes {
+            id
+            props
+            item {
+              name
+              type
+            }
+          }
+        }
+      }
+    }
+  }
+`

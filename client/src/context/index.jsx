@@ -52,6 +52,14 @@ const appReducer = (state, action) => {
           isFishing: action.payload,
         },
       }
+    case 'PLAYER_UPDATE':
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          ...action.payload,
+        },
+      }
     case 'PLAYER_UPDATE_POSITION':
       return {
         ...state,
@@ -69,7 +77,7 @@ const appReducer = (state, action) => {
       return {
         ...state,
         remotePlayers: state.remotePlayers.map((player) =>
-          player.id === action.payload.player.id
+          player.id === action.payload.id
           ? {
             ...player,
             position: action.payload.position,
@@ -103,6 +111,17 @@ const appReducer = (state, action) => {
           ? [...state.geofences]
           : [...state.geofences, action.payload],
       }
+    case 'MARKER_UPDATE':
+      return {
+        ...state,
+        markers: state.markers.map((marker) =>
+          marker.id === action.payload.id
+          ? {
+            ...marker,
+            ...action.payload
+          } : marker,
+        ),
+      }
     case 'GEOFENCE_REMOVE':
       return {
         ...state,
@@ -113,7 +132,7 @@ const appReducer = (state, action) => {
         ...state,
         popups: [...state.popups, action.payload],
       }
-    case 'UI_POPUP_INTERACT':
+    case 'SET_UI_POPUP_INTERACT':
       return {
         ...state,
         popups: state.popups.map((popup) =>

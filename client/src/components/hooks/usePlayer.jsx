@@ -23,10 +23,18 @@ function usePlayer() {
 
   useEffect(() => {
     if (!loadingPlayer && playerData && playerData.player) {
-      if (!state.player.id) {
-        dispatch({ type: 'LOGIN', payload: playerData.player })
+      const { player } = playerData;
+
+      if (!player.id) {
+        dispatch({ type: 'LOGIN', payload: player })
+        return
       }
-      console.log(playerData)
+
+      dispatch({ type: 'PLAYER_UPDATE', payload: {
+        balance: player.balance,
+        fuel: player.fuel,
+        playerItems: player.playerItems
+      }})
     }
   }, [loadingPlayer, playerData])
 

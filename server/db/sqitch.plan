@@ -4,3 +4,5 @@
 
 base_schema 2023-03-02T13:44:47Z blair <blair@optimus> # Add schema for all canals objects.
 fuel 2023-03-14T19:00:56Z blair <blair@optimus> # Add fuel consumption objects.
+locks 2023-05-03T15:06:54Z blair <blair@optimus> # Locking markers and functions.
+deliveries 2023-05-04T04:14:01Z blair <blair@optimus> # Add delivery quests
