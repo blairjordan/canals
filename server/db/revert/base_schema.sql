@@ -12,7 +12,7 @@ DROP FUNCTION IF EXISTS fish(player_id INTEGER);
 
 DROP FUNCTION IF EXISTS purchase_item(player_id INTEGER, item_id INTEGER);
 
-DROP FUNCTION IF EXISTS player_markers(player_id INTEGER, marker_type TEXT, marker_distance_limit INTEGER);
+DROP FUNCTION IF EXISTS player_markers(player_id INTEGER, marker_type TEXT, marker_distance_limit FLOAT);
 
 DROP VIEW IF EXISTS links_recursive;
 

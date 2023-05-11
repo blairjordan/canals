@@ -5,52 +5,64 @@ BEGIN;
 -- 🔒 Locks
 INSERT INTO markers (position, type, radius, props)
 VALUES
-  ('{"x": 775, "y": 0, "z": 445}', 'lock', 30, FORMAT('{ "name": "Foxton Locks", "price": 50, "lockType": "single", "cooldown_seconds": 20, "state": { "openGate": "upper" }, "last_used": "%s" }', TO_CHAR(clock_timestamp(), 'YYYY-MM-DD HH24:MI:SS'))::JSONB),
-  ('{"x": 762, "y": 0, "z": 105}', 'lock', 30, FORMAT('{ "name": "Caen Hill Locks", "price": 200, "lockType": "single", "cooldown_seconds": 20, "state": { "openGate": "lower" }, "last_used": "%s" }', TO_CHAR(clock_timestamp(), 'YYYY-MM-DD HH24:MI:SS'))::JSONB)
+  ('{"x": 775, "y": 0, "z": 445}', 'lock', 30, FORMAT('{ "name": "Foxton Locks", "price": 25, "lockType": "single", "transition_cooldown_seconds": 10, "usage_cooldown_seconds": 60, "player_id": 0, "state": { "openGate": "upper" }, "last_transition": "%1$s", "last_used": "%1$s" }', TO_CHAR(clock_timestamp() - INTERVAL '1 minute', 'YYYY-MM-DD HH24:MI:SS'))::JSONB),
+  ('{"x": 762, "y": 0, "z": 105}', 'lock', 30, FORMAT('{ "name": "Caen Hill Locks", "price": 30, "lockType": "single", "transition_cooldown_seconds": 10, "usage_cooldown_seconds": 60, "player_id": 0, "state": { "openGate": "lower" }, "last_transition": "%1$s", "last_used": "%1$s" }', TO_CHAR(clock_timestamp() - INTERVAL '1 minute', 'YYYY-MM-DD HH24:MI:SS'))::JSONB)
 ON CONFLICT DO NOTHING;
 
-CREATE OR REPLACE FUNCTION operate_lock(player_id INTEGER, marker_id INTEGER)
-RETURNS players AS $$
+CREATE OR REPLACE FUNCTION operate_lock(player_id INTEGER)
+RETURNS markers AS $$
 DECLARE
   lock_row markers%ROWTYPE;
-  updated_player players;
+  marker_id_found INTEGER;
+  is_usage_cooldown_active BOOLEAN := FALSE;
+  is_same_player BOOLEAN := FALSE;
+  fee_payable FLOAT := 0;
   new_state JSONB = '{}';
 BEGIN
 
-  -- TODO: Check if player is at the lock
-
-  -- TODO: Validate states
-
-  SELECT * INTO updated_player FROM players WHERE id = player_id;
-
-  SELECT * INTO lock_row FROM markers WHERE id = marker_id AND type = 'lock';
-
-  -- ⏳ Check cooldown timer
-  IF (COALESCE((lock_row.props->>'last_used')::TIMESTAMPTZ, '-infinity') > clock_timestamp() - (lock_row.props->>'cooldown_seconds')::INTERVAL) THEN
-    RAISE EXCEPTION 'Lock is on cooldown';
-  END IF;
-
-  -- Update player's fuel level and balance
-  WITH lock_price AS (
-    SELECT (m.props ->> 'price')::INTEGER AS price
-    FROM markers m
-    WHERE type = 'lock'
-    AND id = marker_id
-  ),
-  player AS (
-    UPDATE players p
-    SET balance = balance - lp.price
-    FROM lock_price lp
-    WHERE p.id = player_id
-      AND p.balance >= lp.price
-    RETURNING p.*
-  )
-  SELECT *
-  INTO updated_player
-  FROM player;
+  -- 📡 Get the closest lock marker
+  SELECT gm.marker_id
+  INTO marker_id_found
+  FROM player_markers(player_id, 'lock', 100) gm
+  ORDER BY gm.marker_distance ASC
+  LIMIT 1;
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'Insufficient player balance to pay lock fee';
+    RAISE EXCEPTION 'Lock not found';
+  END IF;
+
+  SELECT * INTO lock_row FROM markers WHERE id = marker_id_found AND type = 'lock';
+
+  is_same_player := (lock_row.props->>'player_id')::INTEGER = player_id;
+
+  IF (COALESCE((lock_row.props->>'last_used')::TIMESTAMPTZ, '-infinity') > clock_timestamp() - (lock_row.props->>'usage_cooldown_seconds')::INTERVAL) THEN
+    is_usage_cooldown_active := true;
+  END IF;
+
+  -- ⏳ Check usage timer
+  IF (is_usage_cooldown_active AND NOT is_same_player) THEN
+    RAISE EXCEPTION 'Lock is currently being used by another player';
+  END IF;
+
+  -- ⏳ Check transition cooldown timer
+  IF (COALESCE((lock_row.props->>'last_transition')::TIMESTAMPTZ, '-infinity') > clock_timestamp() - (lock_row.props->>'transition_cooldown_seconds')::INTERVAL) THEN
+    RAISE EXCEPTION 'Lock transition is on cooldown';
+  END IF;
+
+  fee_payable := CASE WHEN is_usage_cooldown_active AND is_same_player THEN 0 ELSE (lock_row.props->>'price')::FLOAT END;
+
+  RAISE NOTICE 'is_same_player %', is_same_player::TEXT;
+  RAISE NOTICE 'is_usage_cooldown_active %', is_usage_cooldown_active::TEXT;
+  RAISE NOTICE 'Fee is %', fee_payable::TEXT;
+
+  -- Update player's balance
+  UPDATE players p
+  SET balance = balance - fee_payable
+  WHERE p.id = player_id
+    AND p.balance >= fee_payable;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Insufficient balance to pay lock fee';
   END IF;
 
   -- 🚦 Update the lock state, depending on the lock type
@@ -64,15 +76,26 @@ BEGIN
     RAISE EXCEPTION 'Unable to determine state of unknown lockType';
   END IF;
 
-  UPDATE markers
-  SET props = jsonb_set(
-    jsonb_set(props,
-      -- 🔄 Update lock cooldown
-      '{last_used}', to_jsonb(clock_timestamp()), true),
-      '{state}', new_state, true)
-  WHERE id = marker_id;
+UPDATE markers
+SET props = props ||
+  jsonb_build_object(
+    -- 🔄 Update global cooldown
+    'last_transition', clock_timestamp(),
+    -- 🔄 Update player cooldown
+    'last_used',
+        CASE
+          WHEN fee_payable <> 0 THEN clock_timestamp()
+          ELSE (lock_row.props->>'last_used')::TIMESTAMPTZ
+        END,
+    'state', props->'state' || new_state,
+    'player_id', player_id
+  )
+WHERE id = marker_id_found;
 
-  RETURN updated_player;
+  -- Return the updated lock marker
+  SELECT * INTO lock_row FROM markers WHERE id = marker_id_found AND type = 'lock';
+
+  RETURN lock_row;
 
 END;
 $$ LANGUAGE plpgsql;

@@ -64,11 +64,11 @@ export const REFUEL = gql`
 `
 
 export const OPERATE_LOCK = gql`
-  mutation ($playerId: Int!, $markerId: Int) {
-    operateLock(input: { markerId: $markerId, playerId: $playerId }) {
-      clientMutationId
-      player {
-        balance
+  mutation ($playerId: Int!) {
+    operateLock(input: { playerId: $playerId }) {
+      marker {
+        id
+        props
       }
     }
   }

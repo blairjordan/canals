@@ -182,7 +182,6 @@ function PopupManager(props) {
         operateLock({
           variables: {
             playerId: parseInt(state.player.id),
-            markerId: parseInt(popup.marker.id),
           },
         })
       }
@@ -230,7 +229,7 @@ function PopupManager(props) {
         </Popup>
         )
       )}
-      {/* ⛽ Refuel popup */}
+      {/* ⛽ Refuel and 🔒 lock popups */}
       {state.popups
         .filter(({type}) => ['fuel_station', 'lock'].includes(type))
         .map(({ id, title, message }) => (
