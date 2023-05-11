@@ -9,6 +9,7 @@ import { DebugMarker } from './DebugMarker'
 import { RemotePlayer } from './RemotePlayer'
 import TWEEN from '@tweenjs/tween.js'
 import { Seagull } from './Seagulls'
+import { Objects } from './Objects'
 import { FISH } from '@/graphql/action'
 import usePlayer from '../hooks/usePlayer'
 import { Locks } from './Locks'
@@ -132,9 +133,9 @@ export default function Game({ route, ...props }) {
   return (
     <>
       {/* <Terrain /> */}
-      <CanalWater ref={canalRef}>
-      </CanalWater>
+      <CanalWater ref={canalRef} />
       <Locks canalRef={canalRef} />
+      <Objects canalRef={canalRef} />
       <Sky scale={5000} sunPosition={[0, 750, -4500]} turbidity={0.1} />
       <Player />
       {state.remotePlayers.map(({ id }) => (

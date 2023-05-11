@@ -5,7 +5,7 @@ BEGIN;
 WITH marina AS (
   INSERT INTO markers (position, type, props, radius)
   VALUES (
-    '{ "x": 160, "y": 0, "z": -77 }',
+    '{ "x": 650, "y": 0, "z": -58 }',
     'marina',
     '{ "name": "Brighton Marina" }',
     25

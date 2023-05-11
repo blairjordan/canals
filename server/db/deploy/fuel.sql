@@ -61,7 +61,7 @@ EXECUTE FUNCTION fuel_is_zero();
 INSERT INTO markers (position, type, props)
 VALUES
   ('{"x": -30, "y": 0, "z": 50}', 'fuel_station', '{ "name": "Bridge 61 Marina Fueling Station" }'),
-  ('{"x": 10, "y": 0, "z": 90}', 'fuel_station', ' {"name": "Sawley Marina Fueling Station" }')
+  ('{"x": 135, "y": 0, "z": -78}', 'fuel_station', ' {"name": "Sawley Marina Fueling Station" }')
 ON CONFLICT DO NOTHING;
 
 -- ⛽ Refuel
