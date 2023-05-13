@@ -1,9 +1,11 @@
 import dynamic from 'next/dynamic'
 import PopupManager from '@/components/dom/PopupManager'
 import PlayerInfo from '@/components/dom/PlayerInfo'
+import ChatBox from '@/components/dom/ChatBox'
 import { useAppContext } from '@/context'
 import { useLazyQuery, useSubscription, useMutation } from '@apollo/client'
 import { PLAYERS_ALL, PLAYER_UPDATES } from '@/graphql/player'
+import { CHAT_GLOBAL, MESSAGE_CREATE } from '@/graphql/message'
 import { MARKERS, MARKER_UPDATED } from '@/graphql/marker'
 import { useCallback, useEffect } from 'react'
 
@@ -14,12 +16,19 @@ export default function Page(props) {
 
   const [getRemotePlayers, { loading: loadingRemotePlayers, data: remotePlayersData, error: remotePlayersError }] = useLazyQuery(PLAYERS_ALL)
   const [getMarkers, { loading: loadingMarkers, data: markerData, error: markerError }] = useLazyQuery(MARKERS)
-  
+  const [createMessage, { loading: loadingCreateMessage, data: createMessageData, error: createMessageError }] = useMutation(MESSAGE_CREATE)
+
+  useSubscription(CHAT_GLOBAL, {
+    onData: (payload) => {
+      if (!(payload.data)) { return }
+      const { data: { data: { listen: { relatedNode: messageNode } } } } = payload
+      handleMessage(messageNode)
+    },
+  })
+
   useSubscription(MARKER_UPDATED, {
     onData: (payload) => {
-      if (!(payload.data)) {
-        return
-      }
+      if (!(payload.data)) { return }
       const { data: { data: { listen: { relatedNode: markerNode } } } } = payload
       handleMarkerUpdate(markerNode)
     },
@@ -27,13 +36,31 @@ export default function Page(props) {
   
   useSubscription(PLAYER_UPDATES, {
     onData: (payload) => {
-      if (!(payload.data)) {
-        return
-      }
+      if (!(payload.data)) { return }
       const { data: { data: { listen: { relatedNode: playerNode } } } } = payload
       handlePlayerUpdate(playerNode)
     },
   })
+
+  const handleMessage = useCallback(
+    (message) => {
+      if (!(state.player && state.player.id)) {
+        return
+      }
+      dispatch({ type: 'MESSAGE_ADD', payload: message })
+    },
+    [dispatch, state.player]
+  )
+
+  const handleMessageSend = useCallback(
+    (message) => {
+      if (!(state.player && state.player.id)) {
+        return
+      }
+      createMessage({ variables: { playerId: state.player.id, message } })
+    },
+    [dispatch, state.player]
+  )
 
   const handlePlayerUpdate = useCallback(
     (updatedPlayer) => {
@@ -92,6 +119,7 @@ export default function Page(props) {
     <>
       <PopupManager />
       <PlayerInfo />
+      <ChatBox handleMessageSend={handleMessageSend} />
     </>
   )
 }

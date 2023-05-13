@@ -6,6 +6,8 @@ import { gql } from '@apollo/client'
 // 🧑‍🌾 vendor
 // ⛽ fuel_station
 // 🚪 lock
+// 🚢 marina
+
 const MARKER_FIELDS = gql`
   fragment MarkerFields on Marker {
     id

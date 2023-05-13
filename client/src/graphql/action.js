@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client'
 
 export const FISH = gql`
-  mutation Fish($playerId: Int!) {
+  mutation ($playerId: Int!) {
     fish(input: { playerId: $playerId }) {
       playerItem {
         id
@@ -18,7 +18,7 @@ export const FISH = gql`
 `
 
 export const PURCHASE = gql`
-  mutation Purchase($playerId: Int!, $itemId: Int!) {
+  mutation ($playerId: Int!, $itemId: Int!) {
     purchaseItem(input: { playerId: $playerId, itemId: $itemId }) {
       playerItem {
         id
@@ -35,7 +35,7 @@ export const PURCHASE = gql`
 `
 
 export const SELL = gql`
-  mutation Sell($markerId: Int!, $playerItemId: Int!) {
+  mutation ($markerId: Int!, $playerItemId: Int!) {
     sellItem(input: { markerId: $markerId, playerItemId: $playerItemId }) {
       player {
         id
@@ -52,7 +52,7 @@ export const SELL = gql`
 `
 
 export const REFUEL = gql`
-  mutation Refuel($playerId: Int!) {
+  mutation ($playerId: Int!) {
     refuel(input: { playerId: $playerId }) {
       player {
         id

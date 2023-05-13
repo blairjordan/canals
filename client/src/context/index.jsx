@@ -2,6 +2,8 @@ import React, { createContext, useContext, useReducer } from 'react'
 
 export const AppContext = createContext()
 
+const MESSAGES_MAX = 20
+
 const initialState = {
   loggedIn: false,
   player: {
@@ -17,6 +19,7 @@ const initialState = {
   geofences: [],
   popups: [],
   locks: [],
+  messages: [],
   actions: {
     forward: false,
     backward: false,
@@ -157,6 +160,12 @@ const appReducer = (state, action) => {
         ...state,
         popups,
       };
+    // 💬 Messages
+    case 'MESSAGE_ADD':
+      return {
+        ...state,
+        messages: [...state.messages, action.payload].slice(-MESSAGES_MAX),
+      }
     // ⌨ Actions
     case 'ACTION_MOVE_FORWARD':
       return {

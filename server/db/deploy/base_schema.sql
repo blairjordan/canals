@@ -232,7 +232,7 @@ item_insert AS (
 INSERT INTO marker_items (marker_id, item_id)
 SELECT vendor_insert.id, item_insert.id FROM vendor_insert, item_insert;
 
--- 📰 PostGraphile GQL subscbription for player updates
+-- 📰 PostGraphile GQL subscription for player updates
 CREATE OR REPLACE FUNCTION notify_player_changes()
   RETURNS TRIGGER AS
 $$
