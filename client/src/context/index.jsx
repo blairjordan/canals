@@ -6,6 +6,7 @@ const MESSAGES_MAX = 20
 
 const initialState = {
   loggedIn: false,
+  isUIFocus: false,
   player: {
     position: {
       x: undefined,
@@ -46,6 +47,11 @@ const appReducer = (state, action) => {
         ...state,
         loggedIn: false,
         player: null,
+      }
+    case 'SET_UI_FOCUS':
+      return {
+        ...state,
+        isUIFocus: action.payload,
       }
     case 'PLAYER_SET_FISHING':
       return {
@@ -167,68 +173,13 @@ const appReducer = (state, action) => {
         messages: [...state.messages, action.payload].slice(-MESSAGES_MAX),
       }
     // ⌨ Actions
-    case 'ACTION_MOVE_FORWARD':
+    case 'ACTION_SET':
+      if (state.isUIFocus) { return state; }
       return {
         ...state,
         actions: {
           ...state.actions,
-          forward: action.payload,
-        },
-      }
-    case 'ACTION_MOVE_BACKWARD':
-      return {
-        ...state,
-        actions: {
-          ...state.actions,
-          backward: action.payload,
-        },
-      }
-    case 'ACTION_MOVE_LEFT':
-      return {
-        ...state,
-        actions: {
-          ...state.actions,
-          left: action.payload,
-        },
-      }
-    case 'ACTION_MOVE_RIGHT':
-      return {
-        ...state,
-        actions: {
-          ...state.actions,
-          right: action.payload,
-        },
-      }
-    case 'ACTION_FISH':
-      return {
-        ...state,
-        actions: {
-          ...state.actions,
-          fish: action.payload,
-        },
-      }
-    case 'ACTION_INTERACT':
-      return {
-        ...state,
-        actions: {
-          ...state.actions,
-          interact: action.payload,
-        },
-      }
-    case 'ACTION_BOOST':
-      return {
-        ...state,
-        actions: {
-          ...state.actions,
-          boosting: action.payload,
-        },
-      }
-    case 'ACTION_CANCEL':
-      return {
-        ...state,
-        actions: {
-          ...state.actions,
-          cancel: action.payload,
+          [action.payload.action]: action.payload.value,
         }
       }
     default:

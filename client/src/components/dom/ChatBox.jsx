@@ -18,9 +18,23 @@ function ChatWindow(props) {
   };
 
   useEffect(() => {
-    // Scroll to the bottom of the chat window when new messages are added
+    // ⬇ scroll to the bottom of the chat window when new messages are added
     chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
   }, [state.messages]);
+
+  const handleFocus = () => {
+    dispatch({ type: 'SET_UI_FOCUS', payload: true });
+  };
+
+  const handleBlur = () => {
+    dispatch({ type: 'SET_UI_FOCUS', payload: false });
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleMessageSend();
+    }
+  };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 mx-auto w-2/3 min-w-[380px] p-2 bg-gray-900 rounded-lg shadow-md z-50 opacity-70">
@@ -38,6 +52,9 @@ function ChatWindow(props) {
           placeholder="Type a message..."
           value={inputValue}
           onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
         />
         <button
           className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-r-lg"
