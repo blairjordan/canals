@@ -136,6 +136,17 @@ VALUES
 (1, 3)
 ON CONFLICT DO NOTHING;
 
+-- 🏠 Add decor items
+INSERT INTO items (item_key, name, type, description, price)
+VALUES
+  ('deck_chair', 'Deck Chair', 'decor', 'Comfortable and relaxing seating option', 25),
+  ('floor_mat', 'Floor Mat', 'decor', 'Durable and slip-resistant floor mat', 20),
+  ('life_buoy', 'Life Buoy', 'decor', 'Reliable tool for rescue and a symbol of safety and preparedness', 35),
+  ('bell', 'Bell', 'decor', 'Elegant canal boat bell, crafted from brass, emitting a melodious tone that echoes along the waterways', 80),
+  ('telescope', 'Telescope', 'decor', 'Functional telescope for observing distant horizons and discovering hidden treasures', 175),
+  ('captain_hat', 'Captain Hat', 'decor', 'Stylish captain hat, channeling your inner seafaring adventurer', 25),
+  ('fishing_bucket', 'Fishing Bucket', 'decor', 'Convenient and reliable fishing bucket, perfect for storing bait, catch, and fishing essentials during your angling expeditions', 5);
+
 -- 🎣 Fishing vendor
 WITH vendor_insert AS (
   INSERT INTO markers (position, type, props)
@@ -157,27 +168,6 @@ SELECT vendor_insert.id, item_insert.id FROM vendor_insert, item_insert;
 -- 🦐 Fishmonger (purchaser of fish items)
 INSERT INTO markers (position, type, props)
 VALUES ('{"x": 75, "y": 0, "z": 15}', 'vendor', '{"name": "The Salmon Slinger", "purchase_item_types": ["fish"]}');
-
--- 👬 Give demo players a rod
-WITH fishing_rod AS (
-  SELECT id FROM items WHERE item_key = 'spincast_rod'
-)
-INSERT INTO player_items (player_id, item_id, props)
-SELECT players.id, fishing_rod.id, '{"equipped": true}'::JSONB
-FROM players
-CROSS JOIN fishing_rod;
-
--- 🐡 Give player some fish to sell
-WITH fish AS (
-  SELECT id FROM items WHERE item_key = 'catfish'
-  UNION SELECT id FROM items WHERE item_key = 'trout'
-  UNION SELECT id FROM items WHERE item_key = 'salmon'
-)
-INSERT INTO player_items (player_id, item_id)
-SELECT players.id, fish.id
-FROM players
-CROSS JOIN fish
-WHERE players.username = 'matt';
 
 -- 🪴 Florist vendor
 WITH vendor_insert AS (
@@ -208,11 +198,12 @@ item_insert AS (
   VALUES
   -- General Items
   ('Air Conditioner', 'air_conditioner', 'Cools air inside a boat''s cabin or enclosed space.', 500.00, 'general_item'),
-  ('Solar Panel', 'solar_panel', 'Converts sunlight into electricity to power onboard systems.', 300.00, 'general_item'),
+  ('Solar Panels', 'solar_panels', 'Converts sunlight into electricity to power onboard systems.', 300.00, 'general_item'),
   -- Hulls
   ('Flat-bottomed Hull', 'flat_hull', 'A type of boat hull that has a flat bottom, making it very stable but slower than other hull types.', 500.00, 'boat_hull'),
   ('Multi-chine Hull', 'multi_chine_hull', 'A type of boat hull that has multiple angles or "chines" in its shape, providing good stability and speed.', 1000.00, 'boat_hull'),
   ('Round-bottomed Hull', 'round_hull', 'A type of boat hull that has a round bottom, providing good speed but less stability than flat-bottomed hulls.', 1500.00, 'boat_hull'),
+  ('V-Shaped Hull', 'vshaped_hull', 'A type of boat hull that is known for its ability to cut through the water, providing enhanced stability and performance.', 2500.00, 'boat_hull'),
   -- Decks
   ('Fiberglass Deck', 'fiberglass_deck', 'A type of boat deck made from fiberglass, providing good durability and resistance to water damage.', 750.00, 'boat_deck'),
   ('Pine Deck',  'pine_deck', 'A type of boat deck made from pine wood, providing a traditional and classic look.', 500.00, 'boat_deck'),
@@ -231,6 +222,19 @@ item_insert AS (
 )
 INSERT INTO marker_items (marker_id, item_id)
 SELECT vendor_insert.id, item_insert.id FROM vendor_insert, item_insert;
+
+-- 👬 Give players starting items
+INSERT INTO player_items(player_id, item_id, props)
+SELECT p.id, i.id, '{"equipped": true}'
+FROM players p
+CROSS JOIN items i
+WHERE item_key IN (
+  'spincast_rod',
+  'traditional_stern',
+  'electric_engine',
+  'deck_chair',
+  'fishing_bucket',
+  'flat_hull');
 
 -- 📰 PostGraphile GQL subscription for player updates
 CREATE OR REPLACE FUNCTION notify_player_changes()

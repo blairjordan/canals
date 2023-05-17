@@ -10,7 +10,7 @@ const PlayerName = ({ username, position }) => {
   // FIXME: Player names produce a warning in the console:
   // "L_INVALID_OPERATION: Feedback loop formed between Framebuffer and active Texture."
   return (
-    <group position={[ position.x, position.y+3, position.z ]}>
+    <group position={[ position.x, position.y+5, position.z ]}>
       <Billboard>
         <Text
           fontSize={1}

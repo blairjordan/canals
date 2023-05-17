@@ -9,7 +9,25 @@ export function Objects(props) {
 
 
   const objects = Object.entries(nodes).reduce((prev, [key, object]) => {
-    if (!someInclude(key, ['tree_', 'boathouse', 'bush_', 'building', 'bridge', 'bike', 'bin', 'industrial', 'petrol', 'shop', 'street_lamp_01', 'street_lamp_02'])) { return prev }
+    if (!someInclude(key, 
+      [
+        'tree_',
+        'boathouse',
+        'bush_',
+        'building',
+        'bridge',
+        'bike',
+        'bin',
+        'industrial',
+        'petrol',
+        'shop',
+        'street_lamp_01',
+        'street_lamp_02',
+        'marina',
+        'post_box',
+        'post_office'
+      ])
+    ) { return prev }
 
     prev.push(object)
     return prev

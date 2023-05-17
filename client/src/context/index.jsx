@@ -13,7 +13,8 @@ const initialState = {
       y: undefined,
       z: undefined
     },
-    isFishing: false
+    isFishing: false,
+    playerItems: []
   },
   remotePlayers: [],
   markers: [],

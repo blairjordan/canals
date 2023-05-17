@@ -1,197 +1,150 @@
-import * as THREE from "three";
-import { forwardRef, useEffect, useMemo, useRef } from "react";
-import { useGLTF } from "@react-three/drei";
-import { useFrame, useLoader } from "@react-three/fiber";
-import { MeshBasicMaterial, MeshStandardMaterial } from "three";
+import { useGLTF } from '@react-three/drei'
+import { forwardRef, useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useAppContext } from '@/context'
+import * as THREE from 'three'
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils';
+import { isEqual } from 'lodash'; 
 
-//import boatUrl from "../../assets/models/boat_01.glb";
+const baseBoatObjects = new Set([
+  'hull_flooring',
+  'house_boat_main_body',
+  // 🚪 door
+  'house_boat_main_door_01',
+  // 🪟 windows
+  'house_boat_main_window_02',
+  'house_boat_main_window_03',
+  'house_boat_main_window_04',
+  'house_boat_main_window_05',
+  'house_boat_main_window_06',
+  'house_boat_main_window_07',
+  'house_boat_main_window_08',
+  'house_boat_main_window_09',
+  'house_boat_main_window_10',
+  'house_boat_main_window_11',
+])
 
-const Boat = forwardRef((props, ref) => {
-  const playerGroup = useRef({group: new THREE.Group() })
-  const sideWake = useRef(null)
-  const boatItems = {};
-  const { scene, nodes, materials } = useGLTF('/models/boat_01.glb');
-  const { scene: sideScene, nodes: sideNodes, materials: sideMaterials } = useGLTF('/models/side_wake.glb');
-  const [wakeTexture, gradTex] = useLoader(
-    THREE.TextureLoader, ['/textures/wakeV.png', '/textures/threeTone.jpg']
-  );
-  wakeTexture.wrapS = wakeTexture.wrapT = THREE.RepeatWrapping;
-  gradTex.wrapS = gradTex.wrapT = THREE.RepeatWrapping
+const itemObjects = new Map([
+  // 🎣 Fishing rods
+  ['spincast_rod', ['decor_fishing_rod_01']],
+  ['spinning_rod', ['decor_fishing_rod_02']],
+  ['baitcasting_rod', ['decor_fishing_rod_03']],
+  // Sterns ⛴
+  ['traditional_stern', [
+    'house_boat_stern_traditional',
+    'house_boat_stern_traditional_window_01',
+    'house_boat_stern_traditional_window_02',
+    'house_boat_stern_traditional_window_03',
+    'house_boat_stern_traditional_window_04',
+  ]],
+  ['semi_traditional_stern', [
+    'house_boat_stern_semi_traditional_door',
+    'house_boat_stern_semi_traditional_seating',
+    'house_boat_stern_semi_traditional_walls',
+    'house_boat_stern_semi_traditional_window_01',
+  ]],
+  ['cruiser_stern', [
+    'house_boat_main_door_02',
+    'house_boat_stern_semi_cruiser_handrail',
+    'house_boat_stern_semi_cruiser_wall',
+    'house_boat_stern_semi_cruiser_window_01',
+  ]],
+  // 🚤 Hulls
+  ['flat_hull', ['hull_flat_bottom']],
+  ['vshaped_hull', ['hull_v_shaped']],
+  ['multi_chine_hull', ['hull_multichine']],
+  ['round_hull', ['hull_round']],
+  // ☀ Solar panels
+  ['solar_panels', [
+    'decor_solar_panel_01',
+    'decor_solar_panel_02',
+    'decor_solar_panel_03',
+    'decor_solar_panel_04',
+  ]],
+  // 🪣 Bucket
+  ['fishing_bucket', ['bucket']],
+  // 🪑 Deck chair
+  ['deck_chair', ['decor_deck_chair', 'decor_deck_chair_material']],
+  // 📦 Packages
+  ['art_supplies', ['box']],
+  ['boating_magazines', ['box']],
+  ['propellers', ['box']],
+  ['lures', ['box']],
+]);
 
-  function addPart(partName) {
-    partName = partName.replace(".", "");
+// TODO: This will currently just render everyones boat from current player state (state.player.playerItems),
+// however we need to publish and subscribe to equipped items for all players and render those
+// Just requires an update to player_updated subscription topic
+// Also need to reference items from remotePlayers state, not just current player state
+// Could pass in isRemotePlayer prop to Boat component and use that to determine which state to use
 
-    if (boatItems[partName]) {
-      for (let i = 0; i < boatItems[partName].parts.length; i++) {
-        const part = clone(boatItems[partName].parts[i])
-        part.rotateY(Math.PI);
-        playerGroup.current.group.add(part);
-      }
+const Boat = forwardRef(({ playerId = 0, ...props }, ref) => {
+  const [state, dispatch] = useAppContext()
+  const { scene, nodes } = useGLTF('/models/canals.glb') 
+
+  const [prevPlayerItems, setPrevPlayerItems] = useState(state.player.playerItems?.nodes);
+
+  const playerGroup = useMemo(() => ({ group: new THREE.Group() }), []);
+
+  // 🐙 A deep compare of playerItems (to see if we need to update the boat)
+  const deepCompareUserItem = useCallback((a, b) => {
+    if (!a || !b) {
+      return false;
     }
-  }
+    if (a.id !== b.id) {
+      return false
+    }
+    if (a.props?.equipped !== b.props?.equipped) {
+      return false;
+    }
+  }, [])
 
-  function getCategory(name) {
-    if (name.includes("hull_")) return "hull";
-    if (name.includes("decor_pot_plant")) return "decor|pot_plant";
-    if (name.includes("decor_solar_panel")) return "decor|solar_panel";
-    if (name.includes("decor_deck_chair")) return "decor|deck_chair";
-    if (name.includes("decor_air_con")) return "decor|air_con";
-    if (name.includes("decor_bell")) return "decor|bell";
-    if (name.includes("decor_fishing_rod")) return "decor|fishing_rod";
-    if (name.includes("engine")) return "engine";
-    if (name.includes("house_boat_main")) return "house_boat|main";
-    if (name.includes("house_boat_stern_traditional"))
-      return "house_boat|traditional";
-    if (name.includes("house_boat_semi_traditional"))
-      return "house_boat|semi_traditional";
-    if (name.includes("house_boat_stern_semi_cruiser"))
-      return "house_boat|semi_cruiser";
+  const objectsToRender = useMemo(() => {
+    if (!(state.player && state.player.id)) {
+      return []
+    }
+    const { nodes: playerItems } = state.player.playerItems;
 
-    return "none";
-  }
-
-  useEffect(() => {
-    //Need to find a better way to handle this, without a code change will rebuild this and it gets messed up?
-    if(playerGroup.current.group.children.length>0) return;
-
-    playerGroup.current.group.name = 'Player Boat';
-    playerGroup.current.group.rotation.order = "YXZ";
-    Object.values(nodes).forEach((child) => {
-      if (child.isMesh) {
-        let nameCheck = child.name;
-        if (nameCheck.includes("Cube") || nameCheck.includes("Cylinder")) {
-          nameCheck = child.parent.name.replace(".", "");
-        }
-        nameCheck = nameCheck.replace(".", "");
-
-        if (!boatItems[nameCheck]) {
-          boatItems[nameCheck] = {
-            parts: [],
-            category: getCategory(nameCheck),
-          };
-        }
-
-        boatItems[nameCheck].parts.push(child);
+    return Object.entries(nodes).reduce((prev, [key, object]) => {
+      if (baseBoatObjects.has(key)) {
+        prev.push(object);
       }
+
+      playerItems.forEach(({ item, props }) => {
+        if (props?.equipped) {
+          const itemObjectsKeys = itemObjects.get(item.itemKey) || [];
+          if (itemObjectsKeys.includes(key)) {
+            prev.push(object);
+          }
+        }
+      });
+
+      return prev;
+    }, []);
+  }, [
+    nodes,
+    deepCompareUserItem(state.player.playerItems?.nodes, prevPlayerItems),
+    playerId
+  ]);
+  
+  useEffect(() => {
+    playerGroup.group.rotation.order = "YXZ";
+
+    objectsToRender.forEach((object) => {
+      const cloned = clone(object);
+      cloned.rotateY(Math.PI * 4);
+      playerGroup.group.add(cloned);
     });
 
-    //default parts
-    addPart("hull_flooring");
-    addPart("hull_v_shaped");
+    setPrevPlayerItems(state.player.playerItems?.nodes);
 
-    //decor
-    //potplants
-    addPart("decor_pot_plant_cactus");
-    addPart("decor_pot_plant_hanging_flowers");
-    addPart("decor_pot_plant_hanging_plant");
-    //solar_panels
-    addPart("decor_solar_panel_01");
-    addPart("decor_solar_panel_02");
-    addPart("decor_solar_panel_03");
-    addPart("decor_solar_panel_04");
-    //deck_chair
-    addPart("decor_deck_chair");
-    addPart("decor_deck_chair_material");
-    //air_con
-    addPart("decor_air_con");
-    //bell
-    addPart("decor_bell_01");
-    //rod
-    addPart("decor_fishing_rod_01.001");
+  }, [objectsToRender, playerGroup]);
 
-    //engines
-    //engine_electric
-    addPart("engine_electric");
-
-    //boat
-    addPart("house_boat_main_body");
-    addPart("house_boat_main_door_01");
-    addPart("house_boat_main_window_01");
-    addPart("house_boat_main_window_02");
-    addPart("house_boat_main_window_03");
-    addPart("house_boat_main_window_04");
-    addPart("house_boat_main_window_05");
-    addPart("house_boat_main_window_06");
-    addPart("house_boat_main_window_07");
-    addPart("house_boat_main_window_08");
-    addPart("house_boat_main_window_09");
-    addPart("house_boat_main_window_10");
-    addPart("house_boat_main_window_11");
-
-    // sterns
-    // stern_traditional
-    // house_boat_stern_traditional
-    const whichOne = Math.random();
-    if (whichOne < 0.34) {
-      console.log('Boat Stern: Traditional')
-      addPart("house_boat_stern_traditional");
-      addPart("house_boat_stern_traditional_window_01");
-      addPart("house_boat_stern_traditional_window_02");
-      addPart("house_boat_stern_traditional_window_03");
-      addPart("house_boat_stern_traditional_window_04");
-    } else if (whichOne < 0.68) {
-      console.log('Boat Stern: Semi Cruiser')
-      addPart("house_boat_stern_semi_cruiser_handrail");
-      addPart("house_boat_stern_semi_cruiser_wall");
-      addPart("house_boat_stern_semi_cruiser_window_01");
-      addPart("house_boat_main_door_02");
-    } else {
-      console.log('Boat Stern: Semi Traditional')
-      addPart("house_boat_stern_semi_traditional_door");
-      addPart("house_boat_stern_semi_traditional_seating");
-      addPart("house_boat_stern_semi_traditional_walls");
-      addPart("house_boat_stern_semi_traditional_window_01");
-    }
-
-    playerGroup.current.group.traverse((item) => {
-      if(item.isMesh) {
-        if(item.material) {
-          
-          const toonMat = new THREE.MeshToonMaterial()
-          toonMat.copy(item.material)
-          toonMat.gradientMap = gradTex
-          item.material = toonMat;
-        }
-      }
-    })
-
-    // if(sideNodes) {
-    //   Object.values(sideNodes).forEach((child) => {
-    //     if (child.isMesh) {
-    //       child.position.y = 0.11
-    //       child.rotateY(Math.PI);
-    //       playerGroup.current.group.add(child)
-    //       sideWake.current = child;
-          
-    //       const map = sideWake.current.material.map.clone()
-    //       const alphaMap = wakeTexture ? sideWake.current.material.map.clone() : wakeTexture; 
-    //       const mat = new MeshBasicMaterial({alphaMap: alphaMap, transparent: true, map: map, opacity: 0.8})
-    //       child.material = mat;
-    //       console.log(sideWake.current.material)
-          
-    //     }
-    //   })
-    // }
-  }, [nodes]);
-
-  useEffect(() => {
-    if(sideWake.current) sideWake.current.material.alphaMap = wakeTexture;
-  }, [wakeTexture])
-
-  //playerGroup changes on reload???
-
-  useFrame(
-    (state, delta) => {
-      //if(sideWake.current) sideWake.current.material.map.offset.y+=delta*-0.2
-    }
-  );
-
-  return <primitive ref={ref}
-    object={playerGroup.current.group} 
-    {...props} 
-  />;
-})
+  return <primitive
+    object={playerGroup.group}
+    ref={ref}
+    {...props}
+  />
+});
 
 Boat.displayName = 'Boat';
 

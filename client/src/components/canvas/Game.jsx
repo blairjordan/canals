@@ -139,7 +139,7 @@ export default function Game({ route, ...props }) {
       <Sky scale={5000} sunPosition={[0, 750, -4500]} turbidity={0.1} />
       <Player />
       {state.remotePlayers.map(({ id }) => (
-        <RemotePlayer key={`player-${id}`} id={id} />
+        <RemotePlayer key={`player-${id}`} playerId={id} />
       ))}
       <Seagull />
       {state.markers.map(({ id, position: { x, z }, radius, type, props }) => {

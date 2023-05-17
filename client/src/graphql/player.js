@@ -27,6 +27,7 @@ export const PLAYER = gql`
       playerItems {
         nodes {
           id
+          props
           item {
             id
             itemKey

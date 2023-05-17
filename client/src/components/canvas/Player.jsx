@@ -95,7 +95,7 @@ const Player = () => {
 
   return (
     <>
-      <Boat ref={playerRef} />
+      <Boat ref={playerRef} playerId={state.player.id}/>
       <BoatWake player={playerRef} />
       <OrbitControls
         ref={controlsRef}
