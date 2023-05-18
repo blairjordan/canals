@@ -16,6 +16,9 @@ function PopupManager(props) {
   const [state, dispatch] = useAppContext()
   const [getPlayer, playerStartPolling, { loading: loadingPlayer, data: playerData, error: playerError }] = usePlayer();
 
+  // TODO: Remove calls to getPlayer() and just update current player using subscription
+  // (same way as remote players are updated)
+
   // 💸 Purchase item mutation
   const [purchaseItem] = useMutation(PURCHASE, {
     onCompleted: (data) => {

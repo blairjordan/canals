@@ -196,9 +196,9 @@ WITH vendor_insert AS (
 item_insert AS (
   INSERT INTO items (name, item_key, description, price, type)
   VALUES
-  -- General Items
-  ('Air Conditioner', 'air_conditioner', 'Cools air inside a boat''s cabin or enclosed space.', 500.00, 'general_item'),
-  ('Solar Panels', 'solar_panels', 'Converts sunlight into electricity to power onboard systems.', 300.00, 'general_item'),
+  -- Decor
+  ('Air Conditioner', 'air_conditioner', 'Cools air inside a boat''s cabin or enclosed space.', 500.00, 'decor'),
+  ('Solar Panels', 'solar_panels', 'Converts sunlight into electricity to power onboard systems.', 300.00, 'decor'),
   -- Hulls
   ('Flat-bottomed Hull', 'flat_hull', 'A type of boat hull that has a flat bottom, making it very stable but slower than other hull types.', 500.00, 'boat_hull'),
   ('Multi-chine Hull', 'multi_chine_hull', 'A type of boat hull that has multiple angles or "chines" in its shape, providing good stability and speed.', 1000.00, 'boat_hull'),
@@ -234,7 +234,9 @@ WHERE item_key IN (
   'electric_engine',
   'deck_chair',
   'fishing_bucket',
-  'flat_hull');
+  'flat_hull',
+  'engine_electric'
+);
 
 -- 📰 PostGraphile GQL subscription for player updates
 CREATE OR REPLACE FUNCTION notify_player_changes()

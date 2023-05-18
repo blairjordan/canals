@@ -10,6 +10,21 @@ export const PLAYERS_ALL = gql`
         username
         meta
         position
+        playerItems {
+          nodes {
+            id
+            props
+            item {
+              id
+              itemKey
+              name
+              type
+              description
+              props
+              price
+            }
+          }
+        }
       }
     }
   }
@@ -59,8 +74,23 @@ export const PLAYER_UPDATES = gql`
     listen(topic: "player_updated") {
       relatedNode {
         ... on Player {
-          position
           id
+          position
+          playerItems {
+            nodes {
+              id
+              props
+              item {
+                id
+                itemKey
+                name
+                type
+                description
+                props
+                price
+              }
+            }
+          }
         }
       }
     }

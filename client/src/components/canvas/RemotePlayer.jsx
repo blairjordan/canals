@@ -85,7 +85,11 @@ const RemotePlayer = ({ playerId = 0 }) => {
 
   return (remotePlayerRef && remotePlayerRef.current && (
     <>
-      <Boat ref={remotePlayerRef} playerId={playerId} />
+      <Boat
+        ref={remotePlayerRef}
+        playerId={playerId}
+        isRemotePlayer={true}
+      />
       <PlayerName
         position={remotePlayerRef.current.position}
         username={remotePlayerRef.username}

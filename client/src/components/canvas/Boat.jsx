@@ -3,7 +3,6 @@ import { forwardRef, useEffect, useMemo, useRef, useState, useCallback } from "r
 import { useAppContext } from '@/context'
 import * as THREE from 'three'
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils';
-import { isEqual } from 'lodash'; 
 
 const baseBoatObjects = new Set([
   'hull_flooring',
@@ -69,19 +68,32 @@ const itemObjects = new Map([
   ['boating_magazines', ['box']],
   ['propellers', ['box']],
   ['lures', ['box']],
+  // 🛟 life buoy
+  ['life_buoy', ['life_buoy']],
+  // 🌬 air conditioner
+  ['air_conditioner', ['decor_air_con']],
+  // ⚙ engines
+  ['electric_engine', ['engine_electric']],
+  ['outboard_engine', ['engine_outboard']],
+  ['inboard_engine', ['engine_inboard']],
+  ['inboard_diesel_engine', ['engine_inboard_diesel']],
 ]);
 
-// TODO: This will currently just render everyones boat from current player state (state.player.playerItems),
-// however we need to publish and subscribe to equipped items for all players and render those
-// Just requires an update to player_updated subscription topic
-// Also need to reference items from remotePlayers state, not just current player state
-// Could pass in isRemotePlayer prop to Boat component and use that to determine which state to use
+const Boat = forwardRef(({
+  playerId = 0,
+  isRemotePlayer = false,
+  ...props
+}, ref) => {
+  const [state] = useAppContext()
+  const { scene, nodes } = useGLTF('/models/canals.glb')
 
-const Boat = forwardRef(({ playerId = 0, ...props }, ref) => {
-  const [state, dispatch] = useAppContext()
-  const { scene, nodes } = useGLTF('/models/canals.glb') 
+  const getPlayerItems = useCallback(() => (
+    isRemotePlayer ?
+      state.remotePlayers.find((player) => player.id === playerId)?.playerItems?.nodes :
+      state.player.playerItems?.nodes
+  ), [playerId, isRemotePlayer])
 
-  const [prevPlayerItems, setPrevPlayerItems] = useState(state.player.playerItems?.nodes);
+  const [prevPlayerItems, setPrevPlayerItems] = useState(getPlayerItems());
 
   const playerGroup = useMemo(() => ({ group: new THREE.Group() }), []);
 
@@ -102,7 +114,9 @@ const Boat = forwardRef(({ playerId = 0, ...props }, ref) => {
     if (!(state.player && state.player.id)) {
       return []
     }
-    const { nodes: playerItems } = state.player.playerItems;
+    const playerItems = getPlayerItems();
+
+    if (!playerItems) { return [] }
 
     return Object.entries(nodes).reduce((prev, [key, object]) => {
       if (baseBoatObjects.has(key)) {
@@ -122,7 +136,7 @@ const Boat = forwardRef(({ playerId = 0, ...props }, ref) => {
     }, []);
   }, [
     nodes,
-    deepCompareUserItem(state.player.playerItems?.nodes, prevPlayerItems),
+    deepCompareUserItem(getPlayerItems(), prevPlayerItems),
     playerId
   ]);
   
@@ -135,7 +149,7 @@ const Boat = forwardRef(({ playerId = 0, ...props }, ref) => {
       playerGroup.group.add(cloned);
     });
 
-    setPrevPlayerItems(state.player.playerItems?.nodes);
+    setPrevPlayerItems(getPlayerItems());
 
   }, [objectsToRender, playerGroup]);
 

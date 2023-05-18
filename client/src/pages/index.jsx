@@ -68,7 +68,7 @@ export default function Page(props) {
         return
       }
       if (updatedPlayer.id !== state.player.id) {
-        dispatch({ type: 'REMOTE_PLAYER_UPDATE_POSITION', payload: updatedPlayer })
+        dispatch({ type: 'REMOTE_PLAYER_UPDATE', payload: updatedPlayer })
       }
     },
     [dispatch, state.player]

@@ -83,7 +83,8 @@ const appReducer = (state, action) => {
         ...state,
         remotePlayers: action.payload,
       }
-    case 'REMOTE_PLAYER_UPDATE_POSITION':
+    case 'REMOTE_PLAYER_UPDATE':
+      console.log(action.payload)
       return {
         ...state,
         remotePlayers: state.remotePlayers.map((player) =>
@@ -91,6 +92,7 @@ const appReducer = (state, action) => {
           ? {
             ...player,
             position: action.payload.position,
+            playerItems: action.payload.playerItems
           } : player,
         ),
       }
