@@ -85,73 +85,68 @@ const Boat = forwardRef(({
   ...props
 }, ref) => {
   const [state] = useAppContext()
+  const [prevPlayerItemsHash, setPrevPlayerItemsHash] = useState('');
+  
+  // TODO: Split into its own file eventually
   const { scene, nodes } = useGLTF('/models/canals.glb')
 
-  const getPlayerItems = useCallback(() => (
-    isRemotePlayer ?
-      state.remotePlayers.find((player) => player.id === playerId)?.playerItems?.nodes :
-      state.player.playerItems?.nodes
-  ), [playerId, isRemotePlayer])
+  useEffect(() => {
+    setPrevPlayerItemsHash(getPlayerItemsHash())
+  }, [nodes])
 
-  const [prevPlayerItems, setPrevPlayerItems] = useState(getPlayerItems());
+  const player = useMemo(() => (
+    isRemotePlayer ?
+      state.remotePlayers.find((player) => player.id === playerId) :
+      state.player
+  ), [playerId, isRemotePlayer, state.remotePlayers, state.player])
+
+  const getPlayerItemsHash = useCallback(() => (
+    isRemotePlayer ? player?.hashedPlayerItems : player.hashedPlayerItems
+  ), [player])
 
   const playerGroup = useMemo(() => ({ group: new THREE.Group() }), []);
 
-  // 🐙 A deep compare of playerItems (to see if we need to update the boat)
-  const deepCompareUserItem = useCallback((a, b) => {
-    if (!a || !b) {
-      return false;
+  const { objectsToAdd, objectsToRemove } = useMemo(() => {
+    if (!(state.player && state.player.id) || !player.playerItems?.nodes) {
+      return { objectsToAdd: [], objectsToRemove: [] }
     }
-    if (a.id !== b.id) {
-      return false
-    }
-    if (a.props?.equipped !== b.props?.equipped) {
-      return false;
-    }
-  }, [])
-
-  const objectsToRender = useMemo(() => {
-    if (!(state.player && state.player.id)) {
-      return []
-    }
-    const playerItems = getPlayerItems();
-
-    if (!playerItems) { return [] }
-
+  
+    const playerItems = player.playerItems.nodes;
+  
     return Object.entries(nodes).reduce((prev, [key, object]) => {
-      if (baseBoatObjects.has(key)) {
-        prev.push(object);
-      }
-
-      playerItems.forEach(({ item, props }) => {
-        if (props?.equipped) {
-          const itemObjectsKeys = itemObjects.get(item.itemKey) || [];
-          if (itemObjectsKeys.includes(key)) {
-            prev.push(object);
-          }
-        }
-      });
-
+      const isBaseObject = baseBoatObjects.has(key);
+      const isItemObject = playerItems.some(({ item, props }) =>
+        props?.equipped && itemObjects.get(item.itemKey)?.includes(key)
+      );
+  
+      ((isBaseObject || isItemObject) ? prev.objectsToAdd : prev.objectsToRemove).push(object);
+  
       return prev;
-    }, []);
+    }, { objectsToAdd: [], objectsToRemove: []});
   }, [
     nodes,
-    deepCompareUserItem(getPlayerItems(), prevPlayerItems),
-    playerId
+    (getPlayerItemsHash() !== prevPlayerItemsHash)
   ]);
   
   useEffect(() => {
     playerGroup.group.rotation.order = "YXZ";
 
-    objectsToRender.forEach((object) => {
+    objectsToAdd && objectsToAdd.forEach((object) => {
       const cloned = clone(object);
       cloned.rotateY(Math.PI * 4);
       playerGroup.group.add(cloned);
     });
 
-    setPrevPlayerItems(getPlayerItems());
+    console.log(objectsToRemove && objectsToRemove.length)
 
-  }, [objectsToRender, playerGroup]);
+    objectsToRemove && objectsToRemove && objectsToRemove.forEach((object) => {
+      const objectToRemove = playerGroup.group.getObjectByName(object.name);
+      playerGroup.group.remove(objectToRemove)
+    });
+
+    setPrevPlayerItemsHash(getPlayerItemsHash());
+
+  }, [objectsToAdd, objectsToRemove, playerGroup]);
 
   return <primitive
     object={playerGroup.group}

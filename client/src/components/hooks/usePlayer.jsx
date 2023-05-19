@@ -10,8 +10,6 @@ function usePlayer() {
     loading: loadingPlayer,
     data: playerData,
     error: playerError,
-    startPolling: playerStartPolling,
-    stopPolling: playerStopPolling
   }] = useLazyQuery(PLAYER, {
     fetchPolicy: 'no-cache'
   });
@@ -30,11 +28,7 @@ function usePlayer() {
         return
       }
 
-      dispatch({ type: 'PLAYER_UPDATE', payload: {
-        balance: player.balance,
-        fuel: player.fuel,
-        playerItems: player.playerItems
-      }})
+      dispatch({ type: 'PLAYER_UPDATE', payload: player})
     }
   }, [loadingPlayer, playerData])
 
@@ -44,7 +38,7 @@ function usePlayer() {
     }
   }, [loadingPlayer, playerData])
 
-  return [getPlayer, playerStartPolling, { loadingPlayer, playerData, playerError }];
+  return [getPlayer, { loadingPlayer, playerData, playerError }];
 }
 
 usePlayer.displayName = 'usePlayer';

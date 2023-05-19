@@ -76,6 +76,8 @@ export const PLAYER_UPDATES = gql`
         ... on Player {
           id
           position
+          fuel
+          balance
           playerItems {
             nodes {
               id

@@ -10,11 +10,9 @@ import ItemGrid from '@/components/dom/ItemGrid'
 import ItemDisplay from '@/components/dom/ItemDisplay'
 import usePlayer from '../hooks/usePlayer';
 
-const PLAYER_POLL_INTERVAL=5_000
-
 function PopupManager(props) {
   const [state, dispatch] = useAppContext()
-  const [getPlayer, playerStartPolling, { loading: loadingPlayer, data: playerData, error: playerError }] = usePlayer();
+  const [getPlayer, { loading: loadingPlayer, data: playerData, error: playerError }] = usePlayer();
 
   // TODO: Remove calls to getPlayer() and just update current player using subscription
   // (same way as remote players are updated)
@@ -23,7 +21,6 @@ function PopupManager(props) {
   const [purchaseItem] = useMutation(PURCHASE, {
     onCompleted: (data) => {
       console.log('Item purchased successfully:', data)
-      getPlayer({ variables: { id: state.player.id } })
     },
     onError: (error) => {
       console.log('Error purchasing item:', error)
@@ -34,7 +31,6 @@ function PopupManager(props) {
   const [sellItem] = useMutation(SELL, {
     onCompleted: (data) => {
       console.log('Item sold successfully:', data)
-      getPlayer({ variables: { id: state.player.id } })
     },
     onError: (error) => {
       console.log('Error purchasing item:', error)
@@ -46,7 +42,6 @@ function PopupManager(props) {
     // TODO: debounce refueling
     onCompleted: (data) => {
       console.log('Refueled successfully:', data)
-      getPlayer({ variables: { id: state.player.id } })
     },
     onError: (error) => {
       console.log('Error refueling:', error)
@@ -58,7 +53,6 @@ function PopupManager(props) {
     // TODO: debounce lock usage
     onCompleted: (data) => {
       console.log('Used lock successfully:', data)
-      getPlayer({ variables: { id: state.player.id } })
     },
     onError: (error) => {
       console.log('Error using lock:', error)
@@ -67,7 +61,6 @@ function PopupManager(props) {
 
   const handleLogin = (id) => {
     getPlayer({ variables: { id } })
-    playerStartPolling(PLAYER_POLL_INTERVAL)
   }
 
   const addPopup = useCallback(({ id, type, payload }) => {

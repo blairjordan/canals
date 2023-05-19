@@ -1,4 +1,5 @@
 import dynamic from 'next/dynamic'
+import crypto from 'crypto'
 import PopupManager from '@/components/dom/PopupManager'
 import PlayerInfo from '@/components/dom/PlayerInfo'
 import ChatBox from '@/components/dom/ChatBox'
@@ -67,8 +68,17 @@ export default function Page(props) {
       if (!(state.player && state.player.id)) {
         return
       }
-      if (updatedPlayer.id !== state.player.id) {
-        dispatch({ type: 'REMOTE_PLAYER_UPDATE', payload: updatedPlayer })
+
+      // #️⃣ Hash the player items to determine if they've changed without deep comparing
+      const hashedPlayerItems = crypto.createHash('sha256')
+        .update(JSON.stringify(updatedPlayer.playerItems))
+        .digest('hex')
+
+      if (updatedPlayer.id === state.player.id) {
+        const { playerItems, fuel, balance } = updatedPlayer
+        dispatch({ type: 'PLAYER_UPDATE', payload: { playerItems, fuel, balance, hashedPlayerItems } })
+      } else {
+        dispatch({ type: 'REMOTE_PLAYER_UPDATE', payload: { ...updatedPlayer, hashedPlayerItems } })
       }
     },
     [dispatch, state.player]

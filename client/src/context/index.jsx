@@ -14,7 +14,8 @@ const initialState = {
       z: undefined
     },
     isFishing: false,
-    playerItems: []
+    playerItems: [],
+    hashedPlayerItems: '',
   },
   remotePlayers: [],
   markers: [],

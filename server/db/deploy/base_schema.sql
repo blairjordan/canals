@@ -267,6 +267,35 @@ CREATE OR REPLACE TRIGGER player_changes_trigger
   FOR EACH ROW
   EXECUTE FUNCTION notify_player_changes();
 
+-- 📰 PostGraphile GQL subscription for player item updates
+CREATE OR REPLACE FUNCTION notify_player_item_changes()
+  RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+  IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') THEN
+    PERFORM pg_notify(
+      'postgraphile:player_updated',
+      json_build_object(
+        '__node__', json_build_array(
+          'players',
+          (SELECT NEW.player_id)
+        )
+      )::text
+    );
+    RETURN NULL;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 🔫 Trigger for player item updates
+CREATE OR REPLACE TRIGGER player_item_changes_trigger
+  AFTER INSERT OR UPDATE
+  ON player_items
+  FOR EACH ROW
+  EXECUTE FUNCTION notify_player_item_changes();
+
 -- A nice view to return the marker links recursively 👀
 CREATE OR REPLACE VIEW links_recursive AS
 WITH RECURSIVE links_recursive AS (
