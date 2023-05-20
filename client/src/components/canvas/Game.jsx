@@ -138,7 +138,7 @@ export default function Game({ route, ...props }) {
       <Objects canalRef={canalRef} />
       <Sky scale={5000} sunPosition={[0, 750, -4500]} turbidity={0.1} />
       <Player />
-      {state.remotePlayers.map(({ id }) => (
+      {Object.keys(state.remotePlayers).map(( id ) => (
         <RemotePlayer key={`player-${id}`} playerId={id} />
       ))}
       <Seagull />

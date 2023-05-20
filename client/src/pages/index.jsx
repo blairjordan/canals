@@ -43,6 +43,12 @@ export default function Page(props) {
     },
   })
 
+  // #️⃣ Hash the player items to determine if they've changed without deep comparing
+  const hashplayerItems = useCallback((playerItems) => crypto.createHash('sha256')
+    .update(JSON.stringify(playerItems))
+    .digest('hex'),
+    [])
+
   const handleMessage = useCallback(
     (message) => {
       if (!(state.player && state.player.id)) {
@@ -69,16 +75,13 @@ export default function Page(props) {
         return
       }
 
-      // #️⃣ Hash the player items to determine if they've changed without deep comparing
-      const hashedPlayerItems = crypto.createHash('sha256')
-        .update(JSON.stringify(updatedPlayer.playerItems))
-        .digest('hex')
+      const playerItemsHashed = hashplayerItems(updatedPlayer.playerItems.nodes)
 
       if (updatedPlayer.id === state.player.id) {
         const { playerItems, fuel, balance } = updatedPlayer
-        dispatch({ type: 'PLAYER_UPDATE', payload: { playerItems, fuel, balance, hashedPlayerItems } })
+        dispatch({ type: 'PLAYER_UPDATE', payload: { playerItems, fuel, balance, playerItemsHashed } })
       } else {
-        dispatch({ type: 'REMOTE_PLAYER_UPDATE', payload: { ...updatedPlayer, hashedPlayerItems } })
+        dispatch({ type: 'REMOTE_PLAYER_UPDATE', payload: { ...updatedPlayer, playerItemsHashed } })
       }
     },
     [dispatch, state.player]
@@ -118,12 +121,19 @@ export default function Page(props) {
     }
 
     if (!loadingRemotePlayers && remotePlayersData) {
+      console.log('setting')
       dispatch({
         type: 'REMOTE_PLAYERS_SET',
-        payload: remotePlayersData.players.nodes.filter((player) => player.id !== state.player.id),
+        payload: 
+        remotePlayersData.players.nodes
+          .filter((player) => player.id !== state.player.id)
+          .reduce((prev, remotePlayer) => ({...prev, [remotePlayer.id]: {
+            ...remotePlayer,
+            playerItemsHashed: hashplayerItems(remotePlayer.playerItems.nodes)
+          }}), {}),
       })
     }
-  }, [loadingRemotePlayers, remotePlayersData, state.player, dispatch])
+  }, [loadingRemotePlayers])
 
   return (
     <>

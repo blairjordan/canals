@@ -15,9 +15,9 @@ const initialState = {
     },
     isFishing: false,
     playerItems: [],
-    hashedPlayerItems: '',
+    playerItemsHashed: '',
   },
-  remotePlayers: [],
+  remotePlayers: {},
   markers: [],
   geofences: [],
   popups: [],
@@ -84,28 +84,32 @@ const appReducer = (state, action) => {
         ...state,
         remotePlayers: action.payload,
       }
-    case 'REMOTE_PLAYER_UPDATE':
-      console.log(action.payload)
-      return {
-        ...state,
-        remotePlayers: state.remotePlayers.map((player) =>
-          player.id === action.payload.id
-          ? {
-            ...player,
-            position: action.payload.position,
-            playerItems: action.payload.playerItems
-          } : player,
-        ),
-      }
+      case 'REMOTE_PLAYER_UPDATE':
+        return {
+          ...state,
+          remotePlayers: {
+            ...state.remotePlayers,
+            [action.payload.id]: {
+              ...state.remotePlayers[action.payload.id],
+              position: action.payload.position,
+              playerItems: action.payload.playerItems,
+              playerItemsHashed: action.payload.playerItemsHashed,
+            },
+          },
+        }
     case 'REMOTE_PLAYERS_ADD':
       return {
         ...state,
-        remotePlayers: [...state.remotePlayers, action.payload],
+        remotePlayers: {
+          ...state.remotePlayers,
+          [action.payload.id]: action.payload,
+        },
       }
     case 'REMOTE_PLAYERS_REMOVE':
+      const { [action.payload.id]: value, ...remainingPlayers } = state.remotePlayers;
       return {
         ...state,
-        remotePlayers: state.remotePlayers.filter((player) => player.id !== action.payload.id),
+        remotePlayers: remainingPlayers,
       }
     case 'MARKER_ADD':
       return {

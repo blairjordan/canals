@@ -1,8 +1,8 @@
 import { useGLTF } from '@react-three/drei'
-import { forwardRef, useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { forwardRef, useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { useAppContext } from '@/context'
 import * as THREE from 'three'
-import { clone } from 'three/examples/jsm/utils/SkeletonUtils';
+import { clone } from 'three/examples/jsm/utils/SkeletonUtils'
 
 const baseBoatObjects = new Set([
   'hull_flooring',
@@ -77,7 +77,22 @@ const itemObjects = new Map([
   ['outboard_engine', ['engine_outboard']],
   ['inboard_engine', ['engine_inboard']],
   ['inboard_diesel_engine', ['engine_inboard_diesel']],
-]);
+  // 🛋️ Floor mat
+  ['floor_mat', ['floor_mat']],
+])
+
+const addObjectsToGroup = (group, objects) =>
+  objects.forEach((object) => {
+    const cloned = clone(object)
+    cloned.rotateY(Math.PI * 4)
+    group.add(cloned)
+  })
+
+const removeObjectsFromGroup = (group, objects) =>
+  objects.forEach((object) => {
+    const objectToRemove = group.getObjectByName(object.name)
+    group.remove(objectToRemove)
+  })
 
 const Boat = forwardRef(({
   playerId = 0,
@@ -85,76 +100,56 @@ const Boat = forwardRef(({
   ...props
 }, ref) => {
   const [state] = useAppContext()
-  const [prevPlayerItemsHash, setPrevPlayerItemsHash] = useState('');
   
-  // TODO: Split into its own file eventually
-  const { scene, nodes } = useGLTF('/models/canals.glb')
+  const { scene, nodes } = useGLTF('/models/boat.glb')
 
-  useEffect(() => {
-    setPrevPlayerItemsHash(getPlayerItemsHash())
-  }, [nodes])
+  const player = useMemo(() => {
+    return isRemotePlayer ? state.remotePlayers[playerId] : state.player
+  }, [
+    isRemotePlayer,
+    state.remotePlayers[playerId]?.playerItemsHashed,
+    state.player?.playerItemsHashed])
 
-  const player = useMemo(() => (
-    isRemotePlayer ?
-      state.remotePlayers.find((player) => player.id === playerId) :
-      state.player
-  ), [playerId, isRemotePlayer, state.remotePlayers, state.player])
-
-  const getPlayerItemsHash = useCallback(() => (
-    isRemotePlayer ? player?.hashedPlayerItems : player.hashedPlayerItems
-  ), [player])
-
-  const playerGroup = useMemo(() => ({ group: new THREE.Group() }), []);
+  const playerGroup = useMemo(() => ({ group: new THREE.Group() }), [])
 
   const { objectsToAdd, objectsToRemove } = useMemo(() => {
-    if (!(state.player && state.player.id) || !player.playerItems?.nodes) {
+    if (!(player && player.id)) {
       return { objectsToAdd: [], objectsToRemove: [] }
     }
-  
-    const playerItems = player.playerItems.nodes;
-  
+
+    const playerItemsSet = new Set(player.playerItems.nodes.flatMap(({ item, props }) => 
+      props?.equipped ? itemObjects.get(item.itemKey) : []
+    ))
+
     return Object.entries(nodes).reduce((prev, [key, object]) => {
-      const isBaseObject = baseBoatObjects.has(key);
-      const isItemObject = playerItems.some(({ item, props }) =>
-        props?.equipped && itemObjects.get(item.itemKey)?.includes(key)
-      );
-  
-      ((isBaseObject || isItemObject) ? prev.objectsToAdd : prev.objectsToRemove).push(object);
-  
-      return prev;
+      const isBaseObject = baseBoatObjects.has(key)
+      const isItemObject = playerItemsSet.has(key);
+      (isBaseObject || isItemObject ? prev.objectsToAdd : prev.objectsToRemove).push(object)
+      return prev
     }, { objectsToAdd: [], objectsToRemove: []});
   }, [
     nodes,
-    (getPlayerItemsHash() !== prevPlayerItemsHash)
-  ]);
+    player?.playerItemsHashed
+  ])
   
   useEffect(() => {
-    playerGroup.group.rotation.order = "YXZ";
+    playerGroup.group.clear()
+    playerGroup.group.rotation.order = "YXZ"
+    addObjectsToGroup(playerGroup.group, objectsToAdd)
+  }, [objectsToAdd, playerGroup])
 
-    objectsToAdd && objectsToAdd.forEach((object) => {
-      const cloned = clone(object);
-      cloned.rotateY(Math.PI * 4);
-      playerGroup.group.add(cloned);
-    });
 
-    console.log(objectsToRemove && objectsToRemove.length)
-
-    objectsToRemove && objectsToRemove && objectsToRemove.forEach((object) => {
-      const objectToRemove = playerGroup.group.getObjectByName(object.name);
-      playerGroup.group.remove(objectToRemove)
-    });
-
-    setPrevPlayerItemsHash(getPlayerItemsHash());
-
-  }, [objectsToAdd, objectsToRemove, playerGroup]);
+  useEffect(() => {
+    removeObjectsFromGroup(playerGroup.group, objectsToRemove)
+  }, [objectsToRemove, playerGroup])
 
   return <primitive
     object={playerGroup.group}
     ref={ref}
     {...props}
   />
-});
+})
 
-Boat.displayName = 'Boat';
+Boat.displayName = 'Boat'
 
 export { Boat }

@@ -22,6 +22,10 @@ SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'notify_player_changes');
 
 SELECT EXISTS(SELECT FROM pg_trigger WHERE tgname = 'player_changes_trigger');
 
+SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'notify_player_item_changes');
+
+SELECT EXISTS(SELECT FROM pg_trigger WHERE tgname = 'player_item_changes_trigger');
+
 SELECT EXISTS(SELECT 1 FROM information_schema.views WHERE table_name = 'links_recursive');
 
 SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'player_markers');

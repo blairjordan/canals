@@ -20,6 +20,10 @@ DROP TRIGGER IF EXISTS player_changes_trigger ON players;
 
 DROP FUNCTION IF EXISTS notify_player_changes();
 
+DROP TRIGGER IF EXISTS player_item_changes_trigger ON player_items;
+
+DROP FUNCTION IF EXISTS notify_player_item_changes();
+
 DROP TRIGGER IF EXISTS marker_changes_trigger ON markers;
 
 DROP FUNCTION IF EXISTS notify_marker_changes();

@@ -26,7 +26,7 @@ const RemotePlayer = ({ playerId = 0 }) => {
   })
 
   useEffect(() => {
-    const remotePlayer = state.remotePlayers.find(player => player.id === playerId)
+    const remotePlayer = state.remotePlayers[playerId]
 
     if (!(remotePlayer && remotePlayer.position && remotePlayer.username)) {
       return
@@ -44,7 +44,7 @@ const RemotePlayer = ({ playerId = 0 }) => {
       updateRemotePlayerPosition({x: position.x, y: position.y, z: position.z, r: position.r, jumpTo: true})
     }
     
-  }, [state.remotePlayers.find(player => player.id === playerId)?.position])
+  }, [state.remotePlayers[playerId]?.position])
 
   const updateRemotePlayerPosition = (transform, delta) => {
     if(transform.jumpTo) {
@@ -76,7 +76,6 @@ const RemotePlayer = ({ playerId = 0 }) => {
         })
         .start();
     }
-
   }
 
   useFrame((state, delta) => {

@@ -20,10 +20,10 @@ COMMENT ON COLUMN players.drifting_at is E'@omit';
 
 INSERT INTO players (username, position, balance)
 VALUES
-  ('blair', '{ "x": 0, "y": 0, "z": 0, "r": 0 }', 1000.00),
-  ('matt', '{ "x": 0, "y": 0, "z": 0, "r": 0 }', 250.00),
-  ('zara', '{ "x": 0, "y": 0, "z": 0, "r": 0 }', 500.00),
-  ('finn', '{ "x": 0, "y": 0, "z": 0, "r": 0 }', 50.00);
+  ('blair', '{ "x": -12, "y": 0, "z": 0, "r": 2 }', 1000.00),
+  ('matt', '{ "x": -12, "y": 0, "z": 12, "r": 3 }', 500.00),
+  ('zara', '{ "x": -5, "y": 0, "z": -13, "r": -3 }', 350.00),
+  ('finn', '{ "x": 15, "y": 0, "z": -10, "r": -2 }', 50.00);
 
 CREATE TABLE IF NOT EXISTS markers (
   id BIGSERIAL PRIMARY KEY,
@@ -271,7 +271,6 @@ CREATE OR REPLACE TRIGGER player_changes_trigger
 CREATE OR REPLACE FUNCTION notify_player_item_changes()
   RETURNS TRIGGER AS
 $$
-DECLARE
 BEGIN
   IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') THEN
     PERFORM pg_notify(
@@ -283,15 +282,25 @@ BEGIN
         )
       )::text
     );
-    RETURN NULL;
+  ELSIF (TG_OP = 'DELETE') THEN
+    PERFORM pg_notify(
+      'postgraphile:player_updated',
+      json_build_object(
+        '__node__', json_build_array(
+          'players',
+          (SELECT OLD.player_id)
+        )
+      )::text
+    );
   END IF;
+
   RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
 -- 🔫 Trigger for player item updates
 CREATE OR REPLACE TRIGGER player_item_changes_trigger
-  AFTER INSERT OR UPDATE
+  AFTER INSERT OR UPDATE OR DELETE
   ON player_items
   FOR EACH ROW
   EXECUTE FUNCTION notify_player_item_changes();
