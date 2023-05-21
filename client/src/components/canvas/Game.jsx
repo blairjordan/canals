@@ -1,7 +1,7 @@
 import { CanalWater } from './CanalWater'
 import { Player } from './Player'
 import { useEffect, useRef } from 'react'
-import { Sky } from '@react-three/drei'
+import { Environment, Sky } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useAppContext } from '@/context'
 import { useMutation } from '@apollo/client'
@@ -133,10 +133,11 @@ export default function Game({ route, ...props }) {
   return (
     <>
       {/* <Terrain /> */}
+      <Environment files='/textures/kloppenheim_06_puresky_2k.hdr' background />
       <CanalWater ref={canalRef} />
       <Locks canalRef={canalRef} />
       <Objects canalRef={canalRef} />
-      <Sky scale={5000} sunPosition={[0, 750, -4500]} turbidity={0.1} />
+      {/* <Sky scale={5000} sunPosition={[0, 750, -4500]} turbidity={0.1} /> */}
       <Player />
       {Object.keys(state.remotePlayers).map(( id ) => (
         <RemotePlayer key={`player-${id}`} playerId={id} />

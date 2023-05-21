@@ -182,7 +182,7 @@ const CanalWater = forwardRef((props, ref) => {
       sunDirection: new THREE.Vector3(0, 150, -1500),
       sunColor: 0x041e25,
       waterColor: 0x275980, //000b0e,
-      distortionScale: 3.0,
+      distortionScale: 2.0,
       fog: false,
       format: gl.encoding,
       alpha: 1.0,

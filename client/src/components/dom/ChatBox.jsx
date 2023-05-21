@@ -48,7 +48,7 @@ function ChatWindow(props) {
       <div className="flex mt-2">
         <input
           type="text"
-          className="border rounded-l-lg p-2 flex-grow outline-none"
+          className="border rounded-l-lg p-2 flex-grow outline-none text-gray-800"
           placeholder="Type a message..."
           value={inputValue}
           onChange={handleInputChange}

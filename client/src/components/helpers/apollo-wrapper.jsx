@@ -16,11 +16,11 @@ export const ApolloWrapper = ({ children }) => {
   const ssrMode = typeof window === 'undefined';
 
   const httpLink = createHttpLink({
-    uri: 'https://canals-api.onrender.com/graphql' || ''
+    // TODO: Source from environment variable
   })
 
   const wsLink = typeof window !== "undefined" ?  new GraphQLWsLink(createClient({
-    url: 'wss://canals-api.onrender.com/graphql' || ''
+    // TODO: Source from environment variable
   })) : null
 
   const splitLink = typeof window !== "undefined" ? split(

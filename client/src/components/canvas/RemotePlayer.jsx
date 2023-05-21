@@ -61,6 +61,11 @@ const RemotePlayer = ({ playerId = 0 }) => {
       if(helperRef.current.updateTween) {
         helperRef.current.updateTween.stop()
       }
+
+      if (!(transform && remotePlayerRef.current)) {
+        return
+      }
+
       helperRef.current.updateTween = new TWEEN.Tween(initVal)
         .to({ 
           x: transform.x, 

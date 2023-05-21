@@ -121,7 +121,6 @@ export default function Page(props) {
     }
 
     if (!loadingRemotePlayers && remotePlayersData) {
-      console.log('setting')
       dispatch({
         type: 'REMOTE_PLAYERS_SET',
         payload: 
