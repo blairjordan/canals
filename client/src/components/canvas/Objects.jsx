@@ -7,7 +7,6 @@ const someInclude = (key, array) => array.some((item) => key.includes(item))
 export function Objects(props) {
   const { scene, nodes } = useGLTF('/models/canals.glb') 
 
-
   const objects = Object.entries(nodes).reduce((prev, [key, object]) => {
     if (!someInclude(key, 
       [

@@ -135,7 +135,7 @@ export default function Game({ route, ...props }) {
       {/* <Terrain /> */}
       <Environment files='/textures/kloppenheim_06_puresky_2k.hdr' background />
       <CanalWater ref={canalRef} />
-      <Locks canalRef={canalRef} />
+      {/* <Locks canalRef={canalRef} /> */}
       <Objects canalRef={canalRef} />
       {/* <Sky scale={5000} sunPosition={[0, 750, -4500]} turbidity={0.1} /> */}
       <Player />

@@ -5,8 +5,6 @@ import { useFrame, useLoader } from '@react-three/fiber'
 import { MeshBasicMaterial, MeshStandardMaterial } from 'three'
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils'
 
-//import boatUrl from "../../assets/models/boat_01.glb";
-
 const Seagull = forwardRef((props, ref) => {
   const seagullGroup = useRef({ group: new THREE.Group() })
   const seagullRef = useRef(null)

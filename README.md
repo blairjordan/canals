@@ -7,7 +7,10 @@ Canals is a boat simulation game where players can navigate through various cana
 
 ## 💻 Technology Stack
 
-The game is being developed using Three.js and React (using Fiber) for the frontend, with a Postgraphile backend. The database migrations are managed using Sqitch. 3D models have been designed in Blender.
+- [React](https://react.dev/) and [Three.js](https://threejs.org/) (using [Fiber](https://docs.pmnd.rs/react-three-fiber))
+- [Postgraphile](https://www.graphile.org/postgraphile/) GraphQL server
+- [Sqitch](https://sqitch.org/) database deployments
+- [Blender](https://www.blender.org/) 3D models
 
 ## ✨ Features
 
@@ -17,12 +20,14 @@ The game is being developed using Three.js and React (using Fiber) for the front
 - 🎣 **Fishing**: Catch fish to earn rewards
 - ⛽ **Fuel**: Refuel your boat at pumps
 - 🌐 **Multiplayer**: Collaborate and interact with other players
-- 🗺 **Expanding Regions**: While currently focusing on European and Amsterdam-style canals, the game has plans to expand to different regions in the future.
+- 🗺 **Expanding Regions**: While currently focusing on European / Dutch-style canals, the game has plans to expand to different regions in the future.
 - 🔓 **Locks**: Operate locks to navigate through different water levels
 
 ## 💻 Deployed Version
 
 A deployed version of the game is available at [canals.boats](https://canals.boats/)
+
+(Login using usernames: `1`, `2`, `3`, or `4`)
 
 ## 💾 Installation
 
@@ -46,7 +51,7 @@ You can access the GraphQL playground at [http://localhost:3000/graphql](http://
 
 1.  Navigate to the client directory:  `cd client`
 2.  Install the client dependencies: `npm run install` 
-3.  Start the client development server: `yarn dev --port=3001` 
+3.  Start the client development server: `npm run dev --port=3001` 
 
 This command will compile the client code and launch a development server.
 
@@ -65,7 +70,7 @@ The game can be played using the following controls:
 
 ## 🎨 Art Style
 
-The target art style is medium-to-low poly art style with ghibli-like trees, aiming to capture the charm of European and Amsterdam-style canals.
+The target art style is medium-to-low poly art style with ghibli-like trees, aiming to capture the charm and ambiance found in various canal locations worldwide.
 
 ## 🤝 Contributing
 
