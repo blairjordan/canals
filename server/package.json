@@ -1,6 +1,7 @@
 {
   "scripts": {
     "start": "node server.js",
+    "watch": "nodemon server.js",
     "db:init": "bash ./scripts/createdb.sh",
     "docker:build": "docker build -t canals:latest .",
     "docker:run": "docker run --name canals-app -e DATABASE_URL=$DATABASE_URL -p 3000:3000 -p 3001:3001 canals:latest"
@@ -9,7 +10,10 @@
     "@graphile-contrib/pg-simplify-inflector": "^6.1.0",
     "@graphile/pg-pubsub": "^4.13.0",
     "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "express-jwt": "^8.4.1",
+    "jwks-rsa": "^3.0.1",
     "pg": "^8.9.0",
     "postgraphile": "^4.13.0",
     "postgraphile-plugin-connection-filter": "^2.3.0",

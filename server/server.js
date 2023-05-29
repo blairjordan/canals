@@ -3,15 +3,36 @@ const cors = require("cors")
 const { postgraphile, makePluginHook } = require("postgraphile")
 const { default: PgPubsub } = require("@graphile/pg-pubsub")
 const ConnectionFilterPlugin = require("postgraphile-plugin-connection-filter")
+const dotenv = require("dotenv")
 
-const graphqlRoute = "/graphql"
-const graphiqlRoute = "/graphiql"
+const { checkJwt } = require("./middleware/jwt")
+const { authErrors } = require("./middleware/auth-errors")
+
+dotenv.config()
+
+const graphqlRoute = process.env.GRAPHQL_ROUTE || "/graphql"
+const graphiqlRoute = process.env.GRAPHIQL_ROUTE || "/graphiql"
+const issuer = process.env.AUTH0_DOMAIN
+const audience = process.env.AUTH0_AUDIENCE
+const isProduction = process.env.ENVIRONMENT === "production"
 
 const app = express()
-const pluginHook = makePluginHook([PgPubsub])
 
 // Allow all CORS requests
 app.use(cors())
+
+app.use(graphqlRoute, async (req, res, next) => {
+  if (!isProduction && req.headers.x_user_id) {
+    req.auth = { sub: req.headers.x_user_id }
+  } else {
+    await checkJwt({ issuer, audience })(req, res, () => {
+      authErrors(req, res, next)
+    })
+  }
+  next()
+})
+
+const pluginHook = makePluginHook([PgPubsub])
 
 // 🩺 Health check
 app.get("/healthz", (req, res) => {
@@ -24,6 +45,13 @@ app.use(
       "postgres://canaluser:canalpassword@localhost:5432/canaldb",
     "public",
     {
+      pgSettings: (req) => {
+        const settings = {}
+        if (req.auth) {
+          settings["user.provider_id"] = req.auth.sub
+        }
+        return settings
+      },
       ownerConnectionString: process.env.DATABASE_URL,
       graphqlRoute,
       graphiqlRoute,

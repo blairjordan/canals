@@ -65,7 +65,7 @@ VALUES
 ON CONFLICT DO NOTHING;
 
 -- ⛽ Refuel
-CREATE OR REPLACE FUNCTION refuel(player_id INTEGER)
+CREATE OR REPLACE FUNCTION refuel()
 RETURNS players AS $$
 DECLARE
   -- TODO: Adjust as per station / player's engine type
@@ -75,7 +75,7 @@ BEGIN
 
   -- TODO: Check if player is at a refueling station
 
-  SELECT * INTO updated_player FROM players WHERE id = player_id;
+  SELECT * INTO updated_player FROM players WHERE id = current_player_id();
 
   IF updated_player.fuel >= 100 THEN
     RAISE EXCEPTION 'Player fuel level is already at maximum capacity';
@@ -87,7 +87,7 @@ BEGIN
     balance = balance - fuel_price_per_unit,
     fuel = LEAST(updated_player.fuel + 1, 100),
     drifting_at = NULL -- Reset drift mode
-  WHERE id = player_id
+  WHERE id = current_player_id()
   AND balance >= fuel_price_per_unit
   RETURNING * INTO updated_player;
 
