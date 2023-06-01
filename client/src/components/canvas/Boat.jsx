@@ -64,10 +64,10 @@ const itemObjects = new Map([
   // 🪑 Deck chair
   ['deck_chair', ['decor_deck_chair', 'decor_deck_chair_material']],
   // 📦 Packages
-  ['art_supplies', ['box']],
-  ['boating_magazines', ['box']],
-  ['propellers', ['box']],
-  ['lures', ['box']],
+  ['art_supplies', ['postage_box_01']],
+  ['boating_magazines', ['postage_box_01']],
+  ['propellers', ['postage_box_01']],
+  ['lures', ['postage_box_01']],
   // 🛟 life buoy
   ['life_buoy', ['life_buoy']],
   // 🌬 air conditioner
@@ -79,6 +79,8 @@ const itemObjects = new Map([
   ['inboard_diesel_engine', ['engine_inboard_diesel']],
   // 🛋️ Floor mat
   ['floor_mat', ['floor_mat']],
+  // 🔔 Bell
+  ['bell', ['decor_bell_01']],
 ])
 
 const addObjectsToGroup = (group, objects) =>
@@ -122,6 +124,7 @@ const Boat = forwardRef(({
     ))
 
     return Object.entries(nodes).reduce((prev, [key, object]) => {
+      console.log(key)
       const isBaseObject = baseBoatObjects.has(key)
       const isItemObject = playerItemsSet.has(key);
       (isBaseObject || isItemObject ? prev.objectsToAdd : prev.objectsToRemove).push(object)
