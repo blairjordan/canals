@@ -14,6 +14,7 @@ const initialState = {
       z: undefined
     },
     isFishing: false,
+    packageItem: undefined,
     playerItems: [],
     playerItemsHashed: '',
   },
@@ -55,12 +56,20 @@ const appReducer = (state, action) => {
         ...state,
         isUIFocus: action.payload,
       }
-    case 'PLAYER_SET_FISHING':
+    case 'PLAYER_SET_IS_FISHING':
       return {
         ...state,
         player: {
           ...state.player,
           isFishing: action.payload,
+        },
+      }
+    case 'PLAYER_SET_PACKAGE':
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          packageItem: action.payload,
         },
       }
     case 'PLAYER_UPDATE':
@@ -94,6 +103,7 @@ const appReducer = (state, action) => {
               position: action.payload.position,
               playerItems: action.payload.playerItems,
               playerItemsHashed: action.payload.playerItemsHashed,
+              package: action.payload.package,
             },
           },
         }

@@ -145,7 +145,8 @@ VALUES
   ('bell', 'Bell', 'decor', 'Elegant canal boat bell, crafted from brass, emitting a melodious tone that echoes along the waterways', 80),
   ('telescope', 'Telescope', 'decor', 'Functional telescope for observing distant horizons and discovering hidden treasures', 175),
   ('captain_hat', 'Captain Hat', 'decor', 'Stylish captain hat, channeling your inner seafaring adventurer', 25),
-  ('fishing_bucket', 'Fishing Bucket', 'decor', 'Convenient and reliable fishing bucket, perfect for storing bait, catch, and fishing essentials during your angling expeditions', 5);
+  ('fishing_bucket', 'Fishing Bucket', 'decor', 'Convenient and reliable fishing bucket, perfect for storing bait, catch, and fishing essentials during your angling expeditions', 5),
+  ('barbeque', 'Barbeque', 'decor', 'A versatile and portable grill for outoor cooking adventures', 260);
 
 -- 🎣 Fishing vendor
 WITH vendor_insert AS (
@@ -181,7 +182,8 @@ item_insert AS (
   ('Snake Plant', 'snake_plant', 'A potted Snake Plant, also known as Mother-in-Law’s Tongue.', 20.00, 'plant'),
   ('Barrel Cactus', 'barrel_cactus', 'A potted Barrel Cactus, also known as Ferocactus.', 60.00, 'plant'),
   ('Boxwood Topiary', 'boxwood_topiary', 'A potted Boxwood Topiary, pruned into a ball shape.', 35.00, 'plant'),
-  ('Climbing Ivy', 'climbing_ivy', 'A potted Climbing Ivy, trained to climb a trellis or wall.', 25.00, 'plant')
+  ('Climbing Ivy', 'climbing_ivy', 'A potted Climbing Ivy, trained to climb a trellis or wall.', 25.00, 'plant'),
+  ('Potted Magnolia', 'potted_magnolia', 'A potted Magnolia tree, known for its beautiful and fragrant flowers.', 40.00, 'plant')
   RETURNING id
 )
 INSERT INTO marker_items (marker_id, item_id)
@@ -235,7 +237,32 @@ WHERE item_key IN (
   'deck_chair',
   'fishing_bucket',
   'flat_hull',
-  'engine_electric'
+  'engine_electric',
+  'potted_magnolia'
+)
+AND p.username <> 'blair';
+
+-- 🎩 Give certain player some extra bling (something for other players to aspire to)
+INSERT INTO player_items(player_id, item_id, props)
+SELECT p.id, i.id, '{"equipped": true}'
+FROM players p
+CROSS JOIN items i
+WHERE p.username = 'blair'
+AND i.item_key IN (
+  'floor_mat',
+  'bell',
+  'life_buoy',
+  'air_conditioner',
+  'outboard_engine',
+  'barbeque',
+  'solar_panels',
+  'deck_chair',
+  'multi_chine_hull',
+  'cruiser_stern',
+  'baitcasting_rod',
+  'climbing_ivy',
+  'potted_magnolia',
+  'fishing_bucket'
 );
 
 -- 📰 PostGraphile GQL subscription for player updates
