@@ -16,11 +16,11 @@ export const ApolloWrapper = ({ children }) => {
   const ssrMode = typeof window === 'undefined';
 
   const httpLink = createHttpLink({
-    // TODO: Source from environment variable
+    uri: process.env.NEXT_PUBLIC_GRAPHQL_HTTP_URL,
   })
 
   const wsLink = typeof window !== "undefined" ?  new GraphQLWsLink(createClient({
-    // TODO: Source from environment variable
+    url: process.env.NEXT_PUBLIC_GRAPHQL_WS_URL
   })) : null
 
   const splitLink = typeof window !== "undefined" ? split(

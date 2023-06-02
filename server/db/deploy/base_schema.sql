@@ -237,8 +237,7 @@ WHERE item_key IN (
   'deck_chair',
   'fishing_bucket',
   'flat_hull',
-  'engine_electric',
-  'potted_magnolia'
+  'engine_electric'
 )
 AND p.username <> 'blair';
 
