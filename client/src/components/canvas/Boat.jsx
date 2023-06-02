@@ -81,6 +81,11 @@ const itemObjects = new Map([
   ['floor_mat', ['floor_mat']],
   // 🔔 Bell
   ['bell', ['decor_bell_01']],
+  // 🥩 Barbecue 
+  ['barbecue', ['decor_barbecue']],
+  // 🪴 Plants
+  ['climbing_ivy', ['decor_pot_plant_hanging_plant']],
+  ['potted_magnolia', ['decor_pot_plant_large']],
 ])
 
 const addObjectsToGroup = (group, objects) =>
@@ -120,13 +125,13 @@ const Boat = forwardRef(({
     }
 
     const playerItemsSet = new Set(player.playerItems.nodes.flatMap(({ item, props }) => 
-      props?.equipped ? itemObjects.get(item.itemKey) : []
+      (!!props || props.equipped) ? itemObjects.get(item.itemKey) : []
     ))
 
     return Object.entries(nodes).reduce((prev, [key, object]) => {
-      console.log(key)
       const isBaseObject = baseBoatObjects.has(key)
       const isItemObject = playerItemsSet.has(key);
+      
       (isBaseObject || isItemObject ? prev.objectsToAdd : prev.objectsToRemove).push(object)
       return prev
     }, { objectsToAdd: [], objectsToRemove: []});

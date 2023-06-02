@@ -172,4 +172,40 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Player package computed field
+CREATE OR REPLACE FUNCTION players_package(
+  player players
+) RETURNS player_items AS $$
+DECLARE
+  package_item player_items;
+BEGIN
+  SELECT pi.*
+  INTO package_item
+  FROM players p
+  INNER JOIN player_items pi ON p.id = pi.player_id
+  INNER JOIN items i ON pi.item_id = i.id
+  WHERE p.id = player.id
+  AND i.type = 'delivery'
+  LIMIT 1;
+
+  RETURN package_item;
+END;
+$$ LANGUAGE plpgsql STABLE;;
+
+-- Marker packages computed field
+CREATE OR REPLACE FUNCTION markers_packages(
+  marker markers
+) RETURNS SETOF marker_items AS $$
+DECLARE
+BEGIN
+  RETURN QUERY
+  SELECT mi.*
+  FROM markers m
+  INNER JOIN marker_items mi on m.id = mi.marker_id
+  INNER JOIN items i on mi.item_id = i.id
+  WHERE m.id = marker.id
+  AND i.type = 'delivery';
+END;
+$$ LANGUAGE plpgsql STABLE;
+
 COMMIT;

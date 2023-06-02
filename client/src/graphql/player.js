@@ -1,7 +1,5 @@
 import { gql } from '@apollo/client'
 
-// TODO: use this query somewhere and delete this usage comment
-// .then((result) => resolve(result?.data?.players?.nodes))
 export const PLAYERS_ALL = gql`
   query GetPlayersAll {
     players {
@@ -69,6 +67,12 @@ export const PLAYER_UPDATED = gql`
   }
 `
 
+// TODO: Split into separate subscriptions for
+// - player position
+// - player items
+// - general player info
+//
+// (Requires changes to the backend)
 export const PLAYER_UPDATES = gql`
   subscription {
     listen(topic: "player_updated") {
@@ -91,6 +95,17 @@ export const PLAYER_UPDATES = gql`
                 props
                 price
               }
+            }
+          }
+          package {
+            id
+            props
+            item {
+              id
+              itemKey
+              name
+              description
+              props
             }
           }
         }

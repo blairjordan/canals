@@ -107,6 +107,14 @@ function PopupManager(props) {
     if (geofenceMarkers.length === 1) {
       const marker = geofenceMarkers[geofenceMarkers.length - 1]
 
+      const isMarina = marker.type === 'marina'
+      const hasPickup = isMarina && marker.packages && !state.player.packageItem
+      const hasDelivery = isMarina && state.player.packageItem && parseInt(marker.id) === state.player.packageItem.props.destination_marker_id
+
+      if (isMarina && !(hasPickup || hasDelivery)) {
+        return;
+      }
+
       const message = (() => {
         switch (marker.type) {
           case 'vendor':
@@ -114,7 +122,11 @@ function PopupManager(props) {
           case 'fuel_station':
             return `(Press E to refuel)`
           case 'marina':
-              return `(Press E to pickup package)`
+            return hasPickup
+            ? '(Press E to pickup package)'
+            : hasDelivery
+            ? '(Press E to deliver package)'
+            : '';
           case 'lock':
             return `(Press E to use lock)`
         }
@@ -130,7 +142,6 @@ function PopupManager(props) {
         }
       })
     }
-    
 
     // Remove popups if the player is no longer inside a geofence
     if (geofenceMarkers.length === 0) {

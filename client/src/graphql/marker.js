@@ -32,6 +32,17 @@ const MARKER_FIELDS = gql`
         }
       }
     }
+    packages {
+      nodes {
+        item {
+          id
+          itemKey
+          name
+          description
+        }
+        props
+      }
+    }
   }
 `
 
