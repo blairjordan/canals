@@ -40,7 +40,7 @@ To install and set up the Canals, follow the instructions below for the server a
 
 ### Server
 
-1.  Create the Docker container for PostgreSQL: `yarn db:init`
+1.  Create the Docker container for PostgreSQL: `npm run db:init`
 2.  Start the server by running: `npm run start`
 
 This will launch the server and make it accessible for the client.

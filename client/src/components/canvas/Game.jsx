@@ -12,7 +12,6 @@ import { Seagull } from './Seagulls'
 import { Objects } from './Objects'
 import { FISH } from '@/graphql/action'
 import usePlayer from '../hooks/usePlayer'
-import { Locks } from './Locks'
 
 export default function Game({ route, ...props }) {
   const [state, dispatch] = useAppContext()
@@ -82,7 +81,7 @@ export default function Game({ route, ...props }) {
     if (state.popups.length > 0) {
       if (state.actions.interact) {
         // 🛑 Cancel any fishing activity
-        dispatch({ type: 'PLAYER_SET_FISHING', payload: false })
+        dispatch({ type: 'PLAYER_SET_IS_FISHING', payload: false })
 
         dispatch({
           type: 'SET_UI_POPUP_INTERACT',
@@ -121,12 +120,12 @@ export default function Game({ route, ...props }) {
       })
 
       // 🐡 Stop fishing
-      dispatch({ type: 'PLAYER_SET_FISHING', payload: false })
+      dispatch({ type: 'PLAYER_SET_IS_FISHING', payload: false })
     }
 
     // 🎣 If player hits fishing key, set fishing state
     if (state.actions.fish) {
-      dispatch({ type: 'PLAYER_SET_FISHING', payload: true })
+      dispatch({ type: 'PLAYER_SET_IS_FISHING', payload: true })
     }
   })
 

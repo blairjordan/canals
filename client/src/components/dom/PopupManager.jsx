@@ -5,58 +5,63 @@ import Login from '@/components/dom/Login'
 import PopupStack from '@/components/dom/PopupStack'
 import { useAppContext } from '@/context'
 import { useMutation } from '@apollo/client'
-import { PURCHASE, SELL, REFUEL, OPERATE_LOCK } from '@/graphql/action'
+import {
+  PURCHASE,
+  SELL,
+  REFUEL,
+  OPERATE_LOCK,
+  PICKUP_PACKAGE,
+  DELIVER_PACKAGE
+} from '@/graphql/action'
 import ItemGrid from '@/components/dom/ItemGrid'
 import ItemDisplay from '@/components/dom/ItemDisplay'
 import usePlayer from '../hooks/usePlayer';
 
 function PopupManager(props) {
   const [state, dispatch] = useAppContext()
-  const [getPlayer, { loading: loadingPlayer, data: playerData, error: playerError }] = usePlayer();
+  const [getPlayer] = usePlayer();
 
   // TODO: Remove calls to getPlayer() and just update current player using subscription
   // (same way as remote players are updated)
 
   // 💸 Purchase item mutation
   const [purchaseItem] = useMutation(PURCHASE, {
-    onCompleted: (data) => {
-      console.log('Item purchased successfully:', data)
-    },
-    onError: (error) => {
-      console.log('Error purchasing item:', error)
-    },
+    onCompleted: (data) => console.log('Item purchased successfully:', data),
+    onError: (error) => console.log('Error purchasing item:', error),
   })
 
   // 💰 Sell item mutation
   const [sellItem] = useMutation(SELL, {
-    onCompleted: (data) => {
-      console.log('Item sold successfully:', data)
-    },
-    onError: (error) => {
-      console.log('Error purchasing item:', error)
-    },
+    onCompleted: (data) => console.log('Item sold successfully:', data),
+    onError: (error) => console.log('Error purchasing item:', error),
   })
 
   // ⛽ Refuel mutation
   const [refuel] = useMutation(REFUEL, {
     // TODO: debounce refueling
-    onCompleted: (data) => {
-      console.log('Refueled successfully:', data)
-    },
-    onError: (error) => {
-      console.log('Error refueling:', error)
-    },
+    onCompleted: (data) => console.log('Refueled successfully:', data),
+    onError: (error) => console.log('Error refueling:', error),
   })
 
   // 🚪 Use lock
   const [operateLock] = useMutation(OPERATE_LOCK, {
     // TODO: debounce lock usage
-    onCompleted: (data) => {
-      console.log('Used lock successfully:', data)
-    },
-    onError: (error) => {
-      console.log('Error using lock:', error)
-    },
+    onCompleted: (data) => console.log('Used lock successfully:', data),
+    onError: (error) => console.log('Error using lock:', error),
+  })
+
+  // 📦 Pickup package
+  const [pickupPackage] = useMutation(PICKUP_PACKAGE, {
+    // TODO: debounce lock usage
+    onCompleted: (data) => console.log('Package picked up successfully:', data),
+    onError: (error) => console.log('Error picking up package:', error),
+  })
+
+  // 📮 Deliver package
+  const [deliverPackage] = useMutation(DELIVER_PACKAGE, {
+    // TODO: debounce lock usage
+    onCompleted: (data) => console.log('Delivered package successfully:', data),
+    onError: (error) => console.log('Error delivering package:', error),
   })
 
   const handleLogin = (id) => {
@@ -85,11 +90,11 @@ function PopupManager(props) {
     }
 
     const geofenceMarkers = state.geofences.filter((geofence) =>
-      ['vendor', 'fuel_station', 'lock'].includes(geofence.type)
+      ['vendor', 'fuel_station', 'lock', 'marina'].includes(geofence.type)
     )
 
     const popups = state.popups.filter((popups) =>
-      ['vendor', 'fuel_station', 'lock'].includes(popups.type)
+      ['vendor', 'fuel_station', 'lock', 'marina'].includes(popups.type)
     )
 
     // Remove the first popup in the stack if there are more than one
@@ -102,12 +107,26 @@ function PopupManager(props) {
     if (geofenceMarkers.length === 1) {
       const marker = geofenceMarkers[geofenceMarkers.length - 1]
 
+      const isMarina = marker.type === 'marina'
+      const hasPickup = isMarina && marker.packages && !state.player.packageItem
+      const hasDelivery = isMarina && state.player.packageItem && parseInt(marker.id) === state.player.packageItem.props.destination_marker_id
+
+      if (isMarina && !(hasPickup || hasDelivery)) {
+        return;
+      }
+
       const message = (() => {
         switch (marker.type) {
           case 'vendor':
             return `(Press E to interact)`
           case 'fuel_station':
             return `(Press E to refuel)`
+          case 'marina':
+            return hasPickup
+            ? '(Press E to pickup package)'
+            : hasDelivery
+            ? '(Press E to deliver package)'
+            : '';
           case 'lock':
             return `(Press E to use lock)`
         }
@@ -123,12 +142,12 @@ function PopupManager(props) {
         }
       })
     }
-    
 
     // Remove popups if the player is no longer inside a geofence
     if (geofenceMarkers.length === 0) {
       dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'vendor' } })
       dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'fuel_station' } })
+      dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'marina' } })
     }
 
   }, [state.player, state.markers, state.geofences])
@@ -162,7 +181,7 @@ function PopupManager(props) {
     }
     
     state.popups.filter(({ type, interacted }) =>
-      ['lock', 'fuel_station'].includes(type)
+      ['lock', 'fuel_station', 'marina'].includes(type)
       && interacted
     ).map((popup) => {
 
@@ -176,6 +195,19 @@ function PopupManager(props) {
 
       if (popup.type === 'lock') {
         operateLock({
+          variables: {
+            playerId: parseInt(state.player.id),
+          },
+        })
+      }
+
+      if (popup.type === 'marina') {
+        pickupPackage({
+          variables: {
+            playerId: parseInt(state.player.id),
+          },
+        })
+        deliverPackage({
           variables: {
             playerId: parseInt(state.player.id),
           },
@@ -225,9 +257,9 @@ function PopupManager(props) {
         </Popup>
         )
       )}
-      {/* ⛽ Refuel and 🔒 lock popups */}
+      {/* ⛽ Refuel, 🔒 lock, and 🛥 marina popups */}
       {state.popups
-        .filter(({type}) => ['fuel_station', 'lock'].includes(type))
+        .filter(({type}) => ['fuel_station', 'lock', 'marina'].includes(type))
         .map(({ id, title, message }) => (
         <Popup
           key={id}
