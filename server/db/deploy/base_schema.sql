@@ -82,20 +82,20 @@ ON CONFLICT DO NOTHING;
 INSERT INTO items (name, item_key, description, price, type, props)
 VALUES
 -- Common Fish
-('sea bass', 'sea_bass', 'A popular game fish with mild, white flesh and a rich flavor.', 4, 'fish', '{"rarity": "common"}'),
-('trout', 'trout', 'A freshwater fish with delicate, flaky flesh that is mild in flavor.', 4, 'fish', '{"rarity": "common"}'),
-('salmon', 'salmon', 'A fatty fish with a rich, buttery flavor and tender flesh.', 6, 'fish', '{"rarity": "common"}'),
-('pike', 'pike', 'A freshwater fish with firm, white flesh that is often smoked or pickled.', 7, 'fish', '{"rarity": "common"}'),
-('carp', 'carp', 'A freshwater fish with a mild, sweet flavor and firm texture that is often used in European cuisine.', 8, 'fish', '{"rarity": "common"}'),
+('Sea Bass', 'sea_bass', 'A popular game fish with mild, white flesh and a rich flavor.', 4, 'fish', '{"rarity": "common"}'),
+('Trout', 'trout', 'A freshwater fish with delicate, flaky flesh that is mild in flavor.', 4, 'fish', '{"rarity": "common"}'),
+('Salmon', 'salmon', 'A fatty fish with a rich, buttery flavor and tender flesh.', 6, 'fish', '{"rarity": "common"}'),
+('Pike', 'pike', 'A freshwater fish with firm, white flesh that is often smoked or pickled.', 7, 'fish', '{"rarity": "common"}'),
+('Carp', 'carp', 'A freshwater fish with a mild, sweet flavor and firm texture that is often used in European cuisine.', 8, 'fish', '{"rarity": "common"}'),
 -- Uncommon Fish
-('zander', 'zander', 'A freshwater fish with firm, white flesh that is prized for its mild, delicate flavor.', 14, 'fish', '{"rarity": "uncommon"}'),
-('grayling', 'grayling', 'A freshwater fish with delicate, white flesh that is similar in taste to trout.', 15, 'fish', '{"rarity": "uncommon"}'),
+('Zander', 'zander', 'A freshwater fish with firm, white flesh that is prized for its mild, delicate flavor.', 14, 'fish', '{"rarity": "uncommon"}'),
+('Grayling', 'grayling', 'A freshwater fish with delicate, white flesh that is similar in taste to trout.', 15, 'fish', '{"rarity": "uncommon"}'),
 -- Rare Fish
-('catfish', 'catfish', 'A freshwater fish with firm, white flesh that is often used in stews and soups.', 22, 'fish', '{"rarity": "rare"}'),
+('Catfish', 'catfish', 'A freshwater fish with firm, white flesh that is often used in stews and soups.', 22, 'fish', '{"rarity": "rare"}'),
 -- Epic fish
-('sturgeon', 'sturgeon', 'A large, prehistoric-looking fish with firm, flavorful flesh that is prized for its caviar.', 47, 'fish', '{"rarity": "epic"}'),
+('Sturgeon', 'sturgeon', 'A large, prehistoric-looking fish with firm, flavorful flesh that is prized for its caviar.', 47, 'fish', '{"rarity": "epic"}'),
 -- Legendary,
-('bull shark', 'bull_shark', 'A large, aggressive shark with a reputation for attacking humans. Bull sharks are known for their strong, muscular bodies and sharp teeth.', 250, 'fish', '{"rarity": "legendary"}');
+('Bull Shark', 'bull_shark', 'A large, aggressive shark with a reputation for attacking humans. Bull sharks are known for their strong, muscular bodies and sharp teeth.', 250, 'fish', '{"rarity": "legendary"}');
 ;
 
 -- 🐟 A fishing spot marker
