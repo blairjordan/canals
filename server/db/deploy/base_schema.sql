@@ -146,7 +146,7 @@ VALUES
   ('telescope', 'Telescope', 'decor', 'Functional telescope for observing distant horizons and discovering hidden treasures', 175),
   ('captain_hat', 'Captain Hat', 'decor', 'Stylish captain hat, channeling your inner seafaring adventurer', 25),
   ('fishing_bucket', 'Fishing Bucket', 'decor', 'Convenient and reliable fishing bucket, perfect for storing bait, catch, and fishing essentials during your angling expeditions', 5),
-  ('barbeque', 'Barbeque', 'decor', 'A versatile and portable grill for outoor cooking adventures', 260);
+  ('barbecue', 'Barbecue', 'decor', 'A versatile and portable grill for outoor cooking adventures', 260);
 
 -- 🎣 Fishing vendor
 WITH vendor_insert AS (
@@ -253,7 +253,7 @@ AND i.item_key IN (
   'life_buoy',
   'air_conditioner',
   'outboard_engine',
-  'barbeque',
+  'barbecue',
   'solar_panels',
   'deck_chair',
   'multi_chine_hull',

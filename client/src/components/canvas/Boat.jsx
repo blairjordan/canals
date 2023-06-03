@@ -82,7 +82,7 @@ const itemObjects = new Map([
   // 🔔 Bell
   ['bell', ['decor_bell_01']],
   // 🥩 Barbecue 
-  ['barbecue', ['decor_barbecue']],
+  ['barbecue', ['bbq_kettle']],
   // 🪴 Plants
   ['climbing_ivy', ['decor_pot_plant_hanging_plant']],
   ['potted_magnolia', ['decor_pot_plant_large']],
@@ -125,7 +125,7 @@ const Boat = forwardRef(({
     }
 
     const playerItemsSet = new Set(player.playerItems.nodes.flatMap(({ item, props }) => 
-      (!!props || props.equipped) ? itemObjects.get(item.itemKey) : []
+      (props && (props?.equipped ?? !('equipped' in props))) ? itemObjects.get(item.itemKey) : []
     ))
 
     return Object.entries(nodes).reduce((prev, [key, object]) => {

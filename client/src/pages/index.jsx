@@ -81,7 +81,7 @@ export default function Page(props) {
       if (updatedPlayer.id === state.player.id) {
         dispatch({ type: 'PLAYER_UPDATE', payload: { playerItems, fuel, balance, packageItem, playerItemsHashed } })
       } else {
-        dispatch({ type: 'REMOTE_PLAYER_UPDATE', payload: { ...updatedPlayerBase, playerItemsHashed } })
+        dispatch({ type: 'REMOTE_PLAYER_UPDATE', payload: { ...updatedPlayerBase, playerItems, playerItemsHashed } })
       }
     },
     [dispatch, state.player]

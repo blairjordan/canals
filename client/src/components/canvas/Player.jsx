@@ -22,8 +22,6 @@ const Player = () => {
     lastUpdatedPlayerRotation: new THREE.Vector3(),
   })
 
-  const [frameCounter, setFrameCounter] = useState(0)
-
   const [updatePlayer, { data: playerUpdateData, loading: playerUpdateLoading, error: playerUpdateError }] =
     useMutation(PLAYER_UPDATED)
 
@@ -51,31 +49,18 @@ const Player = () => {
 
     currentPlayerPosition.copy(playerRef.current.position)
 
-    dispatch({
-      type: 'PLAYER_UPDATE',
-      payload: {
-        position: {
-          ...currentPlayerPosition,
-          r: playerRef.current.rotation.y,
-        },
-      },
-    })
-
     if (!(state.player && state.player.id)) {
       return
     }
-
-    // Update player position on the server every 120 frames
-    setFrameCounter(frameCounter + 1)
     
     if (
-      frameCounter >= 120 ||
       lastUpdatedPlayerPosition.distanceTo(currentPlayerPosition) > 1 ||
       Math.abs(lastUpdatedPlayerRotation.y - playerRef.current.rotation.y) > 0.1
     ) {
       try {
         lastUpdatedPlayerPosition.copy(currentPlayerPosition)
         lastUpdatedPlayerRotation.y = playerRef.current.rotation.y
+        
         updatePlayer({
           variables: {
             id: state.player.id,
@@ -85,17 +70,26 @@ const Player = () => {
             },
           },
         })
+
+        dispatch({
+          type: 'PLAYER_UPDATE',
+          payload: {
+            position: {
+              ...currentPlayerPosition,
+              r: playerRef.current.rotation.y,
+            },
+          },
+        })
       } catch (error) {
         console.error(error)
       }
-
-      setFrameCounter(0)
     }
   })
 
   return (
     <>
       <Boat ref={playerRef} playerId={state.player.id}/>
+      {/* FIXME: Disappears on Boat re-render, i.e., when player item is added */}
       <BoatWake player={playerRef} />
       <OrbitControls
         ref={controlsRef}
