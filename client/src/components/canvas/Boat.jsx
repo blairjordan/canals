@@ -82,7 +82,7 @@ const itemObjects = new Map([
   // 🔔 Bell
   ['bell', ['decor_bell_01']],
   // 🥩 Barbecue 
-  ['barbecue', ['decor_barbecue']],
+  ['barbecue', ['bbq_kettle']],
   // 🪴 Plants
   ['climbing_ivy', ['decor_pot_plant_hanging_plant']],
   ['potted_magnolia', ['decor_pot_plant_large']],
