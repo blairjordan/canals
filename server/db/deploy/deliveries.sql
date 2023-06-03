@@ -14,8 +14,8 @@ WITH marina AS (
 marina_items AS (
   INSERT INTO items (item_key, name, type, description, price)
   VALUES
-  ('lures', 'lures', 'delivery', 'Box container lures', 500),
-  ('propellers', 'propellers', 'delivery', 'Boat propellers', 1500)
+  ('lures', 'Pack of Lures', 'delivery', 'Box containing lures', 500),
+  ('propellers', 'Boat Propellers', 'delivery', 'Box containing boat propellers', 1500)
   RETURNING id)
 INSERT INTO marker_items
 SELECT marina.id, marina_items.id

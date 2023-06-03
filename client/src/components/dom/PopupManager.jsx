@@ -21,8 +21,7 @@ function PopupManager(props) {
   const [state, dispatch] = useAppContext()
   const [getPlayer] = usePlayer();
 
-  // TODO: Remove calls to getPlayer() and just update current player using subscription
-  // (same way as remote players are updated)
+  // TODO: Debounce all actions
 
   // 💸 Purchase item mutation
   const [purchaseItem] = useMutation(PURCHASE, {
@@ -38,29 +37,31 @@ function PopupManager(props) {
 
   // ⛽ Refuel mutation
   const [refuel] = useMutation(REFUEL, {
-    // TODO: debounce refueling
     onCompleted: (data) => console.log('Refueled successfully:', data),
     onError: (error) => console.log('Error refueling:', error),
   })
 
   // 🚪 Use lock
   const [operateLock] = useMutation(OPERATE_LOCK, {
-    // TODO: debounce lock usage
     onCompleted: (data) => console.log('Used lock successfully:', data),
     onError: (error) => console.log('Error using lock:', error),
   })
 
   // 📦 Pickup package
   const [pickupPackage] = useMutation(PICKUP_PACKAGE, {
-    // TODO: debounce lock usage
-    onCompleted: (data) => console.log('Package picked up successfully:', data),
+    onCompleted: (data) => {
+      dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'marina' } })
+      console.log('Package picked up successfully:', data)
+    },
     onError: (error) => console.log('Error picking up package:', error),
   })
 
   // 📮 Deliver package
   const [deliverPackage] = useMutation(DELIVER_PACKAGE, {
-    // TODO: debounce lock usage
-    onCompleted: (data) => console.log('Delivered package successfully:', data),
+    onCompleted: (data) => {
+      dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'marina' } })
+      console.log('Package delivered successfully:', data)
+    },
     onError: (error) => console.log('Error delivering package:', error),
   })
 
@@ -107,13 +108,10 @@ function PopupManager(props) {
     if (geofenceMarkers.length === 1) {
       const marker = geofenceMarkers[geofenceMarkers.length - 1]
 
+      // 🚢 Marina-specific conditions
       const isMarina = marker.type === 'marina'
       const hasPickup = isMarina && marker.packages && !state.player.packageItem
       const hasDelivery = isMarina && state.player.packageItem && parseInt(marker.id) === state.player.packageItem.props.destination_marker_id
-
-      if (isMarina && !(hasPickup || hasDelivery)) {
-        return;
-      }
 
       const message = (() => {
         switch (marker.type) {
