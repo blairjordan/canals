@@ -56,7 +56,7 @@ export const PLAYER = gql`
   }
 `
 
-export const PLAYER_UPDATED = gql`
+export const PLAYER_UPDATE = gql`
   mutation UpdatePlayer($id: BigInt!, $position: JSON!) {
     updatePlayer(input: { patch: { position: $position }, id: $id }) {
       player {
@@ -67,21 +67,25 @@ export const PLAYER_UPDATED = gql`
   }
 `
 
-// TODO: Split into separate subscriptions for
-// - player position
-// - player items
-// - general player info
-//
-// (Requires changes to the backend)
-export const PLAYER_UPDATES = gql`
+export const PLAYER_POSITION_UPDATES = gql`
   subscription {
-    listen(topic: "player_updated") {
+    listen(topic: "player_position_updated") {
       relatedNode {
         ... on Player {
           id
           position
-          fuel
-          balance
+        }
+      }
+    }
+  }
+`
+
+export const PLAYER_ITEMS_UPDATES = gql`
+  subscription {
+    listen(topic: "player_items_updated") {
+      relatedNode {
+        ... on Player {
+          id
           playerItems {
             nodes {
               id
@@ -97,6 +101,20 @@ export const PLAYER_UPDATES = gql`
               }
             }
           }
+        }
+      }
+    }
+  }
+`
+
+export const PLAYER_GENERAL_UPDATES = gql`
+  subscription {
+    listen(topic: "player_general_updated") {
+      relatedNode {
+        ... on Player {
+          id
+          fuel
+          balance
           package {
             id
             props
@@ -112,4 +130,6 @@ export const PLAYER_UPDATES = gql`
       }
     }
   }
+`
+
 `

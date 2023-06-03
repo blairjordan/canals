@@ -270,17 +270,16 @@ CREATE OR REPLACE FUNCTION notify_player_changes()
 $$
 DECLARE
 BEGIN
-  IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') THEN
+  IF (TG_OP = 'UPDATE' AND NEW.position IS DISTINCT FROM OLD.position) THEN
     PERFORM pg_notify(
-      'postgraphile:player_updated',
+      'postgraphile:player_position_updated',
       json_build_object(
         '__node__', json_build_array(
           'players',
-          (SELECT NEW.id)
+          NEW.id
         )
       )::text
     );
-    RETURN NULL;
   END IF;
   RETURN NULL;
 END;
