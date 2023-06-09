@@ -5,21 +5,14 @@ import Login from '@/components/dom/Login'
 import PopupStack from '@/components/dom/PopupStack'
 import { useAppContext } from '@/context'
 import { useMutation } from '@apollo/client'
-import {
-  PURCHASE,
-  SELL,
-  REFUEL,
-  OPERATE_LOCK,
-  PICKUP_PACKAGE,
-  DELIVER_PACKAGE
-} from '@/graphql/action'
+import { PURCHASE, SELL, REFUEL, OPERATE_LOCK, PICKUP_PACKAGE, DELIVER_PACKAGE } from '@/graphql/action'
 import ItemGrid from '@/components/dom/ItemGrid'
 import ItemDisplay from '@/components/dom/ItemDisplay'
-import usePlayer from '../hooks/usePlayer';
+import usePlayer from '../hooks/usePlayer'
 
 function PopupManager(props) {
   const [state, dispatch] = useAppContext()
-  const [getPlayer] = usePlayer();
+  const [getPlayer] = usePlayer()
 
   // TODO: Debounce all actions
 
@@ -69,38 +62,34 @@ function PopupManager(props) {
     getPlayer({ variables: { id } })
   }
 
-  const addPopup = useCallback(({ id, type, payload }) => {
-    const popupExists = state.popups.some((popup) => popup.id === id)
-    if (!popupExists) {
-      // 🗨 Add a popup when the player is inside a marker zone
-      dispatch({
-        type: 'UI_POPUP_ADD',
-        payload: {
-          id,
-          type,
-          ...payload
-        },
-      })
-    }
-  }, [state.popups, dispatch])
+  const addPopup = useCallback(
+    ({ id, type, payload }) => {
+      const popupExists = state.popups.some((popup) => popup.id === id)
+      if (!popupExists) {
+        // 🗨 Add a popup when the player is inside a marker zone
+        dispatch({
+          type: 'UI_POPUP_ADD',
+          payload: {
+            id,
+            type,
+            ...payload,
+          },
+        })
+      }
+    },
+    [state.popups, dispatch],
+  )
 
   useEffect(() => {
-    // state.player && state.player.id is truthy when the player is logged in
-    if (!(state.player && state.player.id)) {
-      return
-    }
-
     const geofenceMarkers = state.geofences.filter((geofence) =>
-      ['vendor', 'fuel_station', 'lock', 'marina'].includes(geofence.type)
+      ['vendor', 'fuel_station', 'lock', 'marina'].includes(geofence.type),
     )
 
-    const popups = state.popups.filter((popups) =>
-      ['vendor', 'fuel_station', 'lock', 'marina'].includes(popups.type)
-    )
+    const popups = state.popups.filter((popups) => ['vendor', 'fuel_station', 'lock', 'marina'].includes(popups.type))
 
     // Remove the first popup in the stack if there are more than one
     popups.map(({ marker: popupMarker }) => {
-      if (!geofenceMarkers.some((geofenceMarker) => geofenceMarker.id === popupMarker.id )) {
+      if (!geofenceMarkers.some((geofenceMarker) => geofenceMarker.id === popupMarker.id)) {
         dispatch({ type: 'UI_POPUP_REMOVE', payload: { id: `marker-${popupMarker.id}` } })
       }
     })
@@ -111,7 +100,10 @@ function PopupManager(props) {
       // 🚢 Marina-specific conditions
       const isMarina = marker.type === 'marina'
       const hasPickup = isMarina && marker.packages && !state.player.packageItem
-      const hasDelivery = isMarina && state.player.packageItem && parseInt(marker.id) === state.player.packageItem.props.destination_marker_id
+      const hasDelivery =
+        isMarina &&
+        state.player.packageItem &&
+        parseInt(marker.id) === state.player.packageItem.props.destination_marker_id
 
       const message = (() => {
         switch (marker.type) {
@@ -120,11 +112,7 @@ function PopupManager(props) {
           case 'fuel_station':
             return `(Press E to refuel)`
           case 'marina':
-            return hasPickup
-            ? '(Press E to pickup package)'
-            : hasDelivery
-            ? '(Press E to deliver package)'
-            : '';
+            return hasPickup ? '(Press E to pickup package)' : hasDelivery ? '(Press E to deliver package)' : ''
           case 'lock':
             return `(Press E to use lock)`
         }
@@ -136,8 +124,8 @@ function PopupManager(props) {
         payload: {
           title: marker.props.name,
           message,
-          marker
-        }
+          marker,
+        },
       })
     }
 
@@ -147,16 +135,10 @@ function PopupManager(props) {
       dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'fuel_station' } })
       dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'marina' } })
     }
-
   }, [state.player, state.markers, state.geofences])
 
-  // Fishing popups
+  // 🐠 Fishing popups
   useEffect(() => {
-    // state.player && state.player.id is truthy when the player is logged in
-    if (!(state.player && state.player.id)) {
-      return
-    }
-
     if (state.player.isFishing) {
       addPopup({
         id: `fishing-${state.player.id}`,
@@ -164,170 +146,211 @@ function PopupManager(props) {
         payload: {
           title: 'Fishing 🎣',
           message: `Press E to stop fishing`,
-        }
+        },
       })
     } else {
       dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'fishing_status' } })
     }
-
   }, [state.player.isFishing])
 
+  // 🎒 Inventory popups
   useEffect(() => {
-    // state.player && state.player.id is truthy when the player is logged in
-    if (!(state.player && state.player.id)) {
-      return
-    }
-    
-    state.popups.filter(({ type, interacted }) =>
-      ['lock', 'fuel_station', 'marina'].includes(type)
-      && interacted
-    ).map((popup) => {
-
-      if (popup.type === 'fuel_station') {
-        refuel({
-          variables: {
-            playerId: parseInt(state.player.id),
-          },
-        })
-      }
-
-      if (popup.type === 'lock') {
-        operateLock({
-          variables: {
-            playerId: parseInt(state.player.id),
-          },
-        })
-      }
-
-      if (popup.type === 'marina') {
-        pickupPackage({
-          variables: {
-            playerId: parseInt(state.player.id),
-          },
-        })
-        deliverPackage({
-          variables: {
-            playerId: parseInt(state.player.id),
-          },
-        })
-      }
-
-      dispatch({
-        type: 'SET_UI_POPUP_INTERACT',
-        payload: {
-          popup,
-          interacted: false
-        }
+    if (state.player.isInventoryOpen) {
+      addPopup({
+        id: `inventory-${state.player.id}`,
+        type: 'inventory',
       })
-    })
+    } else {
+      dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'inventory' } })
+    }
+  }, [state.player.isInventoryOpen])
 
+  useEffect(() => {
+    state.popups
+      .filter(({ type, interacted }) => ['lock', 'fuel_station', 'marina'].includes(type) && interacted)
+      .map((popup) => {
+        if (popup.type === 'fuel_station') {
+          refuel({
+            variables: {
+              playerId: parseInt(state.player.id),
+            },
+          })
+        }
+
+        if (popup.type === 'lock') {
+          operateLock({
+            variables: {
+              playerId: parseInt(state.player.id),
+            },
+          })
+        }
+
+        if (popup.type === 'marina') {
+          pickupPackage({
+            variables: {
+              playerId: parseInt(state.player.id),
+            },
+          })
+          deliverPackage({
+            variables: {
+              playerId: parseInt(state.player.id),
+            },
+          })
+        }
+
+        dispatch({
+          type: 'SET_UI_POPUP_INTERACT',
+          payload: {
+            popup,
+            interacted: false,
+          },
+        })
+      })
   }, [state.popups])
 
   return (
     <>
-    <PopupStack>
-      {
-        // state.player.id is truthy when the player is logged in
-        !(state.player && state.player.id) && (
-          <Popup key='login'>
-            <Login onLogin={handleLogin} />
+      <PopupStack>
+        {
+          // state.player.id is truthy when the player is logged in
+          !(state.player && state.player.id) && (
+            <Popup key='login'>
+              <Login onLogin={handleLogin} />
+            </Popup>
+          )
+        }
+        {/* 🎣 Fishing status popup */}
+        {state.popups.some(({ type }) => type === 'fishing_status') && (
+          <Popup key='fishing-status-popup'>
+            <h2>Fishing 🎣</h2>
+            <p>Press Esc to stop fishing</p>
           </Popup>
-        )
-      }
-      {/* 🎣 Fishing status popup */}
-      {state.popups.some(({type}) => type === 'fishing_status') && (
-        <Popup key='fishing-status-popup'>
-          <h2>Fishing 🎣</h2>
-          <p>Press Esc to stop fishing</p>
-        </Popup>
-      )}
-      {/* 🐟 Caugh fish popup */}
-      {state.popups
-        .filter(({type}) => type === 'fish_caught')
-        .map(({ id, item }) => (
-        <Popup
-          key={id}
-          timeoutDuration={5_000}
-          onClose={() => dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'fish_caught' } })}
-        >
-          <h2>You caught a <strong>{item.name}</strong> !</h2> <br />
-          <ItemDisplay item={item} />
-        </Popup>
-        )
-      )}
-      {/* ⛽ Refuel, 🔒 lock, and 🛥 marina popups */}
-      {state.popups
-        .filter(({type}) => ['fuel_station', 'lock', 'marina'].includes(type))
-        .map(({ id, title, message }) => (
-        <Popup
-          key={id}
-        >
-        <h1>{title}</h1>
-        {message}
-        </Popup>
-        ))
-      }
-      {/* 🏪 Vendor popups */}
-      {state.popups
-        .filter(({type}) => type === 'vendor')
-        .map(({ id, title, message, marker, interacted }) => (
-        <Popup
-          key={id}
-          title={title}
-          tabs={
-            !interacted ? [] : [
-            ...((marker.markerItems.nodes.length !== 0) ? [
-            {
-              label: 'Buy',
+        )}
+        {/* 🎒 Inventory popup */}
+        {state.popups.some(({ type }) => type === 'inventory') && (
+          <Popup
+            key='inventory-popup'
+            title='Inventory 🎒'
+            tabs={['decor', 'plant', 'boat_hull', 'boat_engine', 'boat_stern', 'fishing_rod'].map((type) => ({
+              // Format the type to be more human-readable
+              label: type.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()),
               content: (
                 <ItemGrid
-                  numBoxes={8}
-                  items={marker.markerItems.nodes}
-                  onItemClick={({ item }) => {
-                    purchaseItem({
-                      variables: {
-                        playerId: parseInt(state.player.id),
-                        itemId: parseInt(item.id),
-                      },
-                    })
-                  }}
+                  numBoxes={16}
+                  items={state.player.playerItems.nodes.filter(({ item }) => item.type === type)}
+                  displayEquipped={true}
+                  // TODO: Update on server
+                  // onItemClick={({ item }) => {
+                  // equipItem({
+                  //   variables: {
+                  //     playerId: parseInt(state.player.id),
+                  //     itemId: parseInt(item.id),
+                  //   },
+                  // })
+                  // }}
                 />
-              )
-            }] : []),
-            // Add selling tab if vendor props.purchase_item_types is truthy
-            ...((marker.props && marker.props.purchase_item_types) ? [
-              {
-                label: 'Sell',
-                content: <ItemGrid
-                  numBoxes={8}
-                  items={
-                    state.player.playerItems.nodes.filter((playerItemNode) => {
-                      return marker.props.purchase_item_types.includes(playerItemNode.item.type)
-                    })
-                  }
-                  onItemClick={( { itemContainer: playerItem }) => {
-                    sellItem({
-                      variables: {
-                        markerId: parseInt(marker.id),
-                        playerItemId: parseInt(playerItem.id),
-                      },
-                    })
-                  }}
-                />
-              }] : [])
-          ]
-        }
-        >
-          <h1>{title}</h1>
-          <p>{message}</p>
-        </Popup>))
-      }
+              ),
+            }))}>
+            <div className='mt-4 flex justify-end'>(Click items to equip / unequip)</div>
+          </Popup>
+        )}
+        {/* 🐟 Caugh fish popup */}
+        {state.popups
+          .filter(({ type }) => type === 'fish_caught')
+          .map(({ id, item }) => (
+            <Popup
+              key={id}
+              timeoutDuration={5_000}
+              onClose={() => dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'fish_caught' } })}>
+              <h2>
+                You caught a <strong>{item.name}</strong> !
+              </h2>{' '}
+              <br />
+              <ItemDisplay item={item} />
+            </Popup>
+          ))}
+        {/* ⛽ Refuel, 🔒 lock, and 🛥 marina popups */}
+        {state.popups
+          .filter(({ type }) => ['fuel_station', 'lock', 'marina'].includes(type))
+          .map(({ id, title, message }) => (
+            <Popup key={id}>
+              <h1>{title}</h1>
+              {message}
+            </Popup>
+          ))}
+        {/* 🏪 Vendor popups */}
+        {state.popups
+          .filter(({ type }) => type === 'vendor')
+          .map(({ id, title, message, marker, interacted }) => (
+            <Popup
+              key={id}
+              title={title}
+              tabs={
+                !interacted
+                  ? []
+                  : [
+                      ...(marker.markerItems.nodes.length !== 0
+                        ? [
+                            {
+                              label: 'Buy',
+                              content: (
+                                <ItemGrid
+                                  numBoxes={8}
+                                  items={marker.markerItems.nodes}
+                                  onItemClick={({ item }) => {
+                                    purchaseItem({
+                                      variables: {
+                                        playerId: parseInt(state.player.id),
+                                        itemId: parseInt(item.id),
+                                      },
+                                    })
+                                  }}
+                                  displayPrice={true}
+                                />
+                              ),
+                            },
+                          ]
+                        : []),
+                      // Add selling tab if vendor props.purchase_item_types is truthy
+                      ...(marker.props && marker.props.purchase_item_types
+                        ? [
+                            {
+                              label: 'Sell',
+                              content: (
+                                <ItemGrid
+                                  numBoxes={8}
+                                  items={state.player.playerItems.nodes.filter((playerItemNode) => {
+                                    return marker.props.purchase_item_types.includes(playerItemNode.item.type)
+                                  })}
+                                  onItemClick={({ itemContainer: playerItem }) => {
+                                    sellItem({
+                                      variables: {
+                                        markerId: parseInt(marker.id),
+                                        playerItemId: parseInt(playerItem.id),
+                                      },
+                                    })
+                                  }}
+                                  displayPrice={true}
+                                />
+                              ),
+                            },
+                          ]
+                        : []),
+                    ]
+              }>
+              {!interacted && (
+                <>
+                  <h1>{title}</h1>
+                  <p>{message}</p>
+                </>
+              )}
+            </Popup>
+          ))}
       </PopupStack>
     </>
   )
 }
 
-PopupManager.displayName = 'PopupManager';
+PopupManager.displayName = 'PopupManager'
 
-export default PopupManager;
-
+export default PopupManager

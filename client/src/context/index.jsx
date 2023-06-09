@@ -11,9 +11,10 @@ const initialState = {
     position: {
       x: undefined,
       y: undefined,
-      z: undefined
+      z: undefined,
     },
     isFishing: false,
+    isInventoryOpen: false,
     packageItem: undefined,
     playerItems: [],
     playerItemsHashed: '',
@@ -31,9 +32,10 @@ const initialState = {
     right: false,
     fish: false,
     interact: false,
+    inventoryToggle: false,
     boosting: false,
-    cancel: false
-  }
+    cancel: false,
+  },
 }
 
 // Reducers should be a pure functions & should not cause side effects (like gql calls).
@@ -62,6 +64,14 @@ const appReducer = (state, action) => {
         player: {
           ...state.player,
           isFishing: action.payload,
+        },
+      }
+    case 'PLAYER_SET_INVENTORY_OPEN':
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          isInventoryOpen: action.payload,
         },
       }
     case 'PLAYER_SET_PACKAGE':
@@ -93,20 +103,20 @@ const appReducer = (state, action) => {
         ...state,
         remotePlayers: action.payload,
       }
-      case 'REMOTE_PLAYER_UPDATE':
-        return {
-          ...state,
-          remotePlayers: {
-            ...state.remotePlayers,
-            [action.payload.id]: {
-              ...state.remotePlayers[action.payload.id],
-              position: action.payload.position,
-              playerItems: action.payload.playerItems,
-              playerItemsHashed: action.payload.playerItemsHashed,
-              package: action.payload.package,
-            },
+    case 'REMOTE_PLAYER_UPDATE':
+      return {
+        ...state,
+        remotePlayers: {
+          ...state.remotePlayers,
+          [action.payload.id]: {
+            ...state.remotePlayers[action.payload.id],
+            position: action.payload.position,
+            playerItems: action.payload.playerItems,
+            playerItemsHashed: action.payload.playerItemsHashed,
+            package: action.payload.package,
           },
-        }
+        },
+      }
     case 'REMOTE_PLAYERS_ADD':
       return {
         ...state,
@@ -116,7 +126,7 @@ const appReducer = (state, action) => {
         },
       }
     case 'REMOTE_PLAYERS_REMOVE':
-      const { [action.payload.id]: value, ...remainingPlayers } = state.remotePlayers;
+      const { [action.payload.id]: value, ...remainingPlayers } = state.remotePlayers
       return {
         ...state,
         remotePlayers: remainingPlayers,
@@ -134,7 +144,7 @@ const appReducer = (state, action) => {
     case 'GEOFENCE_ADD':
       return {
         ...state,
-        geofences: state.geofences.some(g => g.id === action.payload.id)
+        geofences: state.geofences.some((g) => g.id === action.payload.id)
           ? [...state.geofences]
           : [...state.geofences, action.payload],
       }
@@ -143,10 +153,11 @@ const appReducer = (state, action) => {
         ...state,
         markers: state.markers.map((marker) =>
           marker.id === action.payload.id
-          ? {
-            ...marker,
-            ...action.payload
-          } : marker,
+            ? {
+                ...marker,
+                ...action.payload,
+              }
+            : marker,
         ),
       }
     case 'GEOFENCE_REMOVE':
@@ -164,10 +175,11 @@ const appReducer = (state, action) => {
         ...state,
         popups: state.popups.map((popup) =>
           popup.id === action.payload.popup.id
-          ? {
-            ...popup,
-            interacted: action.payload.interacted 
-          } : popup,
+            ? {
+                ...popup,
+                interacted: action.payload.interacted,
+              }
+            : popup,
         ),
       }
     case 'UI_POPUP_REMOVE':
@@ -176,14 +188,12 @@ const appReducer = (state, action) => {
         popups: state.popups.filter((popup) => popup.id !== action.payload.id),
       }
     case 'UI_POPUP_CLEAR':
-      const { type } = action.payload;
-      const popups = state.popups.filter(popup => (
-        !!type && popup.type !== type
-      ));
+      const { type } = action.payload
+      const popups = state.popups.filter((popup) => !type || (!!type && popup.type !== type))
       return {
         ...state,
         popups,
-      };
+      }
     // 💬 Messages
     case 'MESSAGE_ADD':
       return {
@@ -192,13 +202,15 @@ const appReducer = (state, action) => {
       }
     // ⌨ Actions
     case 'ACTION_SET':
-      if (state.isUIFocus) { return state; }
+      if (state.isUIFocus) {
+        return state
+      }
       return {
         ...state,
         actions: {
           ...state.actions,
           [action.payload.action]: action.payload.value,
-        }
+        },
       }
     default:
       return state
