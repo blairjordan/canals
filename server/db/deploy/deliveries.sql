@@ -39,7 +39,6 @@ INSERT INTO marker_items
 SELECT marina.id, marina_items.id
 FROM marina CROSS JOIN marina_items;
 
-
 WITH marina AS (
   INSERT INTO markers (position, type, props, radius)
   VALUES (
@@ -58,7 +57,7 @@ INSERT INTO marker_items
 SELECT marina.id, marina_items.id
 FROM marina CROSS JOIN marina_items;
 
-CREATE OR REPLACE FUNCTION pickup_package(player_id INTEGER)
+CREATE OR REPLACE FUNCTION pickup_package()
 RETURNS players AS $$
   #variable_conflict use_variable
 DECLARE
@@ -82,7 +81,7 @@ BEGIN
   SELECT COUNT(*)
   FROM player_items pi
   INNER JOIN items i ON pi.item_id = i.id
-  WHERE i.type = 'delivery' AND pi.player_id = player_id
+  WHERE i.type = 'delivery' AND pi.player_id = current_player_id()
   INTO player_delivery_count;
 
   IF player_delivery_count <> 0 THEN
@@ -108,7 +107,7 @@ BEGIN
   -- 🎒 Insert the package into the player's inventory
   INSERT INTO player_items (player_id, item_id, props)
   VALUES (
-    player_id,
+    current_player_id(),
     delivery_item_id,
     json_build_object(
       'pickup_marker_id', pickup_marker_id,
@@ -116,14 +115,14 @@ BEGIN
       'delivery_reward', delivery_reward
     ));
 
-  SELECT * INTO updated_player FROM players WHERE id = player_id;
+  SELECT * INTO updated_player FROM players WHERE id = current_player_id();
 
   RETURN updated_player;
 
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION deliver_package(player_id INTEGER)
+CREATE OR REPLACE FUNCTION deliver_package()
 RETURNS players AS $$
   #variable_conflict use_variable
 DECLARE
@@ -145,7 +144,7 @@ BEGIN
   INTO delivery_reward
   FROM player_items pi
   INNER JOIN items i on pi.item_id = i.id
-  WHERE pi.player_id = player_id
+  WHERE pi.player_id = current_player_id()
   AND i.type = 'delivery'
   AND (pi.props ->> 'destination_marker_id')::NUMERIC = nearest_marker_id;
 
@@ -157,7 +156,7 @@ BEGIN
   DELETE FROM player_items pi
   USING items i
   WHERE pi.item_id = i.id
-  AND pi.player_id = player_id
+  AND pi.player_id = current_player_id()
   AND i.type = 'delivery';
 
   -- 💰 Delivery reward
@@ -165,7 +164,7 @@ BEGIN
   SET balance = p.balance + delivery_reward
   WHERE p.id = player_id;
 
-  SELECT * INTO updated_player FROM players WHERE id = player_id;
+  SELECT * INTO updated_player FROM players WHERE id = current_player_id();
 
   RETURN updated_player;
 

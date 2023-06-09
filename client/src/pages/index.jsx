@@ -9,10 +9,12 @@ import { PLAYERS_ALL, PLAYER_UPDATES } from '@/graphql/player'
 import { CHAT_GLOBAL, MESSAGE_CREATE } from '@/graphql/message'
 import { MARKERS, MARKER_UPDATED } from '@/graphql/marker'
 import { useCallback, useEffect } from 'react'
+import { useAuth0 } from '@auth0/auth0-react'
 
 const Game = dynamic(() => import('@/components/canvas/Game'), { ssr: false })
 
 export default function Page(props) {
+  const { isAuthenticated, isLoading, loginWithRedirect, logout } = useAuth0()
   const [state, dispatch] = useAppContext()
 
   const [getRemotePlayers, { loading: loadingRemotePlayers, data: remotePlayersData, error: remotePlayersError }] = useLazyQuery(PLAYERS_ALL)
@@ -136,9 +138,17 @@ export default function Page(props) {
 
   return (
     <>
-      <PopupManager />
-      <PlayerInfo />
-      <ChatBox handleMessageSend={handleMessageSend} />
+      {isLoading ? (
+        <div>Loading...</div>
+      ) : isAuthenticated ? (
+        <>
+          <PopupManager />
+          <PlayerInfo />
+          <ChatBox handleMessageSend={handleMessageSend} />
+        </>
+      ) : (
+        <button onClick={loginWithRedirect}>Log in</button>
+      )}
     </>
   )
 }
