@@ -1,7 +1,7 @@
 
 # 🚤 Canals
 
-Canals is a boat simulation game where players can navigate through various canal systems around the world. The game aims to provide a immersive experience of boating, allowing players to explore different canals, complete challenges, and enjoy the scenery of the waterways.
+Canals is a boat simulation game which allows players to explore different canals, complete challenges, and enjoy the scenery of the waterways.
 
 ![Screenshot](screenshots/screenshot1.gif)
 

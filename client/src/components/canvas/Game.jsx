@@ -15,7 +15,7 @@ import usePlayer from '../hooks/usePlayer'
 
 export default function Game({ route, ...props }) {
   const [state, dispatch] = useAppContext()
-  const [getPlayer] = usePlayer();
+  const [getPlayer] = usePlayer()
   const canalRef = useRef(null)
 
   // 🎣 Fish mutation
@@ -61,16 +61,19 @@ export default function Game({ route, ...props }) {
     const { x: playerX, z: playerZ } = state.player.position
 
     state.markers
-    .filter((marker) => marker.type !== 'geo_marker')
-    .map((marker) => {
-      const { position: { x: markerX, z: markerZ }, radius } = marker
-      const distance = Math.sqrt(Math.pow(playerX - markerX, 2) + Math.pow(playerZ - markerZ, 2)) * 0.5
-      if (distance < radius) {
-        dispatch({ type: 'GEOFENCE_ADD', payload: marker })
-      } else {
-        dispatch({ type: 'GEOFENCE_REMOVE', payload: marker })
-      }
-    })
+      .filter((marker) => marker.type !== 'geo_marker')
+      .map((marker) => {
+        const {
+          position: { x: markerX, z: markerZ },
+          radius,
+        } = marker
+        const distance = Math.sqrt(Math.pow(playerX - markerX, 2) + Math.pow(playerZ - markerZ, 2)) * 0.5
+        if (distance < radius) {
+          dispatch({ type: 'GEOFENCE_ADD', payload: marker })
+        } else {
+          dispatch({ type: 'GEOFENCE_REMOVE', payload: marker })
+        }
+      })
   }, [state.markers, state.player, state.player.position, state.geofences])
 
   // Check if player is inside marker zone
@@ -80,8 +83,9 @@ export default function Game({ route, ...props }) {
     // 📍 Check if player is interacting with a marker
     if (state.popups.length > 0) {
       if (state.actions.interact) {
-        // 🛑 Cancel any fishing activity
+        // 🛑 Cancel any fishing activity or inventory browsing
         dispatch({ type: 'PLAYER_SET_IS_FISHING', payload: false })
+        dispatch({ type: 'PLAYER_SET_INVENTORY_OPEN', payload: false })
 
         dispatch({
           type: 'SET_UI_POPUP_INTERACT',
@@ -121,11 +125,18 @@ export default function Game({ route, ...props }) {
 
       // 🐡 Stop fishing
       dispatch({ type: 'PLAYER_SET_IS_FISHING', payload: false })
+      // 🙅‍♂️ Close inventory
+      dispatch({ type: 'PLAYER_SET_INVENTORY_OPEN', payload: false })
     }
 
     // 🎣 If player hits fishing key, set fishing state
     if (state.actions.fish) {
       dispatch({ type: 'PLAYER_SET_IS_FISHING', payload: true })
+    }
+
+    // 🎒 If player hits inventory key, set inventory state
+    if (state.actions.inventoryToggle && !state.player.isInventoryOpen) {
+      dispatch({ type: 'PLAYER_SET_INVENTORY_OPEN', payload: true })
     }
   })
 
@@ -138,20 +149,20 @@ export default function Game({ route, ...props }) {
       <Objects canalRef={canalRef} />
       {/* <Sky scale={5000} sunPosition={[0, 750, -4500]} turbidity={0.1} /> */}
       <Player />
-      {Object.keys(state.remotePlayers).map(( id ) => (
+      {Object.keys(state.remotePlayers).map((id) => (
         <RemotePlayer key={`player-${id}`} playerId={id} />
       ))}
       <Seagull />
       {state.markers.map(({ id, position: { x, z }, radius, type, props }) => {
         // 🚩 Add DebugMarker for each marker
-        return <DebugMarker
-          key={id}
-          isDebugMode={true}
-          scale={2}
-          position={{ x, z }}
-          radius={radius}
-          color={
-            (() => {
+        return (
+          <DebugMarker
+            key={id}
+            isDebugMode={true}
+            scale={2}
+            position={{ x, z }}
+            radius={radius}
+            color={(() => {
               switch (type) {
                 case 'vendor':
                   return '#B60019'
@@ -170,9 +181,9 @@ export default function Game({ route, ...props }) {
                 default:
                   return '#999999'
               }
-            })()
-          }
-        />
+            })()}
+          />
+        )
       })}
     </>
   )
