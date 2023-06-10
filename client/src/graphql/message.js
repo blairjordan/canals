@@ -1,16 +1,5 @@
 import { gql } from '@apollo/client'
-
-const MESSAGE_FIELDS = gql`
-  fragment MessageFields on Message {
-    id
-    message
-    createdAt
-    meta
-    player {
-      username
-    }
-  }
-`
+import { MESSAGE_FIELDS } from './fragments'
 
 export const CHAT_GLOBAL = gql`
   subscription {

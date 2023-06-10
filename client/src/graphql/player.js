@@ -1,5 +1,7 @@
 import { gql } from '@apollo/client'
 
+import { PLAYER_ITEM_FIELDS } from './fragments'
+
 export const PLAYERS_ALL = gql`
   query GetPlayersAll {
     players {
@@ -10,22 +12,13 @@ export const PLAYERS_ALL = gql`
         position
         playerItems {
           nodes {
-            id
-            props
-            item {
-              id
-              itemKey
-              name
-              type
-              description
-              props
-              price
-            }
+            ...PlayerItemFields
           }
         }
       }
     }
   }
+  ${PLAYER_ITEM_FIELDS}
 `
 
 export const PLAYER = gql`
@@ -39,21 +32,12 @@ export const PLAYER = gql`
       fuel
       playerItems {
         nodes {
-          id
-          props
-          item {
-            id
-            itemKey
-            name
-            type
-            description
-            props
-            price
-          }
+          ...PlayerItemFields
         }
       }
     }
   }
+  ${PLAYER_ITEM_FIELDS}
 `
 
 export const PLAYER_UPDATED = gql`
@@ -84,17 +68,7 @@ export const PLAYER_UPDATES = gql`
           balance
           playerItems {
             nodes {
-              id
-              props
-              item {
-                id
-                itemKey
-                name
-                type
-                description
-                props
-                price
-              }
+              ...PlayerItemFields
             }
           }
           package {
@@ -112,4 +86,5 @@ export const PLAYER_UPDATES = gql`
       }
     }
   }
+  ${PLAYER_ITEM_FIELDS}
 `

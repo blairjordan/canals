@@ -57,7 +57,7 @@ This command will compile the client code and launch a development server.
 
 ## 🎮 Usage
 
-Once both the server and client are set up, you can access the Canals by opening a web browser and navigating to the provided URL (e.g., `http://localhost:3000`).
+Once both the server and client are set up, you can access the Canals by opening a web browser and navigating to the provided URL (e.g., `http://localhost:3001`).
 
 ### 🕹 Controls
 
@@ -66,6 +66,7 @@ The game can be played using the following controls:
 - **WASD**: Move the boat
 - **F**: Fish
 - **E**: Interact with markers or objects
+- **I**: Inventory
 - **Esc**: Cancel current action
 
 ## 🎨 Art Style

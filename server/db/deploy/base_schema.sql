@@ -159,8 +159,7 @@ item_insert AS (
   VALUES
   ('Spincast Rod', 'spincast_rod', 'A simple fishing rod designed to work with spincasting reels.', 25.00, 'fishing_rod', '{"chance_multiplier": 1}'::JSONB),
   ('Spinning Rod', 'spinning_rod', 'The most common type of fishing rod, designed to work with spinning reels.', 50.00, 'fishing_rod', '{"chance_multiplier": 1.05}'::JSONB),
-  ('Baitcasting Rod', 'baitcasting_rod', 'A powerful fishing rod designed to work with baitcasting reels.', 100.00, 'fishing_rod', '{"chance_multiplier": 1.1}'::JSONB),
-  ('Fly Rod', 'fly_rod', 'A specialized fishing rod designed for fly fishing.', 200.00, 'fishing_rod', '{"chance_multiplier": 1.15}'::JSONB)
+  ('Baitcasting Rod', 'baitcasting_rod', 'A powerful fishing rod designed to work with baitcasting reels.', 100.00, 'fishing_rod', '{"chance_multiplier": 1.1}'::JSONB)
   RETURNING id
 )
 INSERT INTO marker_items (marker_id, item_id)

@@ -5,7 +5,16 @@ import Login from '@/components/dom/Login'
 import PopupStack from '@/components/dom/PopupStack'
 import { useAppContext } from '@/context'
 import { useMutation } from '@apollo/client'
-import { PURCHASE, SELL, REFUEL, OPERATE_LOCK, PICKUP_PACKAGE, DELIVER_PACKAGE } from '@/graphql/action'
+import {
+  PURCHASE,
+  SELL,
+  REFUEL,
+  OPERATE_LOCK,
+  PICKUP_PACKAGE,
+  DELIVER_PACKAGE,
+  EQUIP_ITEM,
+  UNEQUIP_ITEM,
+} from '@/graphql/action'
 import ItemGrid from '@/components/dom/ItemGrid'
 import ItemDisplay from '@/components/dom/ItemDisplay'
 import usePlayer from '../hooks/usePlayer'
@@ -18,25 +27,25 @@ function PopupManager(props) {
 
   // 💸 Purchase item mutation
   const [purchaseItem] = useMutation(PURCHASE, {
-    onCompleted: (data) => console.log('Item purchased successfully:', data),
+    onCompleted: (data) => console.log('Item purchased:', data),
     onError: (error) => console.log('Error purchasing item:', error),
   })
 
   // 💰 Sell item mutation
   const [sellItem] = useMutation(SELL, {
-    onCompleted: (data) => console.log('Item sold successfully:', data),
+    onCompleted: (data) => console.log('Item sold:', data),
     onError: (error) => console.log('Error purchasing item:', error),
   })
 
   // ⛽ Refuel mutation
   const [refuel] = useMutation(REFUEL, {
-    onCompleted: (data) => console.log('Refueled successfully:', data),
+    onCompleted: (data) => console.log('Refueled:', data),
     onError: (error) => console.log('Error refueling:', error),
   })
 
   // 🚪 Use lock
   const [operateLock] = useMutation(OPERATE_LOCK, {
-    onCompleted: (data) => console.log('Used lock successfully:', data),
+    onCompleted: (data) => console.log('Used lock:', data),
     onError: (error) => console.log('Error using lock:', error),
   })
 
@@ -44,7 +53,7 @@ function PopupManager(props) {
   const [pickupPackage] = useMutation(PICKUP_PACKAGE, {
     onCompleted: (data) => {
       dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'marina' } })
-      console.log('Package picked up successfully:', data)
+      console.log('Package picked up:', data)
     },
     onError: (error) => console.log('Error picking up package:', error),
   })
@@ -53,13 +62,51 @@ function PopupManager(props) {
   const [deliverPackage] = useMutation(DELIVER_PACKAGE, {
     onCompleted: (data) => {
       dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'marina' } })
-      console.log('Package delivered successfully:', data)
+      console.log('Package delivered:', data)
     },
     onError: (error) => console.log('Error delivering package:', error),
   })
 
+  // ✅ Equip item
+  const [equipItem] = useMutation(EQUIP_ITEM, {
+    onCompleted: (data) => {
+      console.log('Item equipped:', data)
+    },
+    onError: (error) => console.log('Error equipping package:', error),
+  })
+
+  // ➖ Unequip item
+  const [unequipItem] = useMutation(UNEQUIP_ITEM, {
+    onCompleted: (data) => {
+      console.log('Item unequipped:', data)
+    },
+    onError: (error) => console.log('Error unequipping package:', error),
+  })
+
   const handleLogin = (id) => {
     getPlayer({ variables: { id } })
+  }
+
+  const handleInventoryClick = ({ itemContainer: { id: playerItemId, props }, item }) => {
+    if (!props) {
+      return
+    }
+
+    if (!props.equipped) {
+      equipItem({
+        variables: {
+          playerId: parseInt(state.player.id),
+          playerItemId: parseInt(playerItemId),
+        },
+      })
+    } else {
+      unequipItem({
+        variables: {
+          playerId: parseInt(state.player.id),
+          playerItemId: parseInt(playerItemId),
+        },
+      })
+    }
   }
 
   const addPopup = useCallback(
@@ -237,17 +284,9 @@ function PopupManager(props) {
               content: (
                 <ItemGrid
                   numBoxes={16}
-                  items={state.player.playerItems.nodes.filter(({ item }) => item.type === type)}
+                  items={state.player.playerItems.nodes?.filter(({ item }) => item.type === type)}
                   displayEquipped={true}
-                  // TODO: Update on server
-                  // onItemClick={({ item }) => {
-                  // equipItem({
-                  //   variables: {
-                  //     playerId: parseInt(state.player.id),
-                  //     itemId: parseInt(item.id),
-                  //   },
-                  // })
-                  // }}
+                  onItemClick={handleInventoryClick}
                 />
               ),
             }))}>

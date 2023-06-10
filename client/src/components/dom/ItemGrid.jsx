@@ -25,14 +25,17 @@ const ItemGrid = ({ numBoxes, items, onItemClick, displayPrice = false, displayE
                 src={`img/items/${items[index].item.type}/${items[index].item.itemKey}.png`}
                 alt={items[index].item.name}
                 className='h-full w-full object-cover rounded-lg'
+                onError={({ currentTarget }) => {
+                  currentTarget.onerror = null
+                  currentTarget.style.display = 'none'
+                }}
               />
-
               <div
                 className='absolute bottom-0 left-0 w-full bg-black text-white text-sm rounded-b-md p-2 flex flex-col justify-center items-center z-10'
                 style={{ opacity: 0.7 }}>
                 <div className='mb-1'>{items[index].item.name}</div>
                 {displayPrice && <div>🪙 {Math.round(items[index].item.price)}</div>}
-                {displayEquipped && <div>{items[index].props.equipped ? '✅ equipped' : ''}</div>}
+                {displayEquipped && <div>{items[index].props && items[index].props.equipped ? '✅ equipped' : ''}</div>}
               </div>
             </div>
           )}
