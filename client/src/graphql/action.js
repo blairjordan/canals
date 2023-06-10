@@ -1,5 +1,7 @@
 import { gql } from '@apollo/client'
 
+import { PLAYER_ITEM_FIELDS } from './fragments'
+
 export const FISH = gql`
   mutation ($playerId: Int!) {
     fish(input: { playerId: $playerId }) {
@@ -111,4 +113,34 @@ export const DELIVER_PACKAGE = gql`
       }
     }
   }
+`
+
+export const EQUIP_ITEM = gql`
+  mutation ($playerId: Int!, $playerItemId: Int!) {
+    equipItem(input: { playerId: $playerId, playerItemId: $playerItemId }) {
+      player {
+        playerItems {
+          nodes {
+            ...PlayerItemFields
+          }
+        }
+      }
+    }
+  }
+  ${PLAYER_ITEM_FIELDS}
+`
+
+export const UNEQUIP_ITEM = gql`
+  mutation ($playerId: Int!, $playerItemId: Int!) {
+    unequipItem(input: { playerId: $playerId, playerItemId: $playerItemId }) {
+      player {
+        playerItems {
+          nodes {
+            ...PlayerItemFields
+          }
+        }
+      }
+    }
+  }
+  ${PLAYER_ITEM_FIELDS}
 `

@@ -32,7 +32,7 @@ const ItemGrid = ({ numBoxes, items, onItemClick, displayPrice = false, displayE
                 style={{ opacity: 0.7 }}>
                 <div className='mb-1'>{items[index].item.name}</div>
                 {displayPrice && <div>🪙 {Math.round(items[index].item.price)}</div>}
-                {displayEquipped && <div>{items[index].props.equipped ? '✅ equipped' : ''}</div>}
+                {displayEquipped && <div>{items[index].props && items[index].props.equipped ? '✅ equipped' : ''}</div>}
               </div>
             </div>
           )}
