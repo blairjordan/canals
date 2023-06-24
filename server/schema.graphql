@@ -288,6 +288,40 @@ type Query implements Node {
     """
     filter: PlayerFilter
   ): PlayersConnection
+
+  """Reads and enables pagination through a set of `TestTable`."""
+  testTables(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `TestTable`."""
+    orderBy: [TestTablesOrderBy!] = [NATURAL]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: TestTableCondition
+
+    """
+    A filter to be used in determining which values should be returned by the collection.
+    """
+    filter: TestTableFilter
+  ): TestTablesConnection
   item(id: BigInt!): Item
   link(id: BigInt!): Link
   linkByFromMarkerIdAndToMarkerId(fromMarkerId: BigInt!, toMarkerId: BigInt!): Link
@@ -2005,6 +2039,69 @@ input FloatFilter {
   greaterThanOrEqualTo: Float
 }
 
+"""A connection to a list of `TestTable` values."""
+type TestTablesConnection {
+  """A list of `TestTable` objects."""
+  nodes: [TestTable!]!
+
+  """
+  A list of edges which contains the `TestTable` and cursor to aid in pagination.
+  """
+  edges: [TestTablesEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `TestTable` you could get from the connection."""
+  totalCount: Int!
+}
+
+type TestTable {
+  col1: String
+}
+
+"""A `TestTable` edge in the connection."""
+type TestTablesEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `TestTable` at the end of the edge."""
+  node: TestTable!
+}
+
+"""Methods to use when ordering `TestTable`."""
+enum TestTablesOrderBy {
+  NATURAL
+  COL1_ASC
+  COL1_DESC
+}
+
+"""
+A condition to be used against `TestTable` object types. All fields are tested
+for equality and combined with a logical ‘and.’
+"""
+input TestTableCondition {
+  """Checks for equality with the object’s `col1` field."""
+  col1: String
+}
+
+"""
+A filter to be used against `TestTable` object types. All fields are combined with a logical ‘and.’
+"""
+input TestTableFilter {
+  """Filter by the object’s `col1` field."""
+  col1: StringFilter
+
+  """Checks for all expressions in this list."""
+  and: [TestTableFilter!]
+
+  """Checks for any expressions in this list."""
+  or: [TestTableFilter!]
+
+  """Negates the expression."""
+  not: TestTableFilter
+}
+
 """A connection to a list of `NearbyPlayer` values."""
 type NearbyPlayersConnection {
   """A list of `NearbyPlayer` objects."""
@@ -2118,6 +2215,14 @@ type Mutation {
     """
     input: CreatePlayerInput!
   ): CreatePlayerPayload
+
+  """Creates a single `TestTable`."""
+  createTestTable(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateTestTableInput!
+  ): CreateTestTablePayload
 
   """Updates a single `Item` using its globally unique id and a patch."""
   updateItemByNodeId(
@@ -2724,6 +2829,46 @@ input PlayerInput {
   fuel: Float
   balance: BigFloat
   lastFished: Datetime
+}
+
+"""The output of our create `TestTable` mutation."""
+type CreateTestTablePayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `TestTable` that was created by this mutation."""
+  testTable: TestTable
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """An edge for our `TestTable`. May be used by Relay 1."""
+  testTableEdge(
+    """The method to use when ordering `TestTable`."""
+    orderBy: [TestTablesOrderBy!] = [NATURAL]
+  ): TestTablesEdge
+}
+
+"""All input for the create `TestTable` mutation."""
+input CreateTestTableInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `TestTable` to be created by this mutation."""
+  testTable: TestTableInput!
+}
+
+"""An input for mutations affecting `TestTable`"""
+input TestTableInput {
+  col1: String
 }
 
 """The output of our update `Item` mutation."""
