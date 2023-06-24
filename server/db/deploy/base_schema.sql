@@ -4,6 +4,25 @@ BEGIN;
 
 CREATE EXTENSION IF NOT EXISTS postgis;
 
+-- Create db roles 🎭
+DO
+$do$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticated_user') THEN
+    CREATE ROLE authenticated_user;
+  END IF;
+
+  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'anonymous') THEN
+    CREATE ROLE anonymous;
+  END IF;
+END
+$do$;
+
+CREATE OR REPLACE FUNCTION current_user_id() RETURNS INTEGER as $$
+  SELECT current_setting('player.id', true)::integer;
+$$ LANGUAGE sql STABLE;
+GRANT EXECUTE ON FUNCTION current_user_id() TO authenticated_user;
+
 CREATE TABLE IF NOT EXISTS players (
   id BIGSERIAL PRIMARY KEY,
   username TEXT NOT NULL,
@@ -14,6 +33,8 @@ CREATE TABLE IF NOT EXISTS players (
   last_fished TIMESTAMP WITHOUT TIME ZONE, -- The last time the player fished (used for cooldown)
   drifting_at TIMESTAMP WITHOUT TIME ZONE  -- The time the player started drifting (allows movement for N seconds after fuel depletion)
 );
+GRANT SELECT, INSERT, UPDATE ON players TO authenticated_user;
+GRANT SELECT ON players TO anonymous;
 
 -- Omit drifting_at from PostGraphile schema
 COMMENT ON COLUMN players.drifting_at is E'@omit';
@@ -27,11 +48,13 @@ VALUES
 
 CREATE TABLE IF NOT EXISTS markers (
   id BIGSERIAL PRIMARY KEY,
+  key TEXT NULL,
   position JSONB NOT NULL,
   radius NUMERIC(10, 2) NOT NULL DEFAULT 10.00,
   type VARCHAR(55),
   props JSONB
 );
+GRANT SELECT, INSERT, UPDATE ON markers TO authenticated_user;
 
 CREATE INDEX IF NOT EXISTS markers_position_idx ON markers USING GIN (position);
 CREATE INDEX IF NOT EXISTS idx_markers_type ON markers (type);
@@ -43,6 +66,7 @@ CREATE TABLE IF NOT EXISTS links (
   props JSONB,
   CONSTRAINT uq_links UNIQUE (from_marker_id, to_marker_id)
 );
+GRANT SELECT ON links TO authenticated_user;
 
 CREATE INDEX IF NOT EXISTS links_props_idx ON links USING GIN (props);
 
@@ -55,12 +79,15 @@ CREATE TABLE IF NOT EXISTS items (
   price NUMERIC(10,2) DEFAULT NULL,
   props JSONB
 );
+GRANT SELECT, INSERT, UPDATE ON items TO authenticated_user;
+GRANT SELECT ON items TO anonymous;
 
 CREATE TABLE IF NOT EXISTS marker_items (
   marker_id BIGINT REFERENCES markers(id) NOT NULL,
   item_id BIGINT REFERENCES items(id) NOT NULL,
   props JSONB
 );
+GRANT SELECT ON marker_items TO authenticated_user;
 
 CREATE TABLE IF NOT EXISTS player_items (
   id BIGSERIAL PRIMARY KEY,
@@ -69,6 +96,8 @@ CREATE TABLE IF NOT EXISTS player_items (
   created_at TIMESTAMP DEFAULT NOW(),
   props JSONB
 );
+GRANT SELECT, INSERT, UPDATE, DELETE ON player_items TO authenticated_user;
+GRANT SELECT ON player_items TO anonymous;
 
 -- 📍 Geo markers
 INSERT INTO markers (position, type)
@@ -284,6 +313,7 @@ BEGIN
   RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
+GRANT EXECUTE ON FUNCTION notify_player_changes() TO authenticated_user;
 
 -- 🔫 Trigger for player updates
 CREATE OR REPLACE TRIGGER player_changes_trigger
@@ -322,6 +352,7 @@ BEGIN
   RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
+GRANT EXECUTE ON FUNCTION notify_player_item_changes() TO authenticated_user;
 
 -- 🔫 Trigger for player item updates
 CREATE OR REPLACE TRIGGER player_item_changes_trigger
@@ -360,6 +391,7 @@ SELECT
   props,
   depth
 FROM links_recursive;
+GRANT SELECT ON links_recursive TO authenticated_user;
 
 COMMENT ON VIEW links_recursive IS E'@foreignKey (to_marker_id) references markers (id)|@foreignFieldName toMarker\n@foreignKey (from_marker_id) references markers (id)|@foreignFieldName fromMarker';
 
@@ -396,6 +428,7 @@ RETURNS TABLE (marker_id INTEGER, marker_distance DOUBLE PRECISION) AS $$
   WHERE pd.marker_distance <= marker_distance_limit
   ORDER BY pd.marker_distance ASC;
 $$ LANGUAGE sql;
+GRANT EXECUTE ON FUNCTION player_markers(INTEGER, TEXT, FLOAT) TO authenticated_user;
 
 -- 🏪 Purchase item function
 CREATE OR REPLACE FUNCTION purchase_item(player_id INTEGER, item_id INTEGER)
@@ -436,6 +469,7 @@ BEGIN
   RETURN player_item;
 END;
 $$ LANGUAGE plpgsql;
+GRANT EXECUTE ON FUNCTION purchase_item(INTEGER, INTEGER) TO authenticated_user;
 
 -- 🎣 Fishin' function
 CREATE OR REPLACE FUNCTION fish(player_id INTEGER)
@@ -496,6 +530,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+GRANT EXECUTE ON FUNCTION fish(INTEGER) TO authenticated_user;
+
 CREATE OR REPLACE FUNCTION sell_item(
   marker_id INTEGER, -- vendor's marker id
   player_item_id INTEGER
@@ -555,6 +591,7 @@ RETURN player;
 
 END;
 $$ LANGUAGE plpgsql;
+GRANT EXECUTE ON FUNCTION sell_item(INTEGER, INTEGER) TO authenticated_user;
 
 DO $$ BEGIN
   CREATE TYPE nearby_players AS (
@@ -598,6 +635,7 @@ RETURNS SETOF nearby_players AS $$
   FROM player_distances pd
   WHERE pd.player_distance <= distance;
 $$ LANGUAGE sql STABLE;
+GRANT EXECUTE ON FUNCTION nearby_players(INTEGER, FLOAT) TO authenticated_user;
 
 -- 📰 PostGraphile GQL subscription for marker updates
 CREATE OR REPLACE FUNCTION notify_marker_changes()
@@ -628,6 +666,14 @@ CREATE OR REPLACE TRIGGER marker_changes_trigger
   ON markers
   FOR EACH ROW
   EXECUTE FUNCTION notify_marker_changes();
+
+-- 🎮 Current player function
+CREATE OR REPLACE FUNCTION current_player()
+RETURNS players AS $$
+  SELECT * FROM players
+  WHERE id = current_user_id();
+$$ LANGUAGE sql STABLE;
+GRANT EXECUTE ON FUNCTION current_player() TO authenticated_user;
 
 COMMIT;
 

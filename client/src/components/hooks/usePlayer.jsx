@@ -1,18 +1,17 @@
 import { useEffect } from 'react'
 import { useLazyQuery } from '@apollo/client'
-import { PLAYER } from '@/graphql/player'
+import { PLAYER_SELF } from '@/graphql/player'
 import { useAppContext } from '@/context'
 
 function usePlayer() {
   const [state, dispatch] = useAppContext()
 
-  const [getPlayer, {
-    loading: loadingPlayer,
-    data: playerData,
-    error: playerError,
-  }] = useLazyQuery(PLAYER, {
-    fetchPolicy: 'no-cache'
-  });
+  const [getPlayerSelf, { loading: loadingPlayerSelf, data: playerSelfData, error: playerSelfError }] = useLazyQuery(
+    PLAYER_SELF,
+    {
+      fetchPolicy: 'no-cache',
+    },
+  )
 
   // 👀 Watch for changes in state.player.id
   useEffect(() => {
@@ -20,27 +19,27 @@ function usePlayer() {
   }, [state.player?.id])
 
   useEffect(() => {
-    if (!loadingPlayer && playerData && playerData.player) {
-      const { player } = playerData;
+    if (!loadingPlayerSelf && playerSelfData && playerSelfData.currentPlayer) {
+      const { currentPlayer } = playerSelfData
 
-      if (!player.id) {
-        dispatch({ type: 'LOGIN', payload: player })
+      if (!currentPlayer.id) {
+        dispatch({ type: 'LOGIN', payload: currentPlayer })
         return
       }
 
-      dispatch({ type: 'PLAYER_UPDATE', payload: player})
+      dispatch({ type: 'PLAYER_UPDATE', payload: currentPlayer })
     }
-  }, [loadingPlayer, playerData])
+  }, [loadingPlayerSelf, playerSelfData])
 
   useEffect(() => {
-    if (!loadingPlayer && playerData && playerData.player) {
-      dispatch({ type: 'PLAYER_UPDATE', payload: playerData.player })
+    if (!loadingPlayerSelf && playerSelfData && playerSelfData.currentPlayer) {
+      dispatch({ type: 'PLAYER_UPDATE', payload: playerSelfData.currentPlayer })
     }
-  }, [loadingPlayer, playerData])
+  }, [loadingPlayerSelf, playerSelfData])
 
-  return [getPlayer, { loadingPlayer, playerData, playerError }];
+  return [getPlayerSelf, { loadingPlayer: loadingPlayerSelf, playerData: playerSelfData, playerError: playerSelfError }]
 }
 
-usePlayer.displayName = 'usePlayer';
+usePlayer.displayName = 'usePlayer'
 
-export default usePlayer;
+export default usePlayer

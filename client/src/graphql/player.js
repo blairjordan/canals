@@ -21,9 +21,9 @@ export const PLAYERS_ALL = gql`
   ${PLAYER_ITEM_FIELDS}
 `
 
-export const PLAYER = gql`
-  query GetPlayer($id: BigInt!) {
-    player(id: $id) {
+export const PLAYER_SELF = gql`
+  query GetCurrentPlayer {
+    currentPlayer {
       id
       username
       meta

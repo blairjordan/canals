@@ -1,7 +1,6 @@
 import dynamic from 'next/dynamic'
 import { useState, useEffect, useCallback } from 'react'
 import Popup from '@/components/dom/Popup'
-import Login from '@/components/dom/Login'
 import PopupStack from '@/components/dom/PopupStack'
 import { useAppContext } from '@/context'
 import { useMutation } from '@apollo/client'
@@ -17,11 +16,9 @@ import {
 } from '@/graphql/action'
 import ItemGrid from '@/components/dom/ItemGrid'
 import ItemDisplay from '@/components/dom/ItemDisplay'
-import usePlayer from '../hooks/usePlayer'
 
 function PopupManager(props) {
   const [state, dispatch] = useAppContext()
-  const [getPlayer] = usePlayer()
 
   // TODO: Debounce all actions
 
@@ -82,10 +79,6 @@ function PopupManager(props) {
     },
     onError: (error) => console.log('Error unequipping package:', error),
   })
-
-  const handleLogin = (id) => {
-    getPlayer({ variables: { id } })
-  }
 
   const handleInventoryClick = ({ itemContainer: { id: playerItemId, props }, item }) => {
     if (!props) {
@@ -258,14 +251,6 @@ function PopupManager(props) {
   return (
     <>
       <PopupStack>
-        {
-          // state.player.id is truthy when the player is logged in
-          !(state.player && state.player.id) && (
-            <Popup key='login'>
-              <Login onLogin={handleLogin} />
-            </Popup>
-          )
-        }
         {/* 🎣 Fishing status popup */}
         {state.popups.some(({ type }) => type === 'fishing_status') && (
           <Popup key='fishing-status-popup'>

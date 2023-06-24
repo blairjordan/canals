@@ -295,6 +295,8 @@ type Query implements Node {
   message(id: BigInt!): Message
   playerItem(id: BigInt!): PlayerItem
   player(id: BigInt!): Player
+  currentPlayer: Player
+  currentUserId: Int
 
   """Reads and enables pagination through a set of `NearbyPlayer`."""
   nearbyPlayers(
@@ -523,6 +525,7 @@ type Marker implements Node {
   """
   nodeId: ID!
   id: BigInt!
+  key: String
   position: JSON!
   radius: BigFloat!
   type: String
@@ -1793,6 +1796,8 @@ enum MarkersOrderBy {
   NATURAL
   ID_ASC
   ID_DESC
+  KEY_ASC
+  KEY_DESC
   POSITION_ASC
   POSITION_DESC
   RADIUS_ASC
@@ -1811,6 +1816,9 @@ A condition to be used against `Marker` object types. All fields are tested for 
 input MarkerCondition {
   """Checks for equality with the object’s `id` field."""
   id: BigInt
+
+  """Checks for equality with the object’s `key` field."""
+  key: String
 
   """Checks for equality with the object’s `position` field."""
   position: JSON
@@ -1831,6 +1839,9 @@ A filter to be used against `Marker` object types. All fields are combined with 
 input MarkerFilter {
   """Filter by the object’s `id` field."""
   id: BigIntFilter
+
+  """Filter by the object’s `key` field."""
+  key: StringFilter
 
   """Filter by the object’s `position` field."""
   position: JSONFilter
@@ -2576,6 +2587,7 @@ input CreateMarkerInput {
 """An input for mutations affecting `Marker`"""
 input MarkerInput {
   id: BigInt
+  key: String
   position: JSON!
   radius: BigFloat
   type: String
@@ -2927,6 +2939,7 @@ Represents an update to a `Marker`. Fields that are set will be updated.
 """
 input MarkerPatch {
   id: BigInt
+  key: String
   position: JSON
   radius: BigFloat
   type: String

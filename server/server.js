@@ -24,6 +24,16 @@ app.use(
       "postgres://canaluser:canalpassword@localhost:5432/canaldb",
     "public",
     {
+      pgSettings: (req) => {
+        const settings = {
+          role: "anonymous",
+        }
+        if (req.headers && req.headers.x_player_id) {
+          settings["player.id"] = req.headers.x_player_id
+          settings.role = "authenticated_user"
+        }
+        return settings
+      },
       ownerConnectionString: process.env.DATABASE_URL,
       graphqlRoute,
       graphiqlRoute,
