@@ -1,21 +1,19 @@
-
-
 class BoatEngine {
     constructor() {
         this.hasFuel = true;
 
-        this.maxPower = 0.0075
-        this.maxReverse = 0.0065
-        this.powerFactor = 0.0001
-        this.reverseFactor = 0.0001
+        this.maxPower = 0.99        
+        this.maxReverse = 0.08
+        this.powerFactor = 0.7
+        this.reverseFactor = 0.02
       
         this.boosting = false;
-        this.boosterPower = 0.0050
+        this.boosterPower = 0.2
 
-        this.drag = 0.85;
-        this.angularDrag = 0.55;
-        this.maxTurningPower = 0.0015
-        this.turningFactor = 0.00002
+        this.drag = 0.4;
+        this.angularDrag = 0.2;
+        this.maxTurningPower = 0.01
+        this.turningFactor = 0.001
 
         this.x= 0;
         this.y= 0;
