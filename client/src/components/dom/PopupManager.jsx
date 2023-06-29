@@ -210,32 +210,16 @@ function PopupManager(props) {
       .filter(({ type, interacted }) => ['lock', 'fuel_station', 'marina'].includes(type) && interacted)
       .map((popup) => {
         if (popup.type === 'fuel_station') {
-          refuel({
-            variables: {
-              playerId: parseInt(state.player.id),
-            },
-          })
+          refuel()
         }
 
         if (popup.type === 'lock') {
-          operateLock({
-            variables: {
-              playerId: parseInt(state.player.id),
-            },
-          })
+          operateLock()
         }
 
         if (popup.type === 'marina') {
-          pickupPackage({
-            variables: {
-              playerId: parseInt(state.player.id),
-            },
-          })
-          deliverPackage({
-            variables: {
-              playerId: parseInt(state.player.id),
-            },
-          })
+          pickupPackage()
+          deliverPackage()
         }
 
         dispatch({
@@ -324,7 +308,6 @@ function PopupManager(props) {
                                   onItemClick={({ item }) => {
                                     purchaseItem({
                                       variables: {
-                                        playerId: parseInt(state.player.id),
                                         itemId: parseInt(item.id),
                                       },
                                     })

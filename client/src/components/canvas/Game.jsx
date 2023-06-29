@@ -30,7 +30,7 @@ export default function Game({ route, ...props }) {
 
     if (state.player.isFishing) {
       const intervalId = setInterval(() => {
-        fish({ variables: { playerId: parseInt(state.player.id) } })
+        fish()
       }, 5000)
 
       return () => clearInterval(intervalId)
@@ -139,7 +139,7 @@ export default function Game({ route, ...props }) {
     if (state.actions.inventoryToggle && !state.player.isInventoryOpen) {
       dispatch({ type: 'PLAYER_SET_INVENTORY_OPEN', payload: true })
     }
-  })
+  }, -100)
 
   return (
     <>

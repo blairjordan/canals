@@ -2,7 +2,7 @@
 
 BEGIN;
 
-DROP FUNCTION IF EXISTS refuel(player_id INTEGER);
+DROP FUNCTION IF EXISTS refuel();
 
 DELETE FROM markers WHERE type = 'fuel_station';
 

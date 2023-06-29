@@ -3,8 +3,8 @@ import { gql } from '@apollo/client'
 import { PLAYER_ITEM_FIELDS } from './fragments'
 
 export const FISH = gql`
-  mutation ($playerId: Int!) {
-    fish(input: { playerId: $playerId }) {
+  mutation {
+    fish(input: {}) {
       playerItem {
         id
         item {
@@ -20,8 +20,8 @@ export const FISH = gql`
 `
 
 export const PURCHASE = gql`
-  mutation ($playerId: Int!, $itemId: Int!) {
-    purchaseItem(input: { playerId: $playerId, itemId: $itemId }) {
+  mutation ($itemId: Int!) {
+    purchaseItem(input: { itemId: $itemId }) {
       playerItem {
         id
         item {
@@ -54,8 +54,8 @@ export const SELL = gql`
 `
 
 export const REFUEL = gql`
-  mutation ($playerId: Int!) {
-    refuel(input: { playerId: $playerId }) {
+  mutation {
+    refuel(input: {}) {
       player {
         id
         fuel
@@ -66,8 +66,8 @@ export const REFUEL = gql`
 `
 
 export const OPERATE_LOCK = gql`
-  mutation ($playerId: Int!) {
-    operateLock(input: { playerId: $playerId }) {
+  mutation {
+    operateLock(input: {}) {
       marker {
         id
         props
@@ -77,8 +77,8 @@ export const OPERATE_LOCK = gql`
 `
 
 export const PICKUP_PACKAGE = gql`
-  mutation ($playerId: Int!) {
-    pickupPackage(input: { playerId: $playerId }) {
+  mutation {
+    pickupPackage(input: {}) {
       player {
         playerItems {
           nodes {
@@ -96,8 +96,8 @@ export const PICKUP_PACKAGE = gql`
 `
 
 export const DELIVER_PACKAGE = gql`
-  mutation ($playerId: Int!) {
-    deliverPackage(input: { playerId: $playerId }) {
+  mutation {
+    deliverPackage(input: {}) {
       player {
         balance
         playerItems {

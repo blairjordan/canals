@@ -8,3 +8,4 @@ locks 2023-05-03T15:06:54Z blair <blair@optimus> # Locking markers and functions
 deliveries 2023-05-04T04:14:01Z blair <blair@optimus> # Add delivery quests
 messages 2023-05-13T14:20:50Z blair <blair@optimus> # Add chat functionality
 inventory 2023-06-10T13:35:40Z blair <blair@optimus> # add inventory management
+sequences 2023-06-29T14:30:50Z blair <blair@optimus> # maintain sequences

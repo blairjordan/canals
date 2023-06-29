@@ -296,11 +296,10 @@ type Query implements Node {
   playerItem(id: BigInt!): PlayerItem
   player(id: BigInt!): Player
   currentPlayer: Player
-  currentUserId: Int
+  currentPlayerId: Int
 
   """Reads and enables pagination through a set of `NearbyPlayer`."""
   nearbyPlayers(
-    currentPlayerId: Int
     distance: Float
 
     """Only read the first `n` values of the set."""
@@ -3543,7 +3542,6 @@ input DeliverPackageInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  playerId: Int
 }
 
 """The output of our `equipItem` mutation."""
@@ -3612,7 +3610,6 @@ input FishInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  playerId: Int
 }
 
 """The output of our `operateLock` mutation."""
@@ -3643,7 +3640,6 @@ input OperateLockInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  playerId: Int
 }
 
 """The output of our `pickupPackage` mutation."""
@@ -3674,7 +3670,6 @@ input PickupPackageInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  playerId: Int
 }
 
 """The output of our `playerMarkers` mutation."""
@@ -3705,7 +3700,6 @@ input PlayerMarkersInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  playerId: Int
   markerType: String
   markerDistanceLimit: Float
 }
@@ -3744,7 +3738,6 @@ input PurchaseItemInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  playerId: Int
   itemId: Int
 }
 
@@ -3776,7 +3769,6 @@ input RefuelInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  playerId: Int
 }
 
 """The output of our `sellItem` mutation."""
