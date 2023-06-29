@@ -14,6 +14,7 @@ const RemotePlayer = ({ playerId = 0 }) => {
     position: new THREE.Vector3(0, 0, 0),
     rotation: new THREE.Vector3(0, 0, 0),
   })
+
   const helperRef = useRef({
     firstSet: false,
     updateTween: null,
@@ -100,7 +101,7 @@ const RemotePlayer = ({ playerId = 0 }) => {
       },
       delta,
     )
-  })
+  }, -10)
 
   return (
     remotePlayerRef &&

@@ -9,6 +9,8 @@ CREATE TABLE messages (
   meta JSONB,
   created_at TIMESTAMP DEFAULT NOW()
 );
+GRANT SELECT, INSERT ON messages TO authenticated_user;
+GRANT SELECT ON messages TO anonymous;
 
 -- 🌏 PostGraphile GQL subscription for global message
 CREATE OR REPLACE FUNCTION notify_global_message()

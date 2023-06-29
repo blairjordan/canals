@@ -27,7 +27,9 @@ Canals is a boat simulation game which allows players to explore different canal
 
 A deployed version of the game is available at [canals.boats](https://canals.boats/)
 
-(Login using usernames: `1`, `2`, `3`, or `4`)
+Specify a `playerId` as a query parameter to log in as a specific player. (e.g., `https://canals.boats/?playerId=1`)
+
+User IDs 1-4 are available for testing.
 
 ## 💾 Installation
 

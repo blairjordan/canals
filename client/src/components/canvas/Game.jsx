@@ -15,7 +15,8 @@ import usePlayer from '../hooks/usePlayer'
 
 export default function Game({ route, ...props }) {
   const [state, dispatch] = useAppContext()
-  const [getPlayer] = usePlayer()
+
+  const [getPlayerSelf] = usePlayer()
   const canalRef = useRef(null)
 
   // 🎣 Fish mutation
@@ -29,7 +30,7 @@ export default function Game({ route, ...props }) {
 
     if (state.player.isFishing) {
       const intervalId = setInterval(() => {
-        fish({ variables: { playerId: parseInt(state.player.id) } })
+        fish()
       }, 5000)
 
       return () => clearInterval(intervalId)
@@ -44,7 +45,7 @@ export default function Game({ route, ...props }) {
       const {
         playerItem: { id, item },
       } = fishData.fish
-      getPlayer({ variables: { id: state.player.id } })
+      getPlayerSelf({ variables: { id: state.player.id } })
       dispatch({
         type: 'UI_POPUP_ADD',
         payload: {
@@ -138,7 +139,7 @@ export default function Game({ route, ...props }) {
     if (state.actions.inventoryToggle && !state.player.isInventoryOpen) {
       dispatch({ type: 'PLAYER_SET_INVENTORY_OPEN', payload: true })
     }
-  })
+  }, -100)
 
   return (
     <>
@@ -170,6 +171,8 @@ export default function Game({ route, ...props }) {
                   return '#33B600'
                 case 'fuel_station':
                   return '#F18118'
+                case 'npc':
+                  return '#6A07D0'
                 case 'lock':
                   if (props.state.openGate === 'lower') {
                     return '#0000ff'

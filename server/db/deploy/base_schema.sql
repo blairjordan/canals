@@ -4,6 +4,27 @@ BEGIN;
 
 CREATE EXTENSION IF NOT EXISTS postgis;
 
+-- Create db roles 🎭
+DO
+$do$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticated_user') THEN
+    CREATE ROLE authenticated_user;
+  END IF;
+
+  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'anonymous') THEN
+    CREATE ROLE anonymous;
+  END IF;
+
+  GRANT anonymous, authenticated_user TO canaluser;
+END
+$do$;
+
+CREATE OR REPLACE FUNCTION current_player_id() RETURNS INTEGER as $$
+  SELECT current_setting('player.id', true)::integer;
+$$ LANGUAGE sql STABLE;
+GRANT EXECUTE ON FUNCTION current_player_id() TO authenticated_user;
+
 CREATE TABLE IF NOT EXISTS players (
   id BIGSERIAL PRIMARY KEY,
   username TEXT NOT NULL,
@@ -14,6 +35,8 @@ CREATE TABLE IF NOT EXISTS players (
   last_fished TIMESTAMP WITHOUT TIME ZONE, -- The last time the player fished (used for cooldown)
   drifting_at TIMESTAMP WITHOUT TIME ZONE  -- The time the player started drifting (allows movement for N seconds after fuel depletion)
 );
+GRANT SELECT, INSERT, UPDATE ON players TO authenticated_user;
+GRANT SELECT ON players TO anonymous;
 
 -- Omit drifting_at from PostGraphile schema
 COMMENT ON COLUMN players.drifting_at is E'@omit';
@@ -27,11 +50,14 @@ VALUES
 
 CREATE TABLE IF NOT EXISTS markers (
   id BIGSERIAL PRIMARY KEY,
+  key TEXT NULL,
   position JSONB NOT NULL,
   radius NUMERIC(10, 2) NOT NULL DEFAULT 10.00,
   type VARCHAR(55),
   props JSONB
 );
+GRANT SELECT, INSERT, UPDATE ON markers TO authenticated_user;
+GRANT SELECT ON markers TO anonymous;
 
 CREATE INDEX IF NOT EXISTS markers_position_idx ON markers USING GIN (position);
 CREATE INDEX IF NOT EXISTS idx_markers_type ON markers (type);
@@ -43,6 +69,7 @@ CREATE TABLE IF NOT EXISTS links (
   props JSONB,
   CONSTRAINT uq_links UNIQUE (from_marker_id, to_marker_id)
 );
+GRANT SELECT ON links TO authenticated_user, anonymous;
 
 CREATE INDEX IF NOT EXISTS links_props_idx ON links USING GIN (props);
 
@@ -55,12 +82,15 @@ CREATE TABLE IF NOT EXISTS items (
   price NUMERIC(10,2) DEFAULT NULL,
   props JSONB
 );
+GRANT SELECT, INSERT, UPDATE ON items TO authenticated_user;
+GRANT SELECT ON items TO anonymous;
 
 CREATE TABLE IF NOT EXISTS marker_items (
   marker_id BIGINT REFERENCES markers(id) NOT NULL,
   item_id BIGINT REFERENCES items(id) NOT NULL,
   props JSONB
 );
+GRANT SELECT ON marker_items TO authenticated_user, anonymous;
 
 CREATE TABLE IF NOT EXISTS player_items (
   id BIGSERIAL PRIMARY KEY,
@@ -69,6 +99,8 @@ CREATE TABLE IF NOT EXISTS player_items (
   created_at TIMESTAMP DEFAULT NOW(),
   props JSONB
 );
+GRANT SELECT, INSERT, UPDATE, DELETE ON player_items TO authenticated_user;
+GRANT SELECT ON player_items TO anonymous;
 
 -- 📍 Geo markers
 INSERT INTO markers (position, type)
@@ -284,6 +316,7 @@ BEGIN
   RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
+GRANT EXECUTE ON FUNCTION notify_player_changes() TO authenticated_user;
 
 -- 🔫 Trigger for player updates
 CREATE OR REPLACE TRIGGER player_changes_trigger
@@ -322,6 +355,7 @@ BEGIN
   RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
+GRANT EXECUTE ON FUNCTION notify_player_item_changes() TO authenticated_user;
 
 -- 🔫 Trigger for player item updates
 CREATE OR REPLACE TRIGGER player_item_changes_trigger
@@ -360,19 +394,18 @@ SELECT
   props,
   depth
 FROM links_recursive;
+GRANT SELECT ON links_recursive TO authenticated_user, anonymous;
 
 COMMENT ON VIEW links_recursive IS E'@foreignKey (to_marker_id) references markers (id)|@foreignFieldName toMarker\n@foreignKey (from_marker_id) references markers (id)|@foreignFieldName fromMarker';
 
 -- 📍 Get a list of markers within given distance to player
-CREATE OR REPLACE FUNCTION player_markers(player_id INTEGER, marker_type TEXT, marker_distance_limit FLOAT)
+CREATE OR REPLACE FUNCTION player_markers(marker_type TEXT, marker_distance_limit FLOAT)
 RETURNS TABLE (marker_id INTEGER, marker_distance DOUBLE PRECISION) AS $$
-
-  -- TODO: Validate player session. Source player_id from session.
 
   WITH current_player AS (
     SELECT position AS position
     FROM players
-    WHERE id = player_id
+    WHERE id = current_player_id()
   ),
   player_distances AS (
     SELECT
@@ -396,15 +429,15 @@ RETURNS TABLE (marker_id INTEGER, marker_distance DOUBLE PRECISION) AS $$
   WHERE pd.marker_distance <= marker_distance_limit
   ORDER BY pd.marker_distance ASC;
 $$ LANGUAGE sql;
+GRANT EXECUTE ON FUNCTION player_markers(TEXT, FLOAT) TO authenticated_user;
 
 -- 🏪 Purchase item function
-CREATE OR REPLACE FUNCTION purchase_item(player_id INTEGER, item_id INTEGER)
+CREATE OR REPLACE FUNCTION purchase_item(item_id INTEGER)
 RETURNS player_items AS $$
 DECLARE
   player_item player_items; -- items purchased in player's inventory
 BEGIN
 
-  -- TODO: Validate player session. Source player_id from session.
   -- TODO: Validate player and a vendor with the item are in the same location.
 
   WITH item_price AS (
@@ -413,12 +446,13 @@ BEGIN
   deducted_balance AS (
     UPDATE players
     SET balance = balance - (SELECT price FROM item_price)::FLOAT
-    WHERE id = player_id AND balance >= (SELECT price FROM item_price)::FLOAT
+    WHERE id = current_player_id()
+    AND balance >= (SELECT price FROM item_price)::FLOAT
     RETURNING balance
   ),
   updated_player_items AS (
     INSERT INTO player_items(player_id, item_id, props)
-    SELECT player_id, item_id, (SELECT JSONB_BUILD_OBJECT('price', price::FLOAT) FROM item_price)
+    SELECT current_player_id(), item_id, (SELECT JSONB_BUILD_OBJECT('price', price::FLOAT) FROM item_price)
     WHERE EXISTS (
       SELECT 1 FROM deducted_balance
     )
@@ -427,7 +461,7 @@ BEGIN
   SELECT upi.*
   INTO player_item
   FROM updated_player_items upi
-  WHERE upi.player_id = purchase_item.player_id;
+  WHERE upi.player_id = current_player_id();
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Insufficient player balance for purchase';
@@ -436,9 +470,10 @@ BEGIN
   RETURN player_item;
 END;
 $$ LANGUAGE plpgsql;
+GRANT EXECUTE ON FUNCTION purchase_item(INTEGER) TO authenticated_user;
 
 -- 🎣 Fishin' function
-CREATE OR REPLACE FUNCTION fish(player_id INTEGER)
+CREATE OR REPLACE FUNCTION fish()
 RETURNS player_items AS $$
   #variable_conflict use_variable
 DECLARE
@@ -453,7 +488,7 @@ BEGIN
   -- Find closest marker within the given distance of the current player's position
   SELECT gm.marker_id
   INTO marker_id_found
-  FROM player_markers(player_id, 'fishing_spot', marker_distance_limit) gm
+  FROM player_markers('fishing_spot', marker_distance_limit) gm
   ORDER BY gm.marker_distance ASC
   LIMIT 1;
 
@@ -466,7 +501,7 @@ BEGIN
   FROM players
   LEFT OUTER JOIN player_items on players.id = player_items.player_id
   LEFT OUTER JOIN items on player_items.item_id = items.id
-  WHERE players.id = player_id
+  WHERE players.id = current_player_id()
   AND COALESCE(last_fished, '-infinity') < now() - interval '30 seconds'
   AND items.type = 'fishing_rod'
   AND player_items.props ->> 'equipped' = 'true';
@@ -478,10 +513,10 @@ BEGIN
 
   UPDATE players
   SET last_fished = now()
-  WHERE id = player_id;
+  WHERE id = current_player_id();
 
   INSERT INTO player_items(player_id, item_id)
-  SELECT player_id, item_id
+  SELECT current_player_id(), item_id
   FROM marker_items
   INNER JOIN items ON marker_items.item_id = items.id
   WHERE marker_id = marker_id_found
@@ -496,6 +531,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+GRANT EXECUTE ON FUNCTION fish() TO authenticated_user;
+
 CREATE OR REPLACE FUNCTION sell_item(
   marker_id INTEGER, -- vendor's marker id
   player_item_id INTEGER
@@ -506,7 +543,6 @@ DECLARE
   player players := NULL; -- The player selling the item
 BEGIN
 
--- TODO: Validate player session
 -- TODO: Validate player and marker are in the same location
 
 -- Returns true if vendor sells item, and player has item
@@ -523,6 +559,7 @@ PERFORM 1
     ) vi ON i.type = vi.purchase_item_type
   WHERE vi.vendor_id = marker_id
     AND pi.id = player_item_id
+    AND pi.player_id = current_player_id()
   ;
 
 IF NOT FOUND THEN
@@ -555,6 +592,7 @@ RETURN player;
 
 END;
 $$ LANGUAGE plpgsql;
+GRANT EXECUTE ON FUNCTION sell_item(INTEGER, INTEGER) TO authenticated_user;
 
 DO $$ BEGIN
   CREATE TYPE nearby_players AS (
@@ -567,13 +605,13 @@ END $$;
 
 COMMENT ON TYPE nearby_players IS '@foreignKey (player_id) references players (id)';
 
-CREATE OR REPLACE FUNCTION nearby_players(current_player_id INTEGER, distance FLOAT)
+CREATE OR REPLACE FUNCTION nearby_players(distance FLOAT)
 RETURNS SETOF nearby_players AS $$
   -- Find players within the given distance of the current player's position
   WITH current_player AS (
     SELECT position
     FROM players
-    WHERE id = current_player_id
+    WHERE id = current_player_id()
   ),
   player_distances AS (
     SELECT
@@ -592,12 +630,13 @@ RETURNS SETOF nearby_players AS $$
     ) AS player_distance
     FROM players p
     CROSS JOIN current_player cp
-    WHERE p.id <> current_player_id
+    WHERE p.id <> current_player_id()
   )
   SELECT pd.id, pd.player_distance
   FROM player_distances pd
   WHERE pd.player_distance <= distance;
 $$ LANGUAGE sql STABLE;
+GRANT EXECUTE ON FUNCTION nearby_players(FLOAT) TO authenticated_user;
 
 -- 📰 PostGraphile GQL subscription for marker updates
 CREATE OR REPLACE FUNCTION notify_marker_changes()
@@ -628,6 +667,14 @@ CREATE OR REPLACE TRIGGER marker_changes_trigger
   ON markers
   FOR EACH ROW
   EXECUTE FUNCTION notify_marker_changes();
+
+-- 🎮 Current player function
+CREATE OR REPLACE FUNCTION current_player()
+RETURNS players AS $$
+  SELECT * FROM players
+  WHERE id = current_player_id();
+$$ LANGUAGE sql STABLE;
+GRANT EXECUTE ON FUNCTION current_player() TO authenticated_user;
 
 COMMIT;
 

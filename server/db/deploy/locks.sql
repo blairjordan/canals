@@ -13,7 +13,7 @@ VALUES
   ('{"x": 762, "y": 0, "z": 105}', 'lock', 30, FORMAT('{ "name": "Caen Hill Locks", "price": 30, "lockType": "single", "usage_cooldown_seconds": 60, "state": { "openGate": "lower" }, "last_used": "%1$s" }', TO_CHAR(clock_timestamp() - INTERVAL '1 minute', 'YYYY-MM-DD HH24:MI:SS'))::JSONB)
 ON CONFLICT DO NOTHING;
 
-CREATE OR REPLACE FUNCTION operate_lock(player_id INTEGER)
+CREATE OR REPLACE FUNCTION operate_lock()
 RETURNS markers AS $$
   #variable_conflict use_variable
 DECLARE
@@ -29,7 +29,7 @@ BEGIN
   -- 📡 Get the closest lock marker
   SELECT gm.marker_id
   INTO marker_id_found
-  FROM player_markers(player_id, 'lock', 100) gm
+  FROM player_markers('lock', 100) gm
   ORDER BY gm.marker_distance ASC
   LIMIT 1;
 
@@ -49,7 +49,7 @@ BEGIN
   EXISTS (
     SELECT 1
     FROM player_items pi
-    WHERE pi.player_id = player_id
+    WHERE pi.player_id = current_player_id()
     AND pi.item_id = (SELECT id FROM items WHERE item_key = 'lock_key' LIMIT 1)
     AND pi.created_at > clock_timestamp() - (pi.props->>'duration')::INTERVAL
     AND (pi.props->>'marker_id')::BIGINT = marker_id_found
@@ -60,7 +60,7 @@ BEGIN
   -- 💸 Update player's balance
   UPDATE players p
   SET balance = balance - fee_payable
-  WHERE p.id = player_id
+  WHERE p.id = current_player_id()
     AND p.balance >= fee_payable;
 
   IF NOT FOUND THEN
@@ -71,7 +71,7 @@ BEGIN
   IF (fee_payable <> 0) THEN
     INSERT INTO player_items (player_id, item_id, props)
     SELECT
-      player_id,
+      current_player_id(),
       items.id,
       jsonb_build_object(
         'duration', key_duration,
@@ -92,14 +92,14 @@ BEGIN
     RAISE EXCEPTION 'Unable to determine state of unknown lockType';
   END IF;
 
-UPDATE markers
-SET props = props ||
-  jsonb_build_object(
-    -- 🔄 Update usage cooldown
-    'last_used', clock_timestamp(),
-    'state', props->'state' || new_state
-  )
-WHERE id = marker_id_found;
+  UPDATE markers
+  SET props = props ||
+    jsonb_build_object(
+      -- 🔄 Update usage cooldown
+      'last_used', clock_timestamp(),
+      'state', props->'state' || new_state
+    )
+  WHERE id = marker_id_found;
 
   -- Return the updated lock marker
   SELECT * INTO lock_row FROM markers WHERE id = marker_id_found AND type = 'lock';
@@ -108,5 +108,6 @@ WHERE id = marker_id_found;
 
 END;
 $$ LANGUAGE plpgsql;
+GRANT EXECUTE ON FUNCTION operate_lock() TO authenticated_user;
 
 COMMIT;

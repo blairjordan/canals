@@ -295,10 +295,11 @@ type Query implements Node {
   message(id: BigInt!): Message
   playerItem(id: BigInt!): PlayerItem
   player(id: BigInt!): Player
+  currentPlayer: Player
+  currentPlayerId: Int
 
   """Reads and enables pagination through a set of `NearbyPlayer`."""
   nearbyPlayers(
-    currentPlayerId: Int
     distance: Float
 
     """Only read the first `n` values of the set."""
@@ -523,6 +524,7 @@ type Marker implements Node {
   """
   nodeId: ID!
   id: BigInt!
+  key: String
   position: JSON!
   radius: BigFloat!
   type: String
@@ -1793,6 +1795,8 @@ enum MarkersOrderBy {
   NATURAL
   ID_ASC
   ID_DESC
+  KEY_ASC
+  KEY_DESC
   POSITION_ASC
   POSITION_DESC
   RADIUS_ASC
@@ -1811,6 +1815,9 @@ A condition to be used against `Marker` object types. All fields are tested for 
 input MarkerCondition {
   """Checks for equality with the object’s `id` field."""
   id: BigInt
+
+  """Checks for equality with the object’s `key` field."""
+  key: String
 
   """Checks for equality with the object’s `position` field."""
   position: JSON
@@ -1831,6 +1838,9 @@ A filter to be used against `Marker` object types. All fields are combined with 
 input MarkerFilter {
   """Filter by the object’s `id` field."""
   id: BigIntFilter
+
+  """Filter by the object’s `key` field."""
+  key: StringFilter
 
   """Filter by the object’s `position` field."""
   position: JSONFilter
@@ -2576,6 +2586,7 @@ input CreateMarkerInput {
 """An input for mutations affecting `Marker`"""
 input MarkerInput {
   id: BigInt
+  key: String
   position: JSON!
   radius: BigFloat
   type: String
@@ -2927,6 +2938,7 @@ Represents an update to a `Marker`. Fields that are set will be updated.
 """
 input MarkerPatch {
   id: BigInt
+  key: String
   position: JSON
   radius: BigFloat
   type: String
@@ -3530,7 +3542,6 @@ input DeliverPackageInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  playerId: Int
 }
 
 """The output of our `equipItem` mutation."""
@@ -3599,7 +3610,6 @@ input FishInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  playerId: Int
 }
 
 """The output of our `operateLock` mutation."""
@@ -3630,7 +3640,6 @@ input OperateLockInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  playerId: Int
 }
 
 """The output of our `pickupPackage` mutation."""
@@ -3661,7 +3670,6 @@ input PickupPackageInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  playerId: Int
 }
 
 """The output of our `playerMarkers` mutation."""
@@ -3692,7 +3700,6 @@ input PlayerMarkersInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  playerId: Int
   markerType: String
   markerDistanceLimit: Float
 }
@@ -3731,7 +3738,6 @@ input PurchaseItemInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  playerId: Int
   itemId: Int
 }
 
@@ -3763,7 +3769,6 @@ input RefuelInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  playerId: Int
 }
 
 """The output of our `sellItem` mutation."""

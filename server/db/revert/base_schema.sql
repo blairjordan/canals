@@ -2,17 +2,17 @@
 
 BEGIN;
 
-DROP FUNCTION IF EXISTS nearby_players(current_player_id INTEGER, distance FLOAT);
+DROP FUNCTION IF EXISTS nearby_players(distance FLOAT);
 
 DROP TYPE IF EXISTS nearby_players;
 
 DROP FUNCTION IF EXISTS sell_item(marker_id INTEGER, player_item_id INTEGER);
 
-DROP FUNCTION IF EXISTS fish(player_id INTEGER);
+DROP FUNCTION IF EXISTS fish();
 
-DROP FUNCTION IF EXISTS purchase_item(player_id INTEGER, item_id INTEGER);
+DROP FUNCTION IF EXISTS purchase_item(item_id INTEGER);
 
-DROP FUNCTION IF EXISTS player_markers(player_id INTEGER, marker_type TEXT, marker_distance_limit FLOAT);
+DROP FUNCTION IF EXISTS player_markers(marker_type TEXT, marker_distance_limit FLOAT);
 
 DROP VIEW IF EXISTS links_recursive;
 
@@ -28,6 +28,10 @@ DROP TRIGGER IF EXISTS marker_changes_trigger ON markers;
 
 DROP FUNCTION IF EXISTS notify_marker_changes();
 
+DROP FUNCTION IF EXISTS current_player();
+
+DROP FUNCTION IF EXISTS current_player_id();
+
 DROP TABLE IF EXISTS player_items CASCADE;
 
 DROP TABLE IF EXISTS marker_items CASCADE;
@@ -39,5 +43,19 @@ DROP TABLE IF EXISTS links CASCADE;
 DROP TABLE IF EXISTS markers CASCADE;
 
 DROP TABLE IF EXISTS players CASCADE;
+
+-- Drop db roles 🎭
+DO
+$do$
+BEGIN
+  IF EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticated_user') THEN
+    DROP ROLE authenticated_user;
+  END IF;
+
+  IF EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'anonymous') THEN
+    DROP ROLE anonymous;
+  END IF;
+END
+$do$;
 
 COMMIT;
