@@ -16,6 +16,7 @@ import {
 } from '@/graphql/action'
 import ItemGrid from '@/components/dom/ItemGrid'
 import ItemDisplay from '@/components/dom/ItemDisplay'
+import { Dialog } from '@/components/dom/Dialog'
 
 function PopupManager(props) {
   const [state, dispatch] = useAppContext()
@@ -122,10 +123,12 @@ function PopupManager(props) {
 
   useEffect(() => {
     const geofenceMarkers = state.geofences.filter((geofence) =>
-      ['vendor', 'fuel_station', 'lock', 'marina'].includes(geofence.type),
+      ['vendor', 'fuel_station', 'lock', 'marina', 'npc'].includes(geofence.type),
     )
 
-    const popups = state.popups.filter((popups) => ['vendor', 'fuel_station', 'lock', 'marina'].includes(popups.type))
+    const popups = state.popups.filter((popups) =>
+      ['vendor', 'fuel_station', 'lock', 'marina', 'npc'].includes(popups.type),
+    )
 
     // Remove the first popup in the stack if there are more than one
     popups.map(({ marker: popupMarker }) => {
@@ -151,6 +154,8 @@ function PopupManager(props) {
             return `(Press E to interact)`
           case 'fuel_station':
             return `(Press E to refuel)`
+          case 'npc':
+            return `(Press E to speak)`
           case 'marina':
             return hasPickup ? '(Press E to pickup package)' : hasDelivery ? '(Press E to deliver package)' : ''
           case 'lock':
@@ -174,6 +179,7 @@ function PopupManager(props) {
       dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'vendor' } })
       dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'fuel_station' } })
       dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'marina' } })
+      dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'npc' } })
     }
   }, [state.player, state.markers, state.geofences])
 
@@ -206,20 +212,23 @@ function PopupManager(props) {
   }, [state.player.isInventoryOpen])
 
   useEffect(() => {
-    state.popups
-      .filter(({ type, interacted }) => ['lock', 'fuel_station', 'marina'].includes(type) && interacted)
-      .map((popup) => {
-        if (popup.type === 'fuel_station') {
-          refuel()
-        }
+    state.popups.forEach((popup) => {
+      const { type, interacted } = popup
 
-        if (popup.type === 'lock') {
-          operateLock()
-        }
-
-        if (popup.type === 'marina') {
-          pickupPackage()
-          deliverPackage()
+      if (['lock', 'fuel_station', 'marina'].includes(type) && interacted) {
+        switch (type) {
+          case 'fuel_station':
+            refuel()
+            break
+          case 'lock':
+            operateLock()
+            break
+          case 'marina':
+            pickupPackage()
+            deliverPackage()
+            break
+          default:
+            break
         }
 
         dispatch({
@@ -229,7 +238,8 @@ function PopupManager(props) {
             interacted: false,
           },
         })
-      })
+      }
+    })
   }, [state.popups])
 
   return (
@@ -284,6 +294,21 @@ function PopupManager(props) {
             <Popup key={id}>
               <h1>{title}</h1>
               {message}
+            </Popup>
+          ))}
+        {/* 🧍 NPC */}
+        {state.popups
+          .filter(({ type }) => ['npc'].includes(type))
+          .map(({ id, title, message, marker, interacted }) => (
+            <Popup key={id}>
+              {!interacted ? (
+                <>
+                  <h1>{title}</h1>
+                  {message}
+                </>
+              ) : (
+                <Dialog markerKey={marker.props.key} name={marker.props.name} data={marker.props.dialog} />
+              )}
             </Popup>
           ))}
         {/* 🏪 Vendor popups */}
