@@ -15,9 +15,11 @@ const initialState = {
     },
     isFishing: false,
     isInventoryOpen: false,
+    isSettingsOpen: false,
     packageItem: undefined,
     playerItems: [],
     playerItemsHashed: '',
+    meta: {},
   },
   remotePlayers: {},
   markers: [],
@@ -33,6 +35,7 @@ const initialState = {
     fish: false,
     interact: false,
     inventoryToggle: false,
+    settingsToggle: false,
     boosting: false,
     cancel: false,
   },
@@ -72,6 +75,14 @@ const appReducer = (state, action) => {
         player: {
           ...state.player,
           isInventoryOpen: action.payload,
+        },
+      }
+    case 'PLAYER_SET_SETTINGS_OPEN':
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          isSettingsOpen: action.payload,
         },
       }
     case 'PLAYER_SET_PACKAGE':
@@ -114,6 +125,7 @@ const appReducer = (state, action) => {
             playerItems: action.payload.playerItems,
             playerItemsHashed: action.payload.playerItemsHashed,
             package: action.payload.package,
+            meta: action.payload.meta,
           },
         },
       }

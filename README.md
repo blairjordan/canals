@@ -57,6 +57,38 @@ You can access the GraphQL playground at [http://localhost:3000/graphql](http://
 
 This command will compile the client code and launch a development server.
 
+#### 🎛️ Configuring Transloadit
+To enable file uploads in the game, you'll need to set up an account with 
+[Transloadit](https://transloadit.com/).
+
+Update `.env.local` file in the `client` directory with the following settings:
+
+- `NEXT_PUBLIC_TRANSLOADIT_KEY`: Transloadit authentication key
+- `NEXT_PUBLIC_TRANSLOADIT_TEMPLATE_ID`: The Transloadit template ID
+
+Values for these settings can be found in Transloadit's Template Credentials page.
+
+**Callbacks**
+
+Once you've set up your Transloadit template, you'll need to configure the callback URL to point to your local development server.
+
+I use the following ngrok command to expose my local development server to the internet:
+
+```
+ngrok http -hostname=canals.ngrok.app -region=au 3000
+```
+
+In my assembly, I set the `notify_url` to point to the ngrok URL with the `/transloadit_callback` path appended to it. For example:
+
+```json
+{
+  "steps": {
+    ... steps
+  },
+  "notify_url": "https://canals.ngrok.app/transloadit_callback"
+}
+```
+
 ## 🎮 Usage
 
 Once both the server and client are set up, you can access the Canals by opening a web browser and navigating to the provided URL (e.g., `http://localhost:3001`).
