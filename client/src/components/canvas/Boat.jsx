@@ -1,5 +1,5 @@
 import { useGLTF } from '@react-three/drei'
-import { forwardRef, useEffect, useMemo, useRef, useState, useCallback } from "react"
+import { forwardRef, useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useAppContext } from '@/context'
 import * as THREE from 'three'
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils'
@@ -28,37 +28,41 @@ const itemObjects = new Map([
   ['spinning_rod', ['decor_fishing_rod_02']],
   ['baitcasting_rod', ['decor_fishing_rod_03']],
   // Sterns ⛴
-  ['traditional_stern', [
-    'house_boat_stern_traditional',
-    'house_boat_stern_traditional_window_01',
-    'house_boat_stern_traditional_window_02',
-    'house_boat_stern_traditional_window_03',
-    'house_boat_stern_traditional_window_04',
-  ]],
-  ['semi_traditional_stern', [
-    'house_boat_stern_semi_traditional_door',
-    'house_boat_stern_semi_traditional_seating',
-    'house_boat_stern_semi_traditional_walls',
-    'house_boat_stern_semi_traditional_window_01',
-  ]],
-  ['cruiser_stern', [
-    'house_boat_main_door_02',
-    'house_boat_stern_semi_cruiser_handrail',
-    'house_boat_stern_semi_cruiser_wall',
-    'house_boat_stern_semi_cruiser_window_01',
-  ]],
+  [
+    'traditional_stern',
+    [
+      'house_boat_stern_traditional',
+      'house_boat_stern_traditional_window_01',
+      'house_boat_stern_traditional_window_02',
+      'house_boat_stern_traditional_window_03',
+      'house_boat_stern_traditional_window_04',
+    ],
+  ],
+  [
+    'semi_traditional_stern',
+    [
+      'house_boat_stern_semi_traditional_door',
+      'house_boat_stern_semi_traditional_seating',
+      'house_boat_stern_semi_traditional_walls',
+      'house_boat_stern_semi_traditional_window_01',
+    ],
+  ],
+  [
+    'cruiser_stern',
+    [
+      'house_boat_main_door_02',
+      'house_boat_stern_semi_cruiser_handrail',
+      'house_boat_stern_semi_cruiser_wall',
+      'house_boat_stern_semi_cruiser_window_01',
+    ],
+  ],
   // 🚤 Hulls
   ['flat_hull', ['hull_flat_bottom']],
   ['vshaped_hull', ['hull_v_shaped']],
   ['multi_chine_hull', ['hull_multichine']],
   ['round_hull', ['hull_round']],
   // ☀ Solar panels
-  ['solar_panels', [
-    'decor_solar_panel_01',
-    'decor_solar_panel_02',
-    'decor_solar_panel_03',
-    'decor_solar_panel_04',
-  ]],
+  ['solar_panels', ['decor_solar_panel_01', 'decor_solar_panel_02', 'decor_solar_panel_03', 'decor_solar_panel_04']],
   // 🪣 Bucket
   ['fishing_bucket', ['bucket']],
   // 🪑 Deck chair
@@ -81,18 +85,36 @@ const itemObjects = new Map([
   ['floor_mat', ['floor_mat']],
   // 🔔 Bell
   ['bell', ['decor_bell_01']],
-  // 🥩 Barbecue 
+  // 🥩 Barbecue
   ['barbecue', ['bbq_kettle']],
   // 🪴 Plants
   ['climbing_ivy', ['decor_pot_plant_hanging_plant']],
   ['potted_magnolia', ['decor_pot_plant_large']],
+  // 🚩 Flag
+  ['flag', ['flag']],
 ])
 
-const addObjectsToGroup = (group, objects) =>
+const updateFlagTexture = (object, remoteTextureUrl) => {
+  const flag = [...object.children].pop()
+  const textureLoader = new THREE.TextureLoader()
+  textureLoader.load(remoteTextureUrl, (texture) => {
+    texture.flipY = false
+    if (flag.material) {
+      flag.material.map = texture
+      flag.material.needsUpdate = true
+    }
+  })
+}
+
+const addObjectsToGroup = (group, objects, modifiers) =>
   objects.forEach((object) => {
     const cloned = clone(object)
     cloned.rotateY(Math.PI * 4)
     group.add(cloned)
+
+    if (modifiers && modifiers[object.name]) {
+      modifiers[object.name].fn(cloned, ...modifiers[object.name].args)
+    }
   })
 
 const removeObjectsFromGroup = (group, objects) =>
@@ -101,13 +123,9 @@ const removeObjectsFromGroup = (group, objects) =>
     group.remove(objectToRemove)
   })
 
-const Boat = forwardRef(({
-  playerId = 0,
-  isRemotePlayer = false,
-  ...props
-}, ref) => {
+const Boat = forwardRef(({ playerId = 0, isRemotePlayer = false, ...props }, ref) => {
   const [state] = useAppContext()
-  
+
   const { scene, nodes } = useGLTF('/models/boat.glb')
 
   const player = useMemo(() => {
@@ -115,7 +133,23 @@ const Boat = forwardRef(({
   }, [
     isRemotePlayer,
     state.remotePlayers[playerId]?.playerItemsHashed,
-    state.player?.playerItemsHashed])
+    state.player?.playerItemsHashed,
+    state.remotePlayers[playerId]?.meta?.flagUrl,
+    state.player?.meta?.flagUrl,
+  ])
+
+  const modifiers = useMemo(() => {
+    if (!(player.meta && player.meta.flagUrl)) {
+      return {}
+    }
+
+    return {
+      flag: {
+        fn: updateFlagTexture,
+        args: [player.meta.flagUrl],
+      },
+    }
+  }, [player.meta])
 
   const playerGroup = useMemo(() => ({ group: new THREE.Group() }), [])
 
@@ -124,38 +158,35 @@ const Boat = forwardRef(({
       return { objectsToAdd: [], objectsToRemove: [] }
     }
 
-    const playerItemsSet = new Set(player.playerItems.nodes.flatMap(({ item, props }) => 
-      (props && (props?.equipped ?? !('equipped' in props))) ? itemObjects.get(item.itemKey) : []
-    ))
+    const playerItemsSet = new Set(
+      player.playerItems.nodes.flatMap(({ item, props }) =>
+        props && (props?.equipped ?? !('equipped' in props)) ? itemObjects.get(item.itemKey) : [],
+      ),
+    )
 
-    return Object.entries(nodes).reduce((prev, [key, object]) => {
-      const isBaseObject = baseBoatObjects.has(key)
-      const isItemObject = playerItemsSet.has(key);
-      
-      (isBaseObject || isItemObject ? prev.objectsToAdd : prev.objectsToRemove).push(object)
-      return prev
-    }, { objectsToAdd: [], objectsToRemove: []});
-  }, [
-    nodes,
-    player?.playerItemsHashed
-  ])
-  
+    return Object.entries(nodes).reduce(
+      (prev, [key, object]) => {
+        const isBaseObject = baseBoatObjects.has(key)
+        const isItemObject = playerItemsSet.has(key)
+
+        ;(isBaseObject || isItemObject ? prev.objectsToAdd : prev.objectsToRemove).push(object)
+        return prev
+      },
+      { objectsToAdd: [], objectsToRemove: [] },
+    )
+  }, [nodes, player?.playerItemsHashed])
+
   useEffect(() => {
     playerGroup.group.clear()
-    playerGroup.group.rotation.order = "YXZ"
-    addObjectsToGroup(playerGroup.group, objectsToAdd)
-  }, [objectsToAdd, playerGroup])
-
+    playerGroup.group.rotation.order = 'YXZ'
+    addObjectsToGroup(playerGroup.group, objectsToAdd, modifiers)
+  }, [objectsToAdd, playerGroup, modifiers])
 
   useEffect(() => {
     removeObjectsFromGroup(playerGroup.group, objectsToRemove)
   }, [objectsToRemove, playerGroup])
 
-  return <primitive
-    object={playerGroup.group}
-    ref={ref}
-    {...props}
-  />
+  return <primitive object={playerGroup.group} ref={ref} {...props} />
 })
 
 Boat.displayName = 'Boat'

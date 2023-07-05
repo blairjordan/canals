@@ -17,6 +17,7 @@ import {
 import ItemGrid from '@/components/dom/ItemGrid'
 import ItemDisplay from '@/components/dom/ItemDisplay'
 import { Dialog } from '@/components/dom/Dialog'
+import { FlagUploader } from './FlagUploader'
 
 function PopupManager(props) {
   const [state, dispatch] = useAppContext()
@@ -199,7 +200,7 @@ function PopupManager(props) {
     }
   }, [state.player.isFishing])
 
-  // 🎒 Inventory popups
+  // 🎒 Inventory popup
   useEffect(() => {
     if (state.player.isInventoryOpen) {
       addPopup({
@@ -210,6 +211,18 @@ function PopupManager(props) {
       dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'inventory' } })
     }
   }, [state.player.isInventoryOpen])
+
+  // ⚙ Settings popup
+  useEffect(() => {
+    if (state.player.isSettingsOpen) {
+      addPopup({
+        id: `settings-${state.player.id}`,
+        type: 'settings',
+      })
+    } else {
+      dispatch({ type: 'UI_POPUP_CLEAR', payload: { type: 'settings' } })
+    }
+  }, [state.player.isSettingsOpen])
 
   useEffect(() => {
     state.popups.forEach((popup) => {
@@ -270,6 +283,16 @@ function PopupManager(props) {
               ),
             }))}>
             <div className='mt-4 flex justify-end'>(Click items to equip / unequip)</div>
+          </Popup>
+        )}
+        {/* ⚙ Settings popup */}
+        {state.popups.some(({ type }) => type === 'settings') && (
+          <Popup key='settings-popup' title='Settings ⚙'>
+            <h1>🚩 Upload a flag</h1>
+            <br />
+            <div>
+              <FlagUploader />
+            </div>
           </Popup>
         )}
         {/* 🐟 Caugh fish popup */}

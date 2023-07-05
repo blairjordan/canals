@@ -107,12 +107,18 @@ export default function Page(props) {
       }
 
       const playerItemsHashed = hashplayerItems(updatedPlayer.playerItems.nodes)
-      const { playerItems, fuel, balance, package: packageItem, ...updatedPlayerBase } = updatedPlayer
+      const { playerItems, fuel, balance, meta, package: packageItem, ...updatedPlayerBase } = updatedPlayer
 
       if (updatedPlayer.id === state.player.id) {
-        dispatch({ type: 'PLAYER_UPDATE', payload: { playerItems, fuel, balance, packageItem, playerItemsHashed } })
+        dispatch({
+          type: 'PLAYER_UPDATE',
+          payload: { playerItems, fuel, balance, packageItem, meta, playerItemsHashed },
+        })
       } else {
-        dispatch({ type: 'REMOTE_PLAYER_UPDATE', payload: { ...updatedPlayerBase, playerItems, playerItemsHashed } })
+        dispatch({
+          type: 'REMOTE_PLAYER_UPDATE',
+          payload: { ...updatedPlayerBase, playerItems, meta, playerItemsHashed },
+        })
       }
     },
     [dispatch, state.player],

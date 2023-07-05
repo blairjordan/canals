@@ -64,6 +64,7 @@ export const PLAYER_UPDATES = gql`
         ... on Player {
           id
           position
+          meta
           fuel
           balance
           playerItems {

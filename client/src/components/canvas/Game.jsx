@@ -87,6 +87,7 @@ export default function Game({ route, ...props }) {
         // 🛑 Cancel any fishing activity or inventory browsing
         dispatch({ type: 'PLAYER_SET_IS_FISHING', payload: false })
         dispatch({ type: 'PLAYER_SET_INVENTORY_OPEN', payload: false })
+        dispatch({ type: 'PLAYER_SET_SETTINGS_OPEN', payload: false })
 
         dispatch({
           type: 'SET_UI_POPUP_INTERACT',
@@ -126,8 +127,9 @@ export default function Game({ route, ...props }) {
 
       // 🐡 Stop fishing
       dispatch({ type: 'PLAYER_SET_IS_FISHING', payload: false })
-      // 🙅‍♂️ Close inventory
+      // 🙅‍♂️ Close inventory and config
       dispatch({ type: 'PLAYER_SET_INVENTORY_OPEN', payload: false })
+      dispatch({ type: 'PLAYER_SET_SETTINGS_OPEN', payload: false })
     }
 
     // 🎣 If player hits fishing key, set fishing state
@@ -138,6 +140,11 @@ export default function Game({ route, ...props }) {
     // 🎒 If player hits inventory key, set inventory state
     if (state.actions.inventoryToggle && !state.player.isInventoryOpen) {
       dispatch({ type: 'PLAYER_SET_INVENTORY_OPEN', payload: true })
+    }
+
+    // ⚙ If player hits settings key, set settings state
+    if (state.actions.settingsToggle && !state.player.isSettingsOpen) {
+      dispatch({ type: 'PLAYER_SET_SETTINGS_OPEN', payload: true })
     }
   }, -100)
 

@@ -177,6 +177,7 @@ VALUES
   ('telescope', 'Telescope', 'decor', 'Functional telescope for observing distant horizons and discovering hidden treasures', 175),
   ('captain_hat', 'Captain Hat', 'decor', 'Stylish captain hat, channeling your inner seafaring adventurer', 25),
   ('fishing_bucket', 'Fishing Bucket', 'decor', 'Convenient and reliable fishing bucket, perfect for storing bait, catch, and fishing essentials during your angling expeditions', 5),
+  ('flag', 'Flag', 'decor', 'Upload your own flag design and make a statement on the open waters', 85),
   ('barbecue', 'Barbecue', 'decor', 'A versatile and portable grill for outoor cooking adventures', 260);
 
 -- 🎣 Fishing vendor
@@ -291,7 +292,8 @@ AND i.item_key IN (
   'baitcasting_rod',
   'climbing_ivy',
   'potted_magnolia',
-  'fishing_bucket'
+  'fishing_bucket',
+  'flag'
 );
 
 -- 📰 PostGraphile GQL subscription for player updates
@@ -674,6 +676,17 @@ RETURNS players AS $$
   WHERE id = current_player_id();
 $$ LANGUAGE sql STABLE;
 GRANT EXECUTE ON FUNCTION current_player() TO authenticated_user;
+
+-- 🚩 Update flag function
+CREATE OR REPLACE FUNCTION update_player_flag(player_id INTEGER, flag_url TEXT)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE players
+  SET meta = jsonb_set(COALESCE(meta, '{}'::jsonb), '{flagUrl}', to_jsonb(flag_url), true)
+  WHERE id = player_id;
+END;
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION update_player_flag is E'@omit';
 
 COMMIT;
 

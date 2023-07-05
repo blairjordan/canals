@@ -2,6 +2,8 @@
 
 BEGIN;
 
+DROP FUNCTION IF EXISTS update_player_flag(player_id INTEGER, flag_url TEXT);
+
 DROP FUNCTION IF EXISTS nearby_players(distance FLOAT);
 
 DROP TYPE IF EXISTS nearby_players;
