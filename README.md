@@ -101,6 +101,7 @@ The game can be played using the following controls:
 - **F**: Fish
 - **E**: Interact with markers or objects
 - **I**: Inventory
+- **C**: Upload new flag (requires flag item)
 - **Esc**: Cancel current action
 
 ## 🎨 Art Style

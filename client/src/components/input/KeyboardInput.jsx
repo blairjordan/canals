@@ -7,36 +7,30 @@ const KeyboardInput = () => {
 
   const setAction = (action, value) => () => dispatch({ type: 'ACTION_SET', payload: { action, value } })
 
-  const keyActionMap = {
-    w: 'forward',
-    W: 'forward',
-    ArrowUp: 'forward',
-    s: 'backward',
-    S: 'backward',
-    ArrowDown: 'backward',
-    a: 'left',
-    A: 'left',
-    ArrowLeft: 'left',
-    d: 'right',
-    D: 'right',
-    ArrowRight: 'right',
-    f: 'fish',
-    F: 'fish',
-    e: 'interact',
-    E: 'interact',
-    i: 'inventoryToggle',
-    I: 'inventoryToggle',
-    c: 'settingsToggle',
-    C: 'settingsToggle',
-    ' ': 'boost',
-    Escape: 'cancel',
-  }
+  useKeyPress('w', null, setAction('forward', true), setAction('forward', false))
+  useKeyPress('W', null, setAction('forward', true), setAction('forward', false))
+  useKeyPress('ArrowUp', null, setAction('forward', true), setAction('forward', false))
+  useKeyPress('s', null, setAction('backward', true), setAction('backward', false))
+  useKeyPress('S', null, setAction('backward', true), setAction('backward', false))
+  useKeyPress('ArrowDown', null, setAction('backward', true), setAction('backward', false))
+  useKeyPress('a', null, setAction('left', true), setAction('left', false))
+  useKeyPress('A', null, setAction('left', true), setAction('left', false))
+  useKeyPress('ArrowLeft', null, setAction('left', true), setAction('left', false))
+  useKeyPress('d', null, setAction('right', true), setAction('right', false))
+  useKeyPress('D', null, setAction('right', true), setAction('right', false))
+  useKeyPress('ArrowRight', null, setAction('right', true), setAction('right', false))
+  useKeyPress('f', null, setAction('fish', true), setAction('fish', false))
+  useKeyPress('F', null, setAction('fish', true), setAction('fish', false))
+  useKeyPress('e', null, setAction('interact', true), setAction('interact', false))
+  useKeyPress('E', null, setAction('interact', true), setAction('interact', false))
+  useKeyPress('i', null, setAction('inventoryToggle', true), setAction('inventoryToggle', false))
+  useKeyPress('I', null, setAction('inventoryToggle', true), setAction('inventoryToggle', false))
+  useKeyPress('c', null, setAction('settingsToggle', true), setAction('settingsToggle', false))
+  useKeyPress('C', null, setAction('settingsToggle', true), setAction('settingsToggle', false))
+  useKeyPress(' ', null, setAction('boost', true), setAction('boost', false))
+  useKeyPress('Escape', null, setAction('cancel', true), setAction('cancel', false))
 
-  Object.entries(keyActionMap).forEach(([key, action]) => {
-    useKeyPress(key, null, setAction(action, true), setAction(action, false))
-  })
-
-  return null
+  return <></>
 }
 
 export default KeyboardInput
