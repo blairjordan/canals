@@ -7,6 +7,7 @@ import { useAppContext } from '@/context'
 import { useMutation } from '@apollo/client'
 import { DebugMarker } from './DebugMarker'
 import { RemotePlayer } from './RemotePlayer'
+import { Particles } from './Particles'
 import TWEEN from '@tweenjs/tween.js'
 import { Seagull } from './Seagulls'
 import { Objects } from './Objects'
@@ -160,6 +161,7 @@ export default function Game({ route, ...props }) {
       {Object.keys(state.remotePlayers).map((id) => (
         <RemotePlayer key={`player-${id}`} playerId={id} />
       ))}
+      <Particles count={50} />
       <Seagull />
       {state.markers.map(({ id, position: { x, z }, radius, type, props }) => {
         // 🚩 Add DebugMarker for each marker
