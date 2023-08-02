@@ -2,7 +2,6 @@
 
 BEGIN;
 
-
 CREATE TABLE IF NOT EXISTS quests (
   id BIGSERIAL PRIMARY KEY,
   key TEXT NOT NULL
@@ -40,18 +39,25 @@ SELECT
   '{
       "action": "start",
       "Label": "Talk to Sawyer",
-      "availableSelector": {
-        "table": "markers",
-        "condition": "SELECT EXISTS (\nSELECT 1\nFROM player_quests pm\nWHERE key=''law_of_attraction''\nAND available=''true''\nAND \nSELECT 1\nFROM player_markers(''npc'', 1000) pm\nINNER JOIN markers m ON pm.marker_id = m.INDEX\nWHERE m.key = ''stuart''\n)"
+      "listeners": [],
+      "condiditions": {
+        "type": "marker",
+        "condition": "SELECT EXISTS (\nSELECT 1\nFROM player_quests pm\nINNER JOIN quests q ON pm.quest_id = q.id\nAND q.key=''law_of_attraction''\nAND pm.quest_state->>''status'' = ''available'')"
       },
       "targetModifier": {
         "dialogue": [
-          "Hello boy sonny Jim laddy boy. Heard of magnet fishin'' have ya?",
-          "It''s your lucky day, I''ve got a spare magnet here. You can have it if you want."
+          {
+            "text": "Hello boy sonny Jim laddy boy. Heard of magnet fishin'' have ya?",
+            "order": 0
+          },
+          {
+            "text": "It''s your lucky day, I''ve got a spare magnet here. You can have it if you want.",
+            "order": 1
+          }
         ]
       },
       "completedSelector": {
-        "table": "player_markers",
+        "type": "player_marker",
         "condition": ""
       },
       "completedCondition": "SELECT EXISTS (\nSELECT 1\nFROM player_quests pm\nWHERE quest_key=''law_of_attraction''\nAND interacted=''true''\n)",

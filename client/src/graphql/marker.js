@@ -54,7 +54,7 @@ export const MARKERS = gql`
 
 export const MARKER_UPDATED = gql`
   subscription {
-    listen(topic: "marker_updated") {
+    listen(topic: "global:marker_updated") {
       relatedNode {
         ... on Marker {
           ...MarkerFields
