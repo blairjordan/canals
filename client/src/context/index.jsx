@@ -20,9 +20,11 @@ const initialState = {
     playerItems: [],
     playerItemsHashed: '',
     meta: {},
+    areas: [],
   },
   remotePlayers: {},
   markers: [],
+  areas: [],
   geofences: [],
   popups: [],
   locks: [],
@@ -152,6 +154,11 @@ const appReducer = (state, action) => {
       return {
         ...state,
         markers: state.markers.filter((marker) => marker.id !== action.payload.id),
+      }
+    case 'AREAS_SET':
+      return {
+        ...state,
+        areas: action.payload,
       }
     case 'GEOFENCE_ADD':
       return {

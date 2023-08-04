@@ -16,8 +16,6 @@ DROP FUNCTION IF EXISTS purchase_item(item_id INTEGER);
 
 DROP FUNCTION IF EXISTS player_markers(marker_type TEXT, marker_distance_limit FLOAT);
 
-DROP VIEW IF EXISTS links_recursive;
-
 DROP TRIGGER IF EXISTS player_changes_trigger ON players;
 
 DROP FUNCTION IF EXISTS notify_player_changes();
@@ -43,6 +41,10 @@ DROP TABLE IF EXISTS items CASCADE;
 DROP TABLE IF EXISTS links CASCADE;
 
 DROP TABLE IF EXISTS markers CASCADE;
+
+DROP TABLE IF EXISTS area_markers CASCADE;
+
+DROP TABLE IF EXISTS areas CASCADE;
 
 DROP TABLE IF EXISTS players CASCADE;
 

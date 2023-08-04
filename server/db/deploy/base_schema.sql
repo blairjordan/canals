@@ -51,6 +51,7 @@ VALUES
 CREATE TABLE IF NOT EXISTS markers (
   id BIGSERIAL PRIMARY KEY,
   position JSONB NOT NULL,
+  position_hash TEXT GENERATED ALWAYS AS (md5(position::text)) STORED,
   radius NUMERIC(10, 2) NOT NULL DEFAULT 10.00,
   type VARCHAR(55),
   props JSONB
@@ -61,16 +62,23 @@ GRANT SELECT ON markers TO anonymous;
 CREATE INDEX IF NOT EXISTS markers_position_idx ON markers USING GIN (position);
 CREATE INDEX IF NOT EXISTS idx_markers_type ON markers (type);
 
-CREATE TABLE IF NOT EXISTS links (
+CREATE TABLE IF NOT EXISTS areas (
   id BIGSERIAL PRIMARY KEY,
+  props JSONB
+);
+GRANT SELECT ON areas TO authenticated_user, anonymous;
+
+CREATE TABLE IF NOT EXISTS area_markers (
+  id BIGSERIAL PRIMARY KEY,
+  area_id BIGINT REFERENCES areas(id) NOT NULL,
   from_marker_id BIGINT REFERENCES markers(id) NOT NULL,
   to_marker_id BIGINT REFERENCES markers(id) NOT NULL,
   props JSONB,
-  CONSTRAINT uq_links UNIQUE (from_marker_id, to_marker_id)
+  CONSTRAINT uq_areas UNIQUE (from_marker_id, to_marker_id)
 );
-GRANT SELECT ON links TO authenticated_user, anonymous;
+GRANT SELECT ON area_markers TO authenticated_user, anonymous;
 
-CREATE INDEX IF NOT EXISTS links_props_idx ON links USING GIN (props);
+CREATE INDEX IF NOT EXISTS area_markers_props_idx ON area_markers USING GIN (props);
 
 CREATE TABLE IF NOT EXISTS items (
   id BIGSERIAL PRIMARY KEY,
@@ -101,13 +109,58 @@ CREATE TABLE IF NOT EXISTS player_items (
 GRANT SELECT, INSERT, UPDATE, DELETE ON player_items TO authenticated_user;
 GRANT SELECT ON player_items TO anonymous;
 
--- 📍 Geo markers
-INSERT INTO markers (position, type)
-VALUES
-  ('{"x": 0, "y": 0, "z": 0}', 'geo_marker'),
-  ('{"x": 500, "y": 0, "z": 0}', 'geo_marker'),
-  ('{"x": 500, "y": 0, "z": 500}', 'geo_marker')
-ON CONFLICT DO NOTHING;
+-- 🗺️ Populate grid system
+DO $$
+DECLARE
+    grid_size INTEGER := 10;
+    area_size NUMERIC := 100;
+    x INTEGER;
+    z INTEGER;
+    square_count INTEGER;
+    half_grid_size NUMERIC;
+BEGIN
+    square_count := grid_size * grid_size;
+    half_grid_size := (grid_size * area_size) / 2;
+
+    FOR i IN 0..square_count-1 LOOP
+      x := ((i % grid_size) * area_size - half_grid_size)::INTEGER;
+      z := ((i / grid_size)::NUMERIC * area_size - half_grid_size)::INTEGER;
+
+      WITH area_inserted AS (
+      -- 🪝 Generate area
+        INSERT INTO areas (props)
+        VALUES (NULL)
+        RETURNING id
+      ),
+      marker_inserted AS (
+        -- ⛓️ Area markers
+        INSERT INTO markers (position, type)
+        VALUES
+          (json_build_object('x', x, 'y', 0, 'z', z), 'geo_marker'),
+          (json_build_object('x', x + area_size, 'y', 0, 'z', z), 'geo_marker'),
+          (json_build_object('x', x + area_size, 'y', 0, 'z', z + area_size), 'geo_marker'),
+          (json_build_object('x', x, 'y', 0, 'z', z + area_size), 'geo_marker')
+        RETURNING id
+      ),
+      marker_ordered AS (
+          SELECT id, ROW_NUMBER() OVER() AS rn
+          FROM marker_inserted
+      )
+      -- 📍 Geo markers
+      INSERT INTO area_markers (area_id, from_marker_id, to_marker_id)
+      SELECT
+        area_inserted.id,
+        marker_ordered.id,
+        COALESCE(
+          LAG(marker_ordered.id) OVER (ORDER BY marker_ordered.rn),
+          first_value(marker_ordered.id) OVER (ORDER BY marker_ordered.rn DESC)
+        )
+      FROM marker_ordered
+      CROSS JOIN area_inserted;
+
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Fish 🐠
 INSERT INTO items (name, item_key, description, price, type, props)
@@ -160,12 +213,6 @@ fishing_spot_fish AS (
 )
 INSERT INTO marker_items (marker_id, item_id, props)
 SELECT fishing_spot_insert.id, fishing_spot_fish.id, fishing_spot_fish.props FROM fishing_spot_insert, fishing_spot_fish;
-
-INSERT INTO links (from_marker_id, to_marker_id)
-VALUES
-(1, 2),
-(1, 3)
-ON CONFLICT DO NOTHING;
 
 -- 🏠 Add decor items
 INSERT INTO items (item_key, name, type, description, price)
@@ -298,7 +345,7 @@ AND i.item_key IN (
 
 -- 📰 PostGraphile GQL subscription for player updates
 CREATE OR REPLACE FUNCTION notify_player_changes()
-  RETURNS TRIGGER AS
+RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
@@ -317,6 +364,7 @@ BEGIN
   RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION notify_player_changes() IS '@omit';
 GRANT EXECUTE ON FUNCTION notify_player_changes() TO authenticated_user;
 
 -- 🔫 Trigger for player updates
@@ -356,6 +404,7 @@ BEGIN
   RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION notify_player_item_changes() IS '@omit';
 GRANT EXECUTE ON FUNCTION notify_player_item_changes() TO authenticated_user;
 
 -- 🔫 Trigger for player item updates
@@ -365,44 +414,11 @@ CREATE OR REPLACE TRIGGER player_item_changes_trigger
   FOR EACH ROW
   EXECUTE FUNCTION notify_player_item_changes();
 
--- A nice view to return the marker links recursively 👀
-CREATE OR REPLACE VIEW links_recursive AS
-WITH RECURSIVE links_recursive AS (
-    -- 🛑 Non-recursive term
-    SELECT
-      id,
-      from_marker_id,
-      to_marker_id,
-      props,
-      1 as depth
-    FROM links
-    WHERE from_marker_id = 1
-    UNION ALL
-    -- 🪃 Recursive term
-    SELECT
-      gnl.id,
-      gnl.from_marker_id,
-      gnl.to_marker_id,
-      gnl.props,
-      gnlr.depth + 1 AS depth
-    FROM links gnl
-    INNER JOIN links_recursive gnlr ON gnlr.to_marker_id = gnl.from_marker_id
-)
-SELECT
-  id,
-  from_marker_id,
-  to_marker_id,
-  props,
-  depth
-FROM links_recursive;
-GRANT SELECT ON links_recursive TO authenticated_user, anonymous;
-
-COMMENT ON VIEW links_recursive IS E'@foreignKey (to_marker_id) references markers (id)|@foreignFieldName toMarker\n@foreignKey (from_marker_id) references markers (id)|@foreignFieldName fromMarker';
-
 -- 📍 Get a list of markers within given distance to player
 CREATE OR REPLACE FUNCTION player_markers(marker_type TEXT, marker_distance_limit FLOAT)
-RETURNS TABLE (marker_id INTEGER, marker_distance DOUBLE PRECISION) AS $$
-
+RETURNS TABLE (marker_id INTEGER, marker_distance DOUBLE PRECISION)
+SECURITY DEFINER
+AS $$
   WITH current_player AS (
     SELECT position AS position
     FROM players
@@ -434,7 +450,9 @@ GRANT EXECUTE ON FUNCTION player_markers(TEXT, FLOAT) TO authenticated_user;
 
 -- 🏪 Purchase item function
 CREATE OR REPLACE FUNCTION purchase_item(item_id INTEGER)
-RETURNS player_items AS $$
+RETURNS player_items
+SECURITY DEFINER
+AS $$
 DECLARE
   player_item player_items; -- items purchased in player's inventory
 BEGIN
@@ -688,5 +706,36 @@ END;
 $$ LANGUAGE plpgsql;
 COMMENT ON FUNCTION update_player_flag is E'@omit';
 
-COMMIT;
+-- 🛰️ Computed field to return all areas that a player is in
 
+CREATE OR REPLACE FUNCTION players_areas(
+  player players
+) RETURNS SETOF areas AS $$
+  WITH player AS (
+    SELECT ST_SetSRID(ST_MakePoint((position->>'x')::NUMERIC, (position->>'z')::NUMERIC), 4326) as geom
+    FROM players
+    WHERE id = player.id
+  ),
+  polygons AS (
+    SELECT
+      area_lines.area_id,
+      ST_MakePolygon(ST_AddPoint(line, ST_StartPoint(line))) AS geom
+    FROM (
+      SELECT
+        a.id AS area_id,
+        ST_MakeLine(array_agg(ST_SetSRID(ST_MakePoint((m.position->>'x')::NUMERIC, (m.position->>'z')::NUMERIC), 4326) ORDER BY am.id)) AS line
+      FROM area_markers am
+      JOIN markers m ON am.from_marker_id = m.id OR am.to_marker_id = m.id
+      JOIN areas a ON am.area_id = a.id
+      GROUP BY a.id
+    ) AS area_lines
+  )
+  SELECT
+    a.*
+  FROM player p
+  CROSS JOIN polygons po
+  INNER JOIN areas a ON po.area_id = a.id
+  WHERE ST_Covers(po.geom, p.geom);
+$$ LANGUAGE sql STABLE;
+
+COMMIT;

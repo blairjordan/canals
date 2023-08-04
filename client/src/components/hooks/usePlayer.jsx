@@ -20,19 +20,6 @@ function usePlayer() {
 
   useEffect(() => {
     if (!loadingPlayerSelf && playerSelfData && playerSelfData.currentPlayer) {
-      const { currentPlayer } = playerSelfData
-
-      if (!currentPlayer.id) {
-        dispatch({ type: 'LOGIN', payload: currentPlayer })
-        return
-      }
-
-      dispatch({ type: 'PLAYER_UPDATE', payload: currentPlayer })
-    }
-  }, [loadingPlayerSelf, playerSelfData])
-
-  useEffect(() => {
-    if (!loadingPlayerSelf && playerSelfData && playerSelfData.currentPlayer) {
       dispatch({ type: 'PLAYER_UPDATE', payload: playerSelfData.currentPlayer })
     }
   }, [loadingPlayerSelf, playerSelfData])

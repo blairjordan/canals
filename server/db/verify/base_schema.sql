@@ -10,6 +10,10 @@ SELECT EXISTS(SELECT FROM pg_tables WHERE tablename = 'players');
 
 SELECT EXISTS(SELECT FROM pg_tables WHERE tablename = 'markers');
 
+SELECT EXISTS(SELECT FROM pg_tables WHERE tablename = 'markers');
+
+SELECT EXISTS(SELECT FROM pg_tables WHERE tablename = 'area_markers');
+
 SELECT EXISTS(SELECT FROM pg_tables WHERE tablename = 'links');
 
 SELECT EXISTS(SELECT FROM pg_tables WHERE tablename = 'items');
@@ -26,8 +30,6 @@ SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'notify_player_item_changes'
 
 SELECT EXISTS(SELECT FROM pg_trigger WHERE tgname = 'player_item_changes_trigger');
 
-SELECT EXISTS(SELECT 1 FROM information_schema.views WHERE table_name = 'links_recursive');
-
 SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'player_markers');
 
 SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'purchase_item');
@@ -41,5 +43,7 @@ SELECT EXISTS(SELECT FROM pg_trigger WHERE tgname = 'marker_changes_trigger');
 SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'notify_marker_changes');
 
 SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'update_player_flag');
+
+SELECT EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'players_areas');
 
 ROLLBACK;
