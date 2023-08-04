@@ -67,6 +67,11 @@ export const PLAYER_UPDATES = gql`
           meta
           fuel
           balance
+          areas {
+            nodes {
+              id
+            }
+          }
           playerItems {
             nodes {
               ...PlayerItemFields

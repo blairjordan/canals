@@ -16,11 +16,6 @@ const MARKER_FIELDS = gql`
     type
     props
     radius
-    toMarker {
-      nodes {
-        id
-      }
-    }
     markerItems {
       nodes {
         item {
@@ -47,8 +42,8 @@ const MARKER_FIELDS = gql`
 `
 
 export const MARKERS = gql`
-  query ($markerType: String = "%") {
-    markers(filter: { type: { like: $markerType } }) {
+  query markers($includeMarkerType: String = "%", $excludeMarkerType: String = "geo_marker") {
+    markers(filter: { and: [{ type: { like: $includeMarkerType } }, { type: { notLike: $excludeMarkerType } }] }) {
       nodes {
         ...MarkerFields
       }

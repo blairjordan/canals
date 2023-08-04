@@ -61,12 +61,15 @@ This command will compile the client code and launch a development server.
 To enable file uploads in the game, you'll need to set up an account with 
 [Transloadit](https://transloadit.com/).
 
-Update `.env.local` file in the `client` directory with the following settings:
+Update the following settings in the `client/.env.local` file:
 
-- `NEXT_PUBLIC_TRANSLOADIT_KEY`: Transloadit authentication key
-- `NEXT_PUBLIC_TRANSLOADIT_TEMPLATE_ID`: The Transloadit template ID
+- `NEXT_PUBLIC_TRANSLOADIT_KEY` (string): Transloadit authentication key
+- `NEXT_PUBLIC_TRANSLOADIT_TEMPLATE_ID` (string): The Transloadit template ID
+#### 🐛 Enabling Debugging
+Update the following settings in the `client/.env.local` file:
 
-Values for these settings can be found in Transloadit's Template Credentials page.
+- `NEXT_PUBLIC_DEBUG_MARKERS` (boolean): Display animated markers. Markers are color-coded by marker type.
+- `NEXT_PUBLIC_DEBUG_AREAS` (boolean): Display game grid, and highglight player's current area
 
 **Callbacks**
 

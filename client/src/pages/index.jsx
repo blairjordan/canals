@@ -8,6 +8,7 @@ import { useLazyQuery, useSubscription, useMutation } from '@apollo/client'
 import { PLAYERS_ALL, PLAYER_UPDATES } from '@/graphql/player'
 import { CHAT_GLOBAL, MESSAGE_CREATE } from '@/graphql/message'
 import { MARKERS, MARKER_UPDATED } from '@/graphql/marker'
+import { AREAS } from '@/graphql/area'
 import { useCallback, useEffect } from 'react'
 import usePlayer from '../components/hooks/usePlayer'
 
@@ -20,6 +21,7 @@ export default function Page(props) {
   const [getRemotePlayers, { loading: loadingRemotePlayers, data: remotePlayersData, error: remotePlayersError }] =
     useLazyQuery(PLAYERS_ALL)
   const [getMarkers, { loading: loadingMarkers, data: markerData, error: markerError }] = useLazyQuery(MARKERS)
+  const [getAreas, { loading: loadingAreas, data: areaData, error: areaError }] = useLazyQuery(AREAS)
   const [createMessage, { loading: loadingCreateMessage, data: createMessageData, error: createMessageError }] =
     useMutation(MESSAGE_CREATE)
 
@@ -107,12 +109,12 @@ export default function Page(props) {
       }
 
       const playerItemsHashed = hashplayerItems(updatedPlayer.playerItems.nodes)
-      const { playerItems, fuel, balance, meta, package: packageItem, ...updatedPlayerBase } = updatedPlayer
+      const { playerItems, fuel, balance, meta, areas, package: packageItem, ...updatedPlayerBase } = updatedPlayer
 
       if (updatedPlayer.id === state.player.id) {
         dispatch({
           type: 'PLAYER_UPDATE',
-          payload: { playerItems, fuel, balance, packageItem, meta, playerItemsHashed },
+          payload: { playerItems, fuel, balance, meta, areas, packageItem, playerItemsHashed },
         })
       } else {
         dispatch({
@@ -142,9 +144,10 @@ export default function Page(props) {
     }
     getRemotePlayers()
     getMarkers({ variables: { markerType: '%' } })
+    getAreas()
   }, [state.player?.id])
 
-  // 🗺️ Add markers to the state when the data is fetched
+  // 📍 Add markers to the state when the data is fetched
   useEffect(() => {
     if (markerData && markerData.markers && markerData.markers.nodes) {
       markerData.markers.nodes.forEach((marker) => {
@@ -154,6 +157,13 @@ export default function Page(props) {
       })
     }
   }, [markerData])
+
+  // 🗺️ Add areas to the state when the data is fetched
+  useEffect(() => {
+    if (areaData && areaData.areas && areaData.areas.nodes) {
+      dispatch({ type: 'AREAS_SET', payload: areaData.areas.nodes })
+    }
+  }, [areaData])
 
   // 📡 Update remote players
   useEffect(() => {

@@ -1,11 +1,12 @@
 import { CanalWater } from './CanalWater'
 import { Player } from './Player'
-import { useEffect, useRef } from 'react'
-import { Environment, Sky } from '@react-three/drei'
+import { useEffect, useRef, useMemo } from 'react'
+import { Environment } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useAppContext } from '@/context'
 import { useMutation } from '@apollo/client'
 import { DebugMarker } from './DebugMarker'
+import { DebugAreaLine } from './DebugAreaLine'
 import { RemotePlayer } from './RemotePlayer'
 import { Particles } from './Particles'
 import TWEEN from '@tweenjs/tween.js'
@@ -19,6 +20,22 @@ export default function Game({ route, ...props }) {
 
   const [getPlayerSelf] = usePlayer()
   const canalRef = useRef(null)
+
+  const playerAreas = useMemo(() => state.player.areas?.nodes?.map(({ id }) => id) || [], [state])
+
+  const markerMap = useMemo(
+    () =>
+      state.areas.reduce((map, { id: areaId, areaMarkers }) => {
+        areaMarkers.nodes.forEach(({ fromMarker, toMarker }) => {
+          const combinedHash = [fromMarker.positionHash, toMarker.positionHash].sort().join('')
+          map[combinedHash] = map[combinedHash] || { areaIds: new Set() }
+          map[combinedHash].areaIds.add(areaId)
+        })
+
+        return map
+      }, {}),
+    [state.player.areas],
+  )
 
   // 🎣 Fish mutation
   const [fish, { data: fishData, loading: fishLoading }] = useMutation(FISH)
@@ -163,40 +180,60 @@ export default function Game({ route, ...props }) {
       ))}
       <Particles count={50} />
       <Seagull />
-      {state.markers.map(({ id, position: { x, z }, radius, type, props }) => {
-        // 🚩 Add DebugMarker for each marker
-        return (
-          <DebugMarker
-            key={id}
-            isDebugMode={true}
-            scale={2}
-            position={{ x, z }}
-            radius={radius}
-            color={(() => {
-              switch (type) {
-                case 'vendor':
-                  return '#B60019'
-                case 'fishing_spot':
-                  return '#33B600'
-                case 'fuel_station':
-                  return '#F18118'
-                case 'npc':
-                  return '#6A07D0'
-                case 'lock':
-                  if (props.state.openGate === 'lower') {
-                    return '#0000ff'
-                  } else {
-                    return '#E500DF'
-                  }
-                case 'marina':
-                  return '#48CFE2'
-                default:
-                  return '#999999'
-              }
-            })()}
-          />
-        )
-      })}
+      {process.env.NEXT_PUBLIC_DEBUG_MARKERS === 'true' &&
+        state.markers.map(({ id, position: { x, z }, radius, type, props }) => {
+          // 🚩 Add DebugMarker for each marker
+          return (
+            <DebugMarker
+              key={id}
+              isDebugMode={true}
+              scale={2}
+              position={{ x, z }}
+              radius={radius}
+              color={(() => {
+                switch (type) {
+                  case 'vendor':
+                    return '#B60019'
+                  case 'fishing_spot':
+                    return '#33B600'
+                  case 'fuel_station':
+                    return '#F18118'
+                  case 'npc':
+                    return '#6A07D0'
+                  case 'lock':
+                    if (props.state.openGate === 'lower') {
+                      return '#0000ff'
+                    } else {
+                      return '#E500DF'
+                    }
+                  case 'marina':
+                    return '#48CFE2'
+                  default:
+                    return '#999999'
+                }
+              })()}
+            />
+          )
+        })}
+      <>
+        {process.env.NEXT_PUBLIC_DEBUG_AREAS === 'true' &&
+          state.areas.flatMap(({ areaMarkers }) =>
+            areaMarkers.nodes.map(({ fromMarker, toMarker }) => {
+              const combinedHash = [fromMarker.positionHash, toMarker.positionHash].sort().join('')
+              const areaIds = Array.from(markerMap[combinedHash].areaIds)
+              const isInPlayerArea = playerAreas.some((pa) => areaIds.includes(pa))
+
+              return (
+                <DebugAreaLine
+                  key={`area-line-${fromMarker.id}-${toMarker.id}`}
+                  fromPosition={fromMarker.position}
+                  toPosition={toMarker.position}
+                  color={isInPlayerArea ? 'green' : 'red'}
+                />
+              )
+            }),
+          )}
+      </>
     </>
   )
 }
