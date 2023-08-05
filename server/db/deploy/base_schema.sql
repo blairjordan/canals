@@ -707,7 +707,6 @@ $$ LANGUAGE plpgsql;
 COMMENT ON FUNCTION update_player_flag is E'@omit';
 
 -- 🛰️ Computed field to return all areas that a player is in
-
 CREATE OR REPLACE FUNCTION players_areas(
   player players
 ) RETURNS SETOF areas AS $$
@@ -729,13 +728,31 @@ CREATE OR REPLACE FUNCTION players_areas(
       JOIN areas a ON am.area_id = a.id
       GROUP BY a.id
     ) AS area_lines
+  ),
+  player_polygon AS (
+    SELECT a.id AS area_id
+    FROM player p
+    CROSS JOIN polygons po
+    INNER JOIN areas a ON po.area_id = a.id
+    WHERE ST_Covers(po.geom, p.geom)
+  ),
+  marker_position_hash AS (
+    SELECT m.position_hash
+    FROM area_markers am
+    INNER JOIN markers m ON am.from_marker_id = m.id OR am.to_marker_id = m.id
+    WHERE am.area_id IN (SELECT area_id FROM player_polygon)
+    GROUP BY m.position_hash
+  ),
+  surrounding_areas AS (
+    SELECT am.area_id
+    FROM area_markers am
+    INNER JOIN markers m ON am.from_marker_id = m.id OR am.to_marker_id = m.id
+    WHERE m.position_hash IN (SELECT position_hash FROM marker_position_hash)
+    GROUP BY am.area_id
   )
-  SELECT
-    a.*
-  FROM player p
-  CROSS JOIN polygons po
-  INNER JOIN areas a ON po.area_id = a.id
-  WHERE ST_Covers(po.geom, p.geom);
+  SELECT a.*
+  FROM areas a
+  INNER JOIN surrounding_areas sa ON a.id = sa.area_id;
 $$ LANGUAGE sql STABLE;
 
 COMMIT;
