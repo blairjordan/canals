@@ -57,6 +57,12 @@ You can access the GraphQL playground at [http://localhost:3000/graphql](http://
 
 This command will compile the client code and launch a development server.
 
+#### 🐛 Enabling Debugging
+Update the following settings in the `client/.env.local` file:
+
+- `NEXT_PUBLIC_DEBUG_MARKERS` (boolean): Display animated markers. Markers are color-coded by marker type.
+- `NEXT_PUBLIC_DEBUG_AREAS` (boolean): Display game grid, and highglight player's current area
+
 #### 🎛️ Configuring Transloadit
 To enable file uploads in the game, you'll need to set up an account with 
 [Transloadit](https://transloadit.com/).
@@ -65,11 +71,6 @@ Update the following settings in the `client/.env.local` file:
 
 - `NEXT_PUBLIC_TRANSLOADIT_KEY` (string): Transloadit authentication key
 - `NEXT_PUBLIC_TRANSLOADIT_TEMPLATE_ID` (string): The Transloadit template ID
-#### 🐛 Enabling Debugging
-Update the following settings in the `client/.env.local` file:
-
-- `NEXT_PUBLIC_DEBUG_MARKERS` (boolean): Display animated markers. Markers are color-coded by marker type.
-- `NEXT_PUBLIC_DEBUG_AREAS` (boolean): Display game grid, and highglight player's current area
 
 **Callbacks**
 
