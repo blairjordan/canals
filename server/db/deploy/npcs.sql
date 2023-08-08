@@ -5,7 +5,7 @@ BEGIN;
 -- 🧍 NPCs
 INSERT INTO markers (position, type, props)
 VALUES (
-  '{"x": 45, "y": 0, "z": -37}',
+  '{"x": 40, "y": 0, "z": -45}',
   'npc',
   '{
     "key": "sawyer",

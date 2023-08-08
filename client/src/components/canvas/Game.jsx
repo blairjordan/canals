@@ -12,6 +12,7 @@ import { Particles } from './Particles'
 import TWEEN from '@tweenjs/tween.js'
 import { Seagull } from './Seagulls'
 import { Objects } from './Objects'
+import { NPC } from './NPC'
 import { FISH } from '@/graphql/action'
 import usePlayer from '../hooks/usePlayer'
 
@@ -173,7 +174,19 @@ export default function Game({ route, ...props }) {
       <CanalWater ref={canalRef} />
       {/* <Locks canalRef={canalRef} /> */}
       <Objects canalRef={canalRef} />
-      {/* <Sky scale={5000} sunPosition={[0, 750, -4500]} turbidity={0.1} /> */}
+      {state.markers
+        .filter((marker) => ['npc'].includes(marker.type))
+        .map(({ id, position: { x, z }, type, props }) =>
+          (() => {
+            switch (type) {
+              case 'npc':
+                // 🧍 NPC
+                return <NPC key={`npc-${id}`} position={[x, 0, z]} object={props.key} />
+              default:
+                return <></>
+            }
+          })(),
+        )}
       <Player />
       {Object.keys(state.remotePlayers).map((id) => (
         <RemotePlayer key={`player-${id}`} playerId={id} />
