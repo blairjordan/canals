@@ -2,10 +2,10 @@
 
 BEGIN;
 
--- 🧍 NPCs
+-- 👴 Sawyer
 INSERT INTO markers (position, type, props)
 VALUES (
-  '{"x": 40, "y": 0, "z": -45}',
+  '{"x": 40, "y": 0, "z": -45, "r": 0}',
   'npc',
   '{
     "key": "sawyer",
@@ -48,8 +48,38 @@ VALUES (
         "order": 0
       },
       {
+        "text": "What compels a person like you to just drop everything and seek refuge on a canal boat? I suppose we''re all sailing away from some skeletons in our past, aren''t we?",
+        "order": 0
+      },
+      {
         "text": "I have spoken.",
         "order": 1
+      }
+    ]
+  }'
+)
+ON CONFLICT DO NOTHING;
+
+-- 👦 Jimmy
+INSERT INTO markers (position, type, props)
+VALUES (
+  '{"x": 102, "y": 0, "z": -23, "r": 2}',
+  'npc',
+  '{
+    "key": "jimmy",
+    "name": "Jimmy",
+    "dialog": [
+      {
+        "text": "Can''t trust everyone on these waters. Remember that.",
+        "order": 0
+      },
+      {
+        "text": "Sawyer''s a good bloke, knows his ropes. But remember, everyone''s got a past.",
+        "order": 0
+      },
+      {
+        "text": "You ever get that feeling that the water''s talking to ya? Nah? Just me then...",
+        "order": 0
       }
     ]
   }'

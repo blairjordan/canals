@@ -2,8 +2,8 @@ class BoatEngine {
   constructor() {
     this.hasFuel = true
 
-    this.maxPower = 0.0075
-    this.maxReverse = 0.0065
+    this.maxPower = 0.0085
+    this.maxReverse = 0.0075
     this.powerFactor = 0.0001
     this.reverseFactor = 0.0001
 

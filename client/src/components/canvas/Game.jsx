@@ -176,12 +176,12 @@ export default function Game({ route, ...props }) {
       <Objects canalRef={canalRef} />
       {state.markers
         .filter((marker) => ['npc'].includes(marker.type))
-        .map(({ id, position: { x, z }, type, props }) =>
+        .map(({ id, position: { x, z, r }, type, props }) =>
           (() => {
             switch (type) {
               case 'npc':
                 // 🧍 NPC
-                return <NPC key={`npc-${id}`} position={[x, 0, z]} object={props.key} />
+                return <NPC key={`npc-${id}`} position={[x, 0, z]} rotation={r} markerKey={props.key} />
               default:
                 return <></>
             }
