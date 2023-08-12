@@ -33,7 +33,7 @@ function PopupManager(props) {
   // 💰 Sell item mutation
   const [sellItem] = useMutation(SELL, {
     onCompleted: (data) => console.log('Item sold:', data),
-    onError: (error) => console.log('Error purchasing item:', error),
+    onError: (error) => console.log('Error selling item:', error),
   })
 
   // ⛽ Refuel mutation

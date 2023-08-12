@@ -86,4 +86,39 @@ VALUES (
 )
 ON CONFLICT DO NOTHING;
 
+-- 🎩 Harrison Blackwood
+INSERT INTO markers (position, type, props)
+VALUES (
+  '{"x": 185, "y": 0, "z": -89, "r": 1.6}',
+  'npc',
+  '{
+    "key": "harrison_blackwood",
+    "name": "Harrison Blackwood",
+    "dialog": [
+      {
+        "text": "One must always look the part. First impressions are the only impressions.",
+        "order": 0
+      },
+      {
+        "text": "Why waste time with small endeavors when the world is ripe with bigger opportunities?",
+        "order": 0
+      },
+      {
+        "text": "Your boat, while not the most sophisticated, certainly has... character. A reflection of its captain, I presume?",
+        "order": 0,
+        "key": "harrison_reflection"
+      },
+      {
+        "text": "Your enthusiasm for the canals is palpable. It reminds me of a younger version of myself, full of dreams and aspirations.",
+        "order": 0
+      },
+      {
+        "text": "Your passion for the canals is commendable. Not many of your age would invest so much in such a... quaint pastime.",
+        "order": 0
+      }
+    ]
+  }'
+)
+ON CONFLICT DO NOTHING;
+
 COMMIT;
