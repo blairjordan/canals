@@ -121,4 +121,46 @@ VALUES (
 )
 ON CONFLICT DO NOTHING;
 
+-- 🌺 Maria
+INSERT INTO markers (position, type, props)
+VALUES (
+  '{"x": 76, "y": 0, "z": -59, "r": 5.5}',
+  'npc',
+  '{
+    "key": "maria",
+    "name": "Maria",
+    "dialog": [
+      {
+        "text": "The canals have a life of their own, don''t you think? Every ripple tells a story, every breeze carries a secret.",
+        "order": 0
+      },
+      {
+        "text": "I''ve always felt drawn to the water. It''s like a mirror, reflecting our true selves.",
+        "order": 0
+      },
+      {
+        "text": "There''s a reason Jimmy''s so streetwise. The world hasn''t been kind to him, but it''s made him resilient.",
+        "order": 0
+      },
+      {
+        "text": "Sawyer''s wisdom is unmatched. But one thing I''ve learned from these canals? Always trust your own instincts first.",
+        "order": 0
+      },
+      {
+        "text": "Blackwood''s charm is like a veil. But if you look closely, every now and then, you''ll catch a glimpse of the ambition that drives him. And it''s fierce.",
+        "order": 0
+      },
+      {
+        "text": "This boat of yours, it has history, it has soul. Take care of it, and it''ll take care of you.",
+        "order": 0
+      },
+      {
+        "text": "Every boat that sails by has a story. Some of love, some of loss, but all of adventure.",
+        "order": 0
+      }
+    ]
+  }' 
+)
+ON CONFLICT DO NOTHING;
+
 COMMIT;
