@@ -19,4 +19,14 @@ FOR SELECT
 TO public
 USING (true);
 
+ALTER TABLE player_quests ENABLE ROW LEVEL SECURITY;
+
+GRANT SELECT ON player_quests TO authenticated_user;
+
+-- 👀 Can view own player_quests
+CREATE POLICY player_quests_crud_select ON player_quests
+FOR SELECT
+TO authenticated_user
+USING (player_id = current_player_id());
+
 COMMIT;
