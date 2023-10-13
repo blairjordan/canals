@@ -251,7 +251,7 @@ VALUES ('{"x": 75, "y": 0, "z": 15}', 'vendor', '{"name": "The Salmon Slinger", 
 -- 🪴 Florist vendor
 WITH vendor_insert AS (
   INSERT INTO markers (position, type, props)
-  VALUES ('{"x": 100, "y": 0, "z": 100}', 'vendor', '{"name": "Mary''s Florist"}')
+  VALUES ('{"x": 105, "y": 0, "z": 105}', 'vendor', '{"name": "Mary''s Florist"}')
   RETURNING id
 ),
 item_insert AS (
@@ -270,7 +270,7 @@ SELECT vendor_insert.id, item_insert.id FROM vendor_insert, item_insert;
 -- 🛥 Boating vendor
 WITH vendor_insert AS (
   INSERT INTO markers (position, type, props)
-  VALUES ('{"x": -50, "y": 0, "z": 0}', 'vendor', '{"name": "Frank''s Boating"}')
+  VALUES ('{"x": -55, "y": 0, "z": 0}', 'vendor', '{"name": "Frank''s Boating"}')
   RETURNING id
 ),
 item_insert AS (
@@ -657,36 +657,6 @@ RETURNS SETOF nearby_players AS $$
 $$ LANGUAGE sql STABLE;
 GRANT EXECUTE ON FUNCTION nearby_players(FLOAT) TO authenticated_user;
 
--- 📰 PostGraphile GQL subscription for marker updates
-CREATE OR REPLACE FUNCTION notify_marker_changes()
-  RETURNS TRIGGER AS
-$$
-DECLARE
-BEGIN
-  IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') THEN
-    PERFORM pg_notify(
-      'postgraphile:marker_updated',
-      json_build_object(
-        '__node__', json_build_array(
-          'markers',
-          (SELECT NEW.id)
-        )
-      )::text
-    );
-    RETURN NULL;
-  END IF;
-  RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
-COMMENT ON FUNCTION notify_marker_changes() IS '@omit';
-
--- 🔫 Trigger for marker updates
-CREATE OR REPLACE TRIGGER marker_changes_trigger
-  AFTER INSERT OR UPDATE
-  ON markers
-  FOR EACH ROW
-  EXECUTE FUNCTION notify_marker_changes();
-
 -- 🎮 Current player function
 CREATE OR REPLACE FUNCTION current_player()
 RETURNS players AS $$
@@ -754,5 +724,81 @@ CREATE OR REPLACE FUNCTION players_areas(
   FROM areas a
   INNER JOIN surrounding_areas sa ON a.id = sa.area_id;
 $$ LANGUAGE sql STABLE;
+
+-- 🐇 Materialized view which maps markers to the areas they are placed in
+CREATE MATERIALIZED VIEW IF NOT EXISTS marker_areas AS
+  WITH marker AS (
+    SELECT *, ST_SetSRID(ST_MakePoint((position->>'x')::NUMERIC, (position->>'z')::NUMERIC), 4326) as geom
+    FROM markers
+    WHERE type <> 'geo_marker'
+  ),
+  polygons AS (
+    SELECT
+      area_lines.area_id,
+      ST_MakePolygon(ST_AddPoint(line, ST_StartPoint(line))) AS geom
+    FROM (
+      SELECT
+        a.id AS area_id,
+        ST_MakeLine(array_agg(ST_SetSRID(ST_MakePoint((m.position->>'x')::NUMERIC, (m.position->>'z')::NUMERIC), 4326) ORDER BY am.id)) AS line
+      FROM area_markers am
+      JOIN markers m ON am.from_marker_id = m.id OR am.to_marker_id = m.id
+      JOIN areas a ON am.area_id = a.id
+      GROUP BY a.id
+    ) AS area_lines
+  )
+  SELECT m.id AS marker_id, a.id AS area_id
+  FROM marker m
+  CROSS JOIN polygons p
+  INNER JOIN areas a ON p.area_id = a.id
+  WHERE ST_Covers(p.geom, m.geom);
+
+REFRESH MATERIALIZED VIEW marker_areas;
+
+-- 📰 PostGraphile GQL subscription for marker updates
+CREATE OR REPLACE FUNCTION notify_marker_changes()
+  RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+  IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') THEN
+
+    -- 📰 Notify global topic
+    PERFORM pg_notify(
+      'postgraphile:global:marker_updated',
+      json_build_object(
+        '__node__', json_build_array(
+          'markers',
+          (SELECT NEW.id)
+        )
+      )::TEXT
+    );
+
+  -- 📰 Notify area topic(s)
+    PERFORM pg_notify(
+      FORMAT('postgraphile:area:%s:marker_updated', area_id),
+      json_build_object(
+        '__node__', json_build_array(
+          'markers',
+          (SELECT NEW.id)
+        )
+      )::TEXT
+    )
+    FROM marker_areas
+    WHERE marker_id = NEW.id;
+
+    RETURN NULL;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+COMMENT ON FUNCTION notify_marker_changes() IS '@omit';
+
+-- 🔫 Trigger for marker updates
+CREATE OR REPLACE TRIGGER marker_changes_trigger
+  AFTER INSERT OR UPDATE
+  ON markers
+  FOR EACH ROW
+  EXECUTE FUNCTION notify_marker_changes();
+
 
 COMMIT;
